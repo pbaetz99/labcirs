@@ -14,3 +14,7 @@ DATABASES = {
         'PORT': get_local_setting('DB_PORT'),
     }
 }
+
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True

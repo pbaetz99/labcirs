@@ -1,6 +1,6 @@
 from django.utils.version import get_version
 
-VERSION = (7, 1, 0, 'beta', 3)
+VERSION = (7, 1, 0, 'beta', 4)
 
 __AUTHOR__ = "Sebastian Major" 
 __version__ = get_version(VERSION)
