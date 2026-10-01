@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+labcirs/settings/local_config.json
+.env
+media/
+db.sqlite3
+artifacts/
+/tls/
+/branding/

@@ -1,0 +1,5 @@
+{% comment %}
+  Label of a field in the design system: the star is decoration, the input says
+  "required" itself (aria-hidden). Used by BoundField.label_tag through form.template_name_label.
+{% endcomment %}
+{% if use_tag %}<{{ tag }} class="ui-field__label"{% include "django/forms/attrs.html" %}>{{ label }}{% if field.field.required %} <span class="ui-required" aria-hidden="true">*</span>{% endif %}</{{ tag }}>{% else %}{{ label }}{% endif %}

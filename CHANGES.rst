@@ -1,6 +1,57 @@
 LabCIRS changelog
 =================
 
+8.0.0a1 (2026-10-01)
+--------------------
+
+First release of the fork. It is based on 7.0 and moves LabCIRS to supported software, changes how reporting works and closes known security gaps. Upgrading from 5.2.1 is tested end to end (``scripts/test-upgrade-from-v5.sh``), see ``docs/upgrade.md``.
+
+Platform
+
+* Django 5.2 LTS, Python 3.13, PostgreSQL 17 (psycopg 3). Runs in Docker: the app with gunicorn and whitenoise, PostgreSQL and an nginx proxy for TLS, ``/media``, rate limits and security headers. ``scripts/setup.sh`` creates ``.env``, ``scripts/smoke-test.sh`` checks the stack.
+* Settings are read from ``LABCIRS_<NAME>`` environment variables first, then from ``local_config.json``, then the defaults. New keys: ``DEBUG``, ``LANGUAGE_CODE``, ``CSRF_TRUSTED_ORIGINS``, ``BEHIND_PROXY``, ``ASK_PUBLICATION_CONSENT``, ``LOGO_URL``, ``THEME_CSS_URL``, ``IMPRINT_URL``, ``PRIVACY_URL``, ``SOURCE_URL``, ``SITE_URL``, ``SITE_NAME``, ``EMAIL_USE_TLS``, ``EMAIL_USE_SSL``, ``EMAIL_TIMEOUT``. Yes/no values are checked strictly, so ``DEBUG=False`` cannot turn debug pages on by accident.
+* Documentation in ``docs/``: quick start, configuration, upgrade, branding.
+
+Reporting
+
+* Reporters need no login. They get a 16-character code (older 8-character codes keep working), see the status of their report in plain language and answer the QM. The code is shown in groups of four, on the page and in mails. A code of the wrong length gets a hint with the number of characters entered instead of "not found". The code is only sent by POST, and the pages that show a code or a report are not cached by the browser.
+* Only QM and admins log in. The reporter account of a department stays as the author of anonymous comments and can no longer log in.
+* Optional e-mail address for reporters, kept apart from the report and deleted when it is closed. Offered only when ``DEFAULT_FROM_EMAIL`` is set. The field carries a short warning that an address makes the report less anonymous. The mails never contain the report.
+* Optional organisational units ("where did it happen") with one level of sub-units, visible to the QM only.
+* ``ASK_PUBLICATION_CONSENT`` switches the question about publication on or off.
+* With exactly one active department, the start page goes straight to the list of published cases.
+
+Interface
+
+* New look from a plain design-system stylesheet and one small script (``core.css``, ``formular.js``). Bootstrap, jQuery, jQuery UI and DataTables are removed. Every page works without JavaScript. The layout aims at WCAG 2.2 AA. German translations in the formal form.
+* Strict Content Security Policy everywhere, the admin included: no inline scripts, styles or event handlers, no external resources.
+* Error pages (400, 403, 404, 500, CSRF) in the same layout, without error text, traceback or address.
+
+Security and privacy
+
+* Closed: comments could be posted on any report by any logged-in user. Access is now checked for GET and POST.
+* Photos are re-encoded from their pixels (no EXIF, GPS or other metadata), stored under random names and limited to JPEG, PNG, GIF and WebP up to 10 MB and 50 megapixels. ``manage.py strip_photo_metadata`` cleans photos that are already stored.
+* nginx rate limits for code checks, new reports and comments (global, no IP address involved) and for the login. No IP addresses or user agents in the logs of nginx, gunicorn and the app. Requests with NUL bytes get a 400.
+* Failed e-mail never costs a report: the error is logged and the reporter still sees the code. LabCIRS sends no error mails, so there is no ``ADMINS`` setting.
+
+Fixes
+
+* Reports with status "new" can be saved again in the admin.
+* The preventability is shown translated. Missing translations are added. The QM can see comments in the admin.
+* Translations of published cases and of the login info are no longer cached per worker. After an edit, some requests still showed the old text.
+* In the admin, the three fields of the "publishable incident" inline fit the page width. The incident page no longer scrolls sideways at 1440 px.
+* In the admin, the comment block, the review block and the application name are translated, the photo shows once on the incident page, and long German names in the index are hyphenated on narrow screens.
+
+Removed
+
+* Self-registration of new departments (django-registration-redux). Migrations ``0020`` and ``0025`` drop its tables, content types and permissions.
+* ``setup.py``, ``makesecretkey``, the Apache templates, the terms-of-service files, model-mommy (replaced by model-bakery) and django-migration-testcase.
+
+Database
+
+* New migrations ``0020`` to ``0025``: drop the registration tables, unique constraints for translations (django-parler 2.4), ``OrgUnit`` and ``CriticalIncident.org_unit``, new permissions for existing reviewers, ``ReporterContact``, drop the registration content types and permissions. Migrations ``0001`` to ``0019`` are unchanged.
+
+
 7.0 (2025-04-14)
 ----------------
 

@@ -1,0 +1,65 @@
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-labcirs}
+      POSTGRES_USER: ${POSTGRES_USER:-labcirs}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (scripts/setup.sh does it)}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # TCP, not the socket: during the first start the image runs a temporary server on the socket only
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      target: base
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    # .env is optional. LABCIRS_ENV_FILE selects another file (scripts/smoke-test.sh does).
+    env_file:
+      - path: ${LABCIRS_ENV_FILE:-.env}
+        required: false
+    environment:
+      LABCIRS_DB_ENGINE: django.db.backends.postgresql
+      LABCIRS_DB_HOST: ${LABCIRS_DB_HOST:-db}
+      LABCIRS_DB_NAME: ${POSTGRES_DB:-labcirs}
+      LABCIRS_DB_USER: ${POSTGRES_USER:-labcirs}
+      LABCIRS_DB_PASSWORD: ${LABCIRS_DB_PASSWORD:-${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (scripts/setup.sh does it)}}
+    volumes:
+      - media:/media
+
+  proxy:
+    image: nginx:1.30
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_started
+        # nginx resolves the address of the app at startup, so it restarts when the app is recreated
+        restart: true
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    environment:
+      LABCIRS_SERVER_NAME: ${LABCIRS_SERVER_NAME:-localhost}
+      APP_UPSTREAM: ${APP_UPSTREAM:-app:8000}
+      RATE_CODES: ${RATE_CODES:-30r/m}
+      RATE_WRITES: ${RATE_WRITES:-10r/m}
+      RATE_LOGIN: ${RATE_LOGIN:-10r/m}
+    volumes:
+      # the image renders every file in /etc/nginx/templates with envsubst
+      - ./deploy/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ${TLS_CERT_DIR:-./tls}:/etc/nginx/tls:ro
+      - ${BRANDING_DIR:-./branding}:/srv/branding:ro
+      - media:/srv/media:ro
+
+volumes:
+  pgdata:
+  media:

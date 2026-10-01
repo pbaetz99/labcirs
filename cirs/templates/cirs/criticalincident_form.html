@@ -1,43 +1,33 @@
 {% extends "cirs/base.html" %}
-
-{% block head %}
-	{{ block.super }}
-	{% load i18n %}
-	<link rel="stylesheet" type="text/css" href={{ STATIC_URL }}css/jquery-ui.min.css />
-{% endblock %}
+{% load i18n %}
+{% block title %}{% translate "Report incident" %}{% endblock %}
+{% block layout %}form{% endblock %}
 
 {% block content %}
-    {{ block.super }}
-    <div class="container">
-		<form action="" method="post" enctype="multipart/form-data" >{% csrf_token %}
-			{# very ugly hack to force the choice of real public! #}
-			<input type="hidden" value="{% trans "Empty" %}" name="public"></input>
-			<table class="table">
-				{{ form }}
-			</table>
-			<hr>
-			<p class="alert alert-success">{% trans "Anonymous report will be send. There is no possibility to change the report." %}</p>
-			<button type="submit" class="btn btn-danger">{% trans "Send" %}</button> 
-		</form>
+  <h1>{% translate "Report incident" %}</h1>
+  <p class="ui-lede">{% translate "You report without logging in. After sending you receive a code with which you can follow the status of your report and answer questions." %}</p>
+
+  {# A static hint, not a status message: no role. #}
+  <div class="ui-alert ui-alert--info">
+    <div class="ui-alert__body">
+      <strong class="ui-alert__titel">{% translate "Before you report" %}</strong>
+      <ul>
+        <li>{% translate "Describe roles, not names, e.g. “nurse on night shift”." %}</li>
+        <li>{% translate "Do not enter patient data such as names, dates of birth or room numbers." %}</li>
+        <li>{% translate "If there is acute danger, act immediately and inform your supervisor. This report does not replace that." %}</li>
+        <li>{% translate "Reporting is voluntary and free of sanctions." %}</li>
+      </ul>
     </div>
-{% endblock %}
+  </div>
 
-{% block javascript %}
-	<script type="text/javascript" src="{{ STATIC_URL }}js/jquery-ui-1.13.2.min.js"></script>
-
-	{% get_current_language as LANGUAGE_CODE %}
-	
-	{% if LANGUAGE_CODE != "en" %}
-		<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.ui.datepicker-{{ LANGUAGE_CODE }}.js"></script>
-	{% endif %}
-	
-	<script type="text/javascript">
-	    $(document).ready(function(){
-		{% if LANGUAGE_CODE == "en" %}
-			$("#id_date").datepicker( $.datepicker.regional[ "" ] );
-		{% else %}
-			$("#id_date").datepicker( $.datepicker.regional[ "{{ LANGUAGE_CODE }}" ] );
-		{% endif %}
-	    });
-	</script>
+  <div class="ui-card">
+    <form method="post" action="" enctype="multipart/form-data" data-einmal-absenden>
+      {% csrf_token %}
+      <p class="ui-secondary">{% blocktranslate trimmed %}Fields marked with <span class="ui-required">*</span> are required.{% endblocktranslate %}</p>
+      {{ form }}
+      <p class="ui-secondary">{% translate "You cannot change your report after sending it." %}</p>
+      {% translate "Sending report …" as busy_text %}
+      <button class="ui-btn ui-btn--primary" type="submit" data-busy-text="{{ busy_text }}">{% translate "Submit report" %}</button>
+    </form>
+  </div>
 {% endblock %}

@@ -24,19 +24,26 @@ from django.db import models
 from django.forms import Textarea, TextInput
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin, TranslatableTabularInline
-from registration.admin import RegistrationAdmin, RegistrationProfile
 
 from cirs.models import (Comment, CriticalIncident, Department, LabCIRSConfig,
-                         PublishableIncident, Reporter, Reviewer)
+                         OrgUnit, PublishableIncident, Reporter, Reviewer)
 
 
 class LabCIRSAdminSite(admin.AdminSite):
-    site_header = _('LabCIRS for %s') % settings.ORGANIZATION
-    # Translators: This message appears in the page title
-    site_title = 'LabCIRS'
-    index_title = _('LabCIRS administration')
-    
-    
+    # Properties, so that SITE_NAME is read per request and not frozen at import.
+
+    @property
+    def site_header(self):
+        return settings.SITE_NAME
+
+    site_title = site_header
+
+    @property
+    def index_title(self):
+        # Translators: %(site)s is the display name (setting SITE_NAME)
+        return _('%(site)s administration') % {'site': settings.SITE_NAME}
+
+
 admin_site = LabCIRSAdminSite()
 
 
@@ -57,7 +64,7 @@ class LabCIRSUserAdmin(UserAdmin):
         # Reviewer can modify only names and change the password
         if hasattr(request.user, 'reviewer'):
             return ((None, {'fields': ('username', 'password')}),
-                    (u'_(Personal info)', {'fields': ('first_name', 'last_name')}))
+                    (_('Personal info'), {'fields': ('first_name', 'last_name')}))
         else:
             return super(LabCIRSUserAdmin, self).get_fieldsets(request, obj=obj)
 
@@ -96,6 +103,8 @@ class PublishableIncidentInline(TranslatableTabularInline):
 
 class CommentInline(admin.TabularInline):
     model = Comment
+    verbose_name = _('Comment')
+    verbose_name_plural = _('Comments')
     extra = 0
     readonly_fields = ('author', 'text',)
     
@@ -105,21 +114,19 @@ class CommentInline(admin.TabularInline):
 
 class CriticalIncidentAdmin(admin.ModelAdmin):
     readonly_fields = ('date', 'incident', 'reason', 'immediate_action',
-                       'public', 'reported', 'preventability', 'photo',
-                       'photo_tag')
+                       'public', 'reported', 'preventability', 'photo_tag')
     list_filter = ('department', 'status', 'date', 'reported', 'public', 'risk',
-                   HasPublishableIncidentListFilter)
-    list_display = ('incident', 'date', 'reported', 'status', 'risk')
+                   'org_unit', HasPublishableIncidentListFilter)
+    list_display = ('incident', 'date', 'reported', 'status', 'risk', 'org_unit')
     list_display_links = ('incident', 'status', 'risk')
     fieldsets = (
         (_('Reported incident'), {
             'fields': (('date', 'reported'), 'public', 'incident', 'reason',
-                       'immediate_action', 'preventability', 'photo',
-                       'photo_tag')
+                       'immediate_action', 'preventability', 'photo_tag')
             
         }),
         (_('Review'), {
-            'fields': (('review_date', 'status'),
+            'fields': (('review_date', 'status'), 'org_unit',
                        ('risk', 'frequency', 'hazard'),
                        'responsibilty', 'action', 'category'),
             'classes': ['collapse',]
@@ -127,13 +134,6 @@ class CriticalIncidentAdmin(admin.ModelAdmin):
     )
     inlines = [PublishableIncidentInline, CommentInline]
 
-    def get_formsets(self, request, obj=None):
-        for inline in self.get_inline_instances(request, obj):
-            # hide PublishableIncidentInline in the add view
-            if isinstance(inline, PublishableIncidentInline) and obj.public is False:
-                continue
-            yield inline.get_formset(request, obj)
-            
     def get_queryset(self, request):
         qs = super(CriticalIncidentAdmin, self).get_queryset(request)
         try:
@@ -171,6 +171,13 @@ class PublishableIncidentAdmin(TranslatableAdmin):
             return qs.none()
 
 
+class OrgUnitAdmin(admin.ModelAdmin):
+    list_display = ('name', 'parent', 'active', 'position')
+    list_editable = ('active', 'position')
+    list_filter = ('active', 'parent')
+    search_fields = ('name',)
+
+
 class AdminObjectMixin(object):
     
     def get_form(self, request, obj=None, **kwargs):
@@ -185,6 +192,7 @@ class ConfigurationAdmin(AdminObjectMixin, TranslatableAdmin):
     
     list_display = ('__str__', 'translation_status')
     filter_horizontal = ('notification_recipients',)
+    formfield_overrides = {models.URLField: {'assume_scheme': 'https'}}
     fieldsets = (
         (_('Languages'), {
             'fields': ('mandatory_languages', 'translation_info')
@@ -199,8 +207,11 @@ class ConfigurationAdmin(AdminObjectMixin, TranslatableAdmin):
     )
     readonly_fields = ('translation_info', )
 
+    def has_add_permission(self, request):
+        # The config of a department is created with the department (post_save signal).
+        return False
+
     def formfield_for_manytomany(self, db_field, request, **kwargs):
-        # If by chance someone creates config in admin manually, the list will be empty!
         if db_field.name == "notification_recipients":
             kwargs["queryset"] = User.objects.filter(reviewer__in=self.model_instance.department.reviewers.all())
         return super(ConfigurationAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)
@@ -244,6 +255,6 @@ admin_site.register(CriticalIncident, CriticalIncidentAdmin)
 admin_site.register(PublishableIncident, PublishableIncidentAdmin)
 admin_site.register(LabCIRSConfig, ConfigurationAdmin)
 admin_site.register(Department, DepartmentAdmin)
+admin_site.register(OrgUnit, OrgUnitAdmin)
 admin_site.register(Reporter, RoleAdmin)
 admin_site.register(Reviewer, RoleAdmin)
-admin_site.register(RegistrationProfile, RegistrationAdmin)

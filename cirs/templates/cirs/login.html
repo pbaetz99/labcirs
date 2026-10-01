@@ -1,43 +1,62 @@
 {% extends "cirs/base.html" %}
+{% load i18n %}
+{% comment %}
+  The login of the quality management and the administration: one card in the narrow auth
+  layout (ui-main--auth). Only reviewers log in, reporters need no login, so the page keeps
+  the top bar and the footer of every page, and the card sits in the middle.
+  No autofocus: the navigation and the hint stand before the form, a screen reader would skip
+  both. The failed login is one alert that both fields point to; it does not
+  say which of the two was wrong.
+{% endcomment %}
 
-{% block head %}
-	{{ block.super }}
-	<link rel="stylesheet" type="text/css" href={{ STATIC_URL }}css/signin.css />
-{% endblock %}
+{% block title %}{% translate "Log in" %}{% endblock %}
+{% block layout %}auth{% endblock %}
+
 {% block content %}
-	{% load i18n %}
-	<div class="container">
-		<form class="form-signin" role="form" action="" method="post">{% csrf_token %}
-			{% if next %}
-				<input type="hidden" name="next" value="{{ next }}" />
-			{% endif %}
-			<h2 class="form-signin-heading">{%trans "Please log in..." %}</h2>
-			{% if message|length > 0 %}
-				<div class="alert alert-{{ message_class }}">{{ message|safe }}</div>
-			{% endif %}
-			<input class="form-control" type="text" name="username" value="{{ username }}" placeholder="{% trans "User name" %}" required="" autofocus="">
-			<input class="form-control" type="password" name="password" value="" placeholder="{% trans "Password" %}" required="">
-			<button class="btn btn-lg btn-danger btn-block" type="submit">{% trans "Log in" %}</button>
-			<br>
-			<div class="alert alert-success">
-				{% if labcirs_config.login_info %}
-					{{ labcirs_config.login_info }} <a href="{{ labcirs_config.login_info_url }}" target="_blank">{{ labcirs_config.login_info_link_text }}</a>
-				{% else %}
-					{% if department %}
-						{% blocktrans %}There is apparently no login info for {{ department }}. The resposible reviewer shold create it in the configuration!{% endblocktrans %}
-					{% else %}
-						{% trans "If you want to report an incident and don't know your login credentials, please go to the" %}
-						<a href="{% url 'labcirs_home' %}">{% trans "main page" %}</a>
-						{% trans "and choose your department!" %}
-						{% if message|length == 0 %}
-							<br>
-							{% trans "If you are reviewer or administrator and forgot your password, please klick" %}
-							<a href="{% url 'auth_password_reset' %}">{% trans "here" %}</a>
-							{% trans "to reset it." %}
-						{% endif %}
-					{% endif %}
-				{% endif %}
-			</div>
-		</form>	
-	</div>
+<div class="ui-card">
+  <h1>{% translate "Log in" %}</h1>
+  <p class="ui-lede ui-mt-2 ui-mb-4">{% translate "Logging in is reserved for the quality management and the administration." %}</p>
+
+  {% if department %}{% url 'create_incident' dept=department as report_url %}{% else %}{% url 'labcirs_home' as report_url %}{% endif %}
+  {% if message %}
+    {# message holds fixed texts of the views (translations), never user input. #}
+    <div class="ui-alert ui-alert--{{ message_class }}" id="anmeldemeldung" role="{% if message_class == 'info' %}status{% else %}alert{% endif %}">
+      <div class="ui-alert__body">{{ message }}</div>
+    </div>
+  {% else %}
+    <div class="ui-alert ui-alert--info">
+      <div class="ui-alert__body">{% blocktranslate %}You do not need to log in to report an incident. Please use <a href="{{ report_url }}">Report incident</a>.{% endblocktranslate %}</div>
+    </div>
+  {% endif %}
+
+  <form method="post" data-einmal-absenden>
+    {% csrf_token %}
+    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+    <div class="ui-field">
+      <label class="ui-field__label" for="username">{% translate "User name" %}</label>
+      <input class="ui-input" type="text" id="username" name="username" value="{{ username|default:'' }}"
+             required autocomplete="username" autocapitalize="none" spellcheck="false"
+             {% if message %}aria-describedby="anmeldemeldung"{% endif %}>
+    </div>
+    <div class="ui-field">
+      <label class="ui-field__label" for="password">{% translate "Password" %}</label>
+      <input class="ui-input" type="password" id="password" name="password"
+             required autocomplete="current-password"
+             {% if message %}aria-describedby="anmeldemeldung"{% endif %}>
+    </div>
+    <button class="ui-btn ui-btn--primary ui-w-full" type="submit" data-busy-text="{% translate 'Logging in …' %}">{% translate "Log in" %}</button>
+  </form>
+
+  {% if labcirs_config.login_info %}
+    <div class="ui-alert ui-alert--info ui-mt-4 ui-mb-0">
+      <div class="ui-alert__body">{{ labcirs_config.login_info }} {% if labcirs_config.login_info_url and labcirs_config.login_info_link_text %}<a href="{{ labcirs_config.login_info_url }}" target="_blank" rel="noopener">{{ labcirs_config.login_info_link_text }}</a>{% endif %}</div>
+    </div>
+  {% elif department %}
+    <div class="ui-alert ui-alert--warning ui-mt-4 ui-mb-0">
+      <div class="ui-alert__body">{% blocktranslate %}There is apparently no login info for {{ department }}. The resposible reviewer shold create it in the configuration!{% endblocktranslate %}</div>
+    </div>
+  {% endif %}
+
+  <p class="ui-secondary ui-text-center ui-mt-4 ui-mb-0"><a href="{% url 'password_reset' %}">{% translate "Forgot your password?" %}</a></p>
+</div>
 {% endblock %}

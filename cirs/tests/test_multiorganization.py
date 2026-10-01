@@ -24,7 +24,7 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
-from model_mommy import mommy
+from model_bakery import baker
 from parameterized import parameterized
 
 from cirs.admin import (ConfigurationAdmin, CriticalIncidentAdmin,
@@ -32,7 +32,7 @@ from cirs.admin import (ConfigurationAdmin, CriticalIncidentAdmin,
                         PublishableIncidentAdmin, RoleAdmin, admin_site)
 from cirs.models import (CriticalIncident, Department, LabCIRSConfig,
                          PublishableIncident, Reporter, Reviewer)
-from cirs.views import IncidentCreate, PublishableIncidentList
+from cirs.views import MISSING_DEPARTMENT_MSG, REPORTER_LOGIN_MSG
 
 from .helpers import create_role, create_user
 
@@ -112,12 +112,12 @@ class DepartmentTest(DepartmentBase):
         
     def test_department_label_cannot_contain_spaces(self):
         dept = Department({'label': 'x y', 'name': 'Name', 
-                           'reporter': mommy.make_recipe('cirs.reporter')})
+                           'reporter': baker.make_recipe('cirs.reporter')})
         with self.assertRaises(ValidationError):
             dept.full_clean()
             
     def test_department_has_get_abs_url(self):
-        dept = mommy.make(Department)
+        dept = baker.make(Department)
         self.assertEqual(dept.get_absolute_url(), '/incidents/{}/'.format(dept.label))
 
 
@@ -285,17 +285,21 @@ class SecurityTest(TestCase):
         self.assertTemplateUsed(response, 'cirs/login.html')
         self.assertTemplateNotUsed(response, 'cirs/publishableincident_list.html')
     
-    @parameterized.expand(gen_test_role_classes)     
-    def test_role_without_department_sees_error_message(self, name, role_cls):
-        from cirs.views import \
-            MISSING_DEPARTMENT_MSG  # necessary only here so far
+    # Reporter accounts never log in, with or without department: they get the hint
+    # that reporting works without login instead of the missing department error.
+    @parameterized.expand([
+        ('reporter', Reporter, REPORTER_LOGIN_MSG, 'info'),
+        ('reviewer', Reviewer, MISSING_DEPARTMENT_MSG, 'danger'),
+    ])
+    def test_role_without_department_sees_error_message(self, name, role_cls, message,
+                                                        message_class):
         role = create_role(role_cls, name)
         response = self.client.post(
-            reverse('login'), 
+            reverse('login'),
             {'username': role.user.username, 'password': role.user.username},
             follow=True)
-        self.assertEqual(response.context['message'], MISSING_DEPARTMENT_MSG)
-        self.assertEqual(response.context['message_class'], 'danger')
+        self.assertEqual(response.context['message'], message)
+        self.assertEqual(response.context['message_class'], message_class)
 
     @parameterized.expand(gen_test_role_classes)
     def test_role_without_department_is_logged_out(self, name, role_cls):
@@ -309,13 +313,17 @@ class SecurityTest(TestCase):
 
         self.assertNotEqual(session_user, role.user)
         
-    @parameterized.expand(gen_test_role_classes)
-    def test_role_with_department_is_logged_in(self, name, role_cls):
+    # Only reviewers log in; the reporter account stays logged out even with a department.
+    @parameterized.expand([
+        ('reporter', Reporter, False),
+        ('reviewer', Reviewer, True),
+    ])
+    def test_role_with_department_is_logged_in(self, name, role_cls, logged_in):
         role = create_role(role_cls, name)
         if name == 'reporter':
-            dept = mommy.make(Department, reporter=role)
+            dept = baker.make(Department, reporter=role)
         elif name == 'reviewer':
-            dept = mommy.make(Department)
+            dept = baker.make(Department)
             dept.reviewers.add(role)
         
         self.client.post(
@@ -325,7 +333,7 @@ class SecurityTest(TestCase):
         
         session_user = auth.get_user(self.client)
 
-        self.assertEqual(session_user, role.user)
+        self.assertEqual(session_user == role.user, logged_in)
 
     # Reviewer needs rights to work in the admin backend, so they have to be granted
     # to the user upon assignig a role, but revoked upon removal
@@ -355,8 +363,8 @@ class BackendViewAccess(TestCase):
         (PublishableIncident, PublishableIncidentAdmin, 'published_incident'),
     ])
     def test_admin_list_view(self, cls_name, admin_cls, recipe):
-        incidents = mommy.make_recipe('cirs.'+recipe,  _quantity=2)
-        reviewers = mommy.make_recipe('cirs.reviewer',  _quantity=2)
+        incidents = baker.make_recipe('cirs.'+recipe,  _quantity=2)
+        reviewers = baker.make_recipe('cirs.reviewer',  _quantity=2)
         for incident, reviewer in zip(incidents, reviewers):
             if cls_name == CriticalIncident:
                 incident.department.reviewers.add(reviewer)
@@ -388,7 +396,7 @@ class BackendViewAccess(TestCase):
         (PublishableIncident, PublishableIncidentAdmin, 'published_incident'),
     ])
     def test_list_view_returns_empty_qs_for_superuser(self, cls_name, admin_cls, recipe):
-        mommy.make_recipe('cirs.'+recipe,  _quantity=2)
+        baker.make_recipe('cirs.'+recipe,  _quantity=2)
         model_admin = admin_cls(cls_name, admin.AdminSite())
         
         factory = RequestFactory()
@@ -399,8 +407,8 @@ class BackendViewAccess(TestCase):
         self.assertEqual(qs.count(), 0)
         
     def test_only_own_reporters_in_qs_for_reviewer(self):
-        rev, rev2 = mommy.make_recipe('cirs.reviewer', _quantity=2)
-        depts = mommy.make_recipe('cirs.department', _quantity=3)
+        rev, rev2 = baker.make_recipe('cirs.reviewer', _quantity=2)
+        depts = baker.make_recipe('cirs.department', _quantity=3)
         depts[0].reviewers.add(rev)
         depts[1].reviewers.add(rev)
         
@@ -422,20 +430,18 @@ class BackendViewAccess(TestCase):
 
 
 class IncidentCreationViewSecurityTest(TestCase):
-    # Role based access!
+    # Role based access! Reporting itself needs no login.
     def setUp(self):
-        factory = RequestFactory()
-        self.dept = mommy.make_recipe('cirs.department')
+        self.dept = baker.make_recipe('cirs.department')
         self.create_url = reverse('create_incident', kwargs={'dept': self.dept.label})
-        self.request = factory.get(self.create_url)
     
-    def test_reporter_can_access_create_view(self):
-        # TODO: check also for rep with other department? 
-        # Not necessary. Report always uses department form reporter
-        # TODO: Change to normal client to remove RequestFactory
-        self.request.user = self.dept.reporter.user
-        response =IncidentCreate.as_view()(self.request)
-        self.assertIn('cirs/criticalincident_form.html', response.template_name)
+    def test_old_reporter_session_is_logged_out_and_sees_form(self):
+        # Reporter accounts no longer log in. An old session ends, the form works anonymously.
+        user = self.dept.reporter.user
+        self.client.force_login(user)
+        response = self.client.get(self.create_url)
+        self.assertTemplateUsed(response, 'cirs/criticalincident_form.html')
+        self.assertNotEqual(auth.get_user(self.client), user)
         
     def test_reviewer_cannot_access_create_view(self):
         user = create_role(Reviewer, 'reviewer').user
@@ -451,51 +457,48 @@ class IncidentCreationViewSecurityTest(TestCase):
         self.assertTemplateNotUsed(response, 'cirs/criticalincident_form.html')
         self.assertTemplateUsed(response, 'admin/index.html')
     
-    # Actually probably not necessary as user are checked at login?     
-    def test_user_cannot_access_create_view(self):
+    def test_user_without_role_is_logged_out_and_sees_form(self):
         user = create_user('cirs_user')
         self.client.force_login(user)
         response = self.client.get(self.create_url, follow=True)
-        self.assertTemplateNotUsed(response, 'cirs/criticalincident_form.html')
-        self.assertTemplateUsed(response, 'cirs/login.html')
+        self.assertTemplateUsed(response, 'cirs/criticalincident_form.html')
+        self.assertTemplateNotUsed(response, 'cirs/login.html')
         session_user = auth.get_user(self.client)
         self.assertNotEqual(session_user, user)
         
-    def test_anonymous_cannot_access_create_view(self):
+    def test_anonymous_can_access_create_view(self):
         response = self.client.get(self.create_url, follow=True)
-        self.assertTemplateNotUsed(response, 'cirs/criticalincident_form.html')
-        self.assertTemplateUsed(response, 'cirs/login.html')
+        self.assertTemplateUsed(response, 'cirs/criticalincident_form.html')
+        self.assertTemplateNotUsed(response, 'cirs/login.html')
 
 
 class CriticalIncidentWithDepartment(TestCase):
     
-    def test_critical_incident_inherits_department_from_creating_reporter(self):
-        reporter = create_role(Reporter, 'reporter')
-        dept = mommy.make(Department, reporter=reporter)
-        ci = mommy.prepare(CriticalIncident, public=True, id=1, photo='', department=dept, _fill_optional=True)
-        self.client.login(username=reporter.user.username, password=reporter.user.username)
-        self.client.post(reverse('create_incident', kwargs={'dept': dept.label}), data=ci.__dict__)
+    def test_critical_incident_gets_department_from_url(self):
+        # The posted data names the first department, the URL the second one: the URL wins.
+        dept, dept2 = baker.make_recipe('cirs.department', _quantity=2)
+        ci = baker.prepare(CriticalIncident, public=True, id=1, photo='', department=dept, _fill_optional=True)
+        data = {key: value for key, value in ci.__dict__.items() if value is not None}
+        self.client.post(reverse('create_incident', kwargs={'dept': dept2.label}), data=data)
 
-        self.assertEqual(CriticalIncident.objects.first().department, 
-                         reporter.department)
+        self.assertEqual(CriticalIncident.objects.get().department, dept2)
     
     @parameterized.expand([
-        ('rep1',),
+        ('anonymous',),
         ('reviewer',),
         ])
     def test_publishable_incident_list_view_returns_only_incidents_with_ci_department(self, role):
         reviewer = create_role(Reviewer, 'reviewer')
-        pi, pi2 = mommy.make_recipe('cirs.published_incident', _quantity=2)
-        pi.critical_incident.department.reviewers.add(reviewer)
-       
-        factory = RequestFactory()
-        kwargs={'dept': pi.critical_incident.department.label}
-        request = factory.get(reverse('incidents_for_department', kwargs=kwargs))
-        request.user = User.objects.get(username=role)
+        dept, dept2 = baker.make_recipe('cirs.department', _quantity=2)
+        pi = baker.make_recipe('cirs.published_incident', critical_incident__department=dept)
+        pi2 = baker.make_recipe('cirs.published_incident', critical_incident__department=dept2)
+        dept.reviewers.add(reviewer)
+        if role == 'reviewer':
+            self.client.force_login(reviewer.user)
 
-        response = PublishableIncidentList.as_view()(request, **kwargs)
+        response = self.client.get(dept.get_absolute_url())
         
-        qs = response.context_data['object_list']
+        qs = response.context['object_list']
         self.assertIn(pi, qs)
         self.assertNotIn(pi2, qs)
 
@@ -503,14 +506,14 @@ class CriticalIncidentWithDepartment(TestCase):
 class ConfigurationForDepartment(TestCase):
     
     def test_department_gets_config_upon_creation(self):
-        dept = mommy.make_recipe('cirs.department')
+        dept = baker.make_recipe('cirs.department')
         self.assertEqual(type(dept.labcirsconfig), LabCIRSConfig,
                          '{} misses configuration'.format(dept))
 
     def test_department_can_have_only_one_config(self):
-        dept = mommy.make_recipe('cirs.department')
+        dept = baker.make_recipe('cirs.department')
         with self.assertRaises(IntegrityError):
-            mommy.make(LabCIRSConfig, department=dept)
+            baker.make(LabCIRSConfig, department=dept)
             
     def test_notification_is_set_to_false_upon_config_creation(self):
         # Decided to set notification sendin to false by default
@@ -519,13 +522,13 @@ class ConfigurationForDepartment(TestCase):
         self.assertNotEqual(config.send_notification, None)
         
     def test_configurations_name_contains_dept_label(self):
-        dept = mommy.make_recipe('cirs.department')
+        dept = baker.make_recipe('cirs.department')
         self.assertEqual(str(dept.labcirsconfig),
                          'LabCIRS configuration for {}'.format(dept.label))
         
     def test_reviewer_sees_only_config_of_his_organization(self):
-        dept1, dept2 = mommy.make_recipe('cirs.department', _quantity=2)
-        reviewer = mommy.make_recipe('cirs.reviewer')
+        dept1, dept2 = baker.make_recipe('cirs.department', _quantity=2)
+        reviewer = baker.make_recipe('cirs.reviewer')
         dept1.reviewers.add(reviewer)
                 
         model_admin = ConfigurationAdmin(LabCIRSConfig, admin.AdminSite())
@@ -540,7 +543,7 @@ class ConfigurationForDepartment(TestCase):
         self.assertNotIn(dept2.labcirsconfig, qs)
     
     def test_admin_sees_all_configurations(self):
-        mommy.make_recipe('cirs.department', _quantity=5)
+        baker.make_recipe('cirs.department', _quantity=5)
         model_admin = ConfigurationAdmin(LabCIRSConfig, admin.AdminSite())
         
         factory = RequestFactory()
@@ -552,10 +555,10 @@ class ConfigurationForDepartment(TestCase):
         self.assertEqual(LabCIRSConfig.objects.count(), qs.count())
 
     def test_only_reviewer_for_dept_appears_in_the_recipient_list(self):
-        dept = mommy.make_recipe('cirs.department')
+        dept = baker.make_recipe('cirs.department')
         dept.labcirsconfig.login_info_de = 'Hallo!!!'
         dept.labcirsconfig.save()
-        rev1, rev2 = mommy.make_recipe('cirs.reviewer', _quantity=2)
+        rev1, rev2 = baker.make_recipe('cirs.reviewer', _quantity=2)
         dept.reviewers.add(rev1)
         form = ConfigurationAdmin(LabCIRSConfig, admin.AdminSite()).get_form(
             None, obj=dept.labcirsconfig)

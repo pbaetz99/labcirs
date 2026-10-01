@@ -1,182 +1,57 @@
 LabCIRS
 =======
 
-LabCIRS is a lightweight anonymous Critical Incident Reporting System (CIRS) developed for research laboratories/departments.
+LabCIRS is a lightweight, anonymous Critical Incident Reporting System (CIRS). Staff report incidents without logging in and get a code. With the code they follow the status of their report and answer questions from the quality management (QM). The QM reviews reports in the Django admin and publishes edited cases.
 
-Background information can be found in
-`A Laboratory Critical Incident and Error Reporting System for Experimental Biomedicine <https://doi.org/10.1371/journal.pbio.2000705>`_ published in `PLOS Biology <http://journals.plos.org/plosbiology/>`_
+This is a fork of `LabCIRS <https://github.com/major-s/labcirs>`_ by Sebastian Major, who developed it for research laboratories at the Charité Berlin. Background: `A Laboratory Critical Incident and Error Reporting System for Experimental Biomedicine <https://doi.org/10.1371/journal.pbio.2000705>`_ (PLOS Biology). The fork runs on Django 5.2 LTS, Python 3.13 and PostgreSQL 17 in Docker, and replaces Bootstrap, jQuery and DataTables with a plain stylesheet. It changes how reporting works: no login for reporters, a code with status and replies, optional organisational units and reporter e-mail, strict privacy defaults. See ``CHANGES.rst``.
 
-LabCIRS builds upon the `Django <http://www.djangoproject.com>`_ framework as a stand-alone web application and is not intended to be a reusable app.
+Intranet only
+-------------
 
-A demo installation can be visited and tested at http://labcirs-demo.charite.de.
+Run LabCIRS inside your network, not on the internet. Published cases can be read without a login, and the login of QM and admins has no second factor.
 
-IMPORTANT
-------------
-As of version 6.0, LabCIRS works only with Python 3. Users of older versions have to create a new virtual environment with an appropriate Python version and install the correct version of mod_wsgi if LabCIRS is used with Apache.
+Quick start
+-----------
 
-Requirements
-------------
-- Python 3.12 (older versions of Python 3 might work but are not tested)
-- Django 4.2 (older versions may work too but are not supported and not tested anymore)
-- Pillow
-- django-multiselectfield
-- django-parler
-- django-registration-redux
-- any Django compatible database - tested in real life with MySQL and PostreSQL.
-- any web server capable running WSGI applications - template for Apache 2.4 configuration is provided
+You need Docker with the Compose plugin (2.24 or newer), a host name and a TLS certificate::
 
-Required versions of Python modules are specified in requirements.txt)
-
-Installation
-------------
-Assuming usage of Apache, PostgreSQL and virtualenv on a Linux (Windows and MacOS should work too) machine, the installation steps are:
-
-Install Python, virtualenv, PostgreSQL and Apache (with mod_wsgi) if not already present. On Ubuntu 18.04 following packages are required::
-
-    apache2, libapache2-mod-wsgi-py3, postgresql, libpq-dev, python, python-dev, python-virtualenv
-
-Create a database user, e.g.::
-
-    sudo -u postgres createuser -P labcirs
-    
-Create a database owned by the user created in the previous step, e.g.::
-
-    sudo -u postgres createdb -O labcirs labcirs
-    
-Create the main directory for all LabCIRS files::
- 
-    mkdir /opt/labcirs
-  
-and ``cd`` there.
-    
-Create a virtual environment (I usually do it in the main directory)::
-
-    virtualenv venv_labcirs
-    
-Create ``static`` and ``media`` directories.
-
-Make sure that the web server has write access to the ``media`` directory
-
-Clone LabCIRS from GitHub and ``cd`` to its directory::
-
-    git clone https://github.com/major-s/labcirs.git
+    git clone https://github.com/pbaetz99/labcirs.git
     cd labcirs
+    bash scripts/setup.sh        # creates .env with random secrets
+    nano .env                    # server name, allowed hosts, languages, mail
+    mkdir tls && cp /path/to/fullchain.pem /path/to/privkey.pem tls/
+    docker compose up -d --build
+    docker compose logs app      # repeat until it shows "Listening at": the app migrates first
+    docker compose run --rm app python manage.py createsuperuser
 
-Activate the virtual environment::
+Then log in at ``https://<your host>/login/``, add a department with a reporter account and a reviewer in the admin, and give your staff the address ``/incidents/<department label>/create/``.
 
-    source ../venv_labcirs/bin/activate
-    
-Install Django and required Python packages with pip::
+Documentation
+-------------
 
-    pip install -r requirements.txt
-    
-Install database adapter, e.g.::
-
-    pip install psycopg2
-    
-Set the local configuration. This can be done either with ``setup.py``::
-
-    python setup.py
-
-or manually by copying the template, generation of the secret key and manual editing, e.g. with nano::
-
-    cp labcirs/settings/local_config.json.template labcirs/settings/local_config.json
-    python manage.py makesecretkey
-    nano labcirs/settings/local_config.json
-
-You should set following variables
-
-- Variables for the database access, usually ``DB_ENGINE``, ``DB_NAME``, ``DB_USER`` and ``DB_PASSWORD``.
-- If you intend to serve LabCIRS from a subdirectory and not from the root of your web server.
-  then you have also to enter this subdirectory as ``ROOT_URL``.
-- Add the domain of your web server to ``ALLOWED_HOSTS``.
-- If your site uses multiple languages, set ``LANGUAGES`` ``PARLER*`` and ``ALL_LANGUAGES_MANDATORY_DEFAULT``.
-- If users can register new departments, set all ``REGISTRATION*`` and ``ACCOUNT_ACTIVATION_DAYS``.
-
-If registration is activated and users have to agree to any terms of service, you have to place a 
-``tos_LANGUAGE.html`` file for every language used in the ``labcirs/tos`` directory. For English 
-the file name will be ``tos_en.html``. See included ``tos_example.txt``.
-
-Initialise the database::
-
-    python manage.py migrate
-     
-Create superuser::
-
-    python manage.py createsuperuser
-
-Copy static files to the ``static`` directory
-
-    python manage.py collectstatic
-    
-Copy the appropriate Apache configuration template:
-
-- ``labcirs/labcirs.conf.root_template`` if you plan to serve LabCIRS from the root of the (virtual) web server.
-- ``labcirs/labcirs.conf.template`` if you plan to serve LabCIRS from any subdirectory e.g. ``/labcirs``.
-
-Make your configuration file accessible by Apache, activate it or include in the configuration.
-
-Restart Apache
-
-LabCIRS configuration
----------------------
-
-Visit the URL you serve LabCIRS from
-
-Login as the superuser you just created
-
-Click on the admin button at the top of the page
-
-Add new department. In the fresh installation, there are neither reporters nor reviewers. You can add
-them by clicking on the green cross next to the corresponding dialogue. You will have to add the 
-new users during this procedure too:
-   
-- a reporter - an account for anonymous reporting of incidents
-- a reviewer - an account for analysis, copy-editing and publication of the incidents. 
-  This account should have a valid email address specified.
-       
-In the admin interface go to the `LabCIRS configuration` and choose the automatically created 
-configuration for the new department. Here you can specify where the users can get the information 
-about the reporter login. Further, you can specify if email notifications should be sent to any 
-reviewer upon creating new incidents. This function can only be activated if you set a valid 
-``EMAIL_HOST`` in the local configuration file.
-
-Update
--------
-
-With activated virtual environment run::
-    
-    pip install -r requirements.txt
-    python setup.py
-    python manage.py migrate
-    python manage.py collectstatic
-
-
-Acknowledgements
-----------------
-
-The development of multitenant LabCIRS version was sponsored by the `Stiftung Charité <http://www.stiftung-charite.de>`_
-
-Thanks to Claudia Kurreck, Nikolas Offenhauser, Ingo Przesdzing for ideas and testing. 
-
-Users
------
-
-LabCIRS was created and used in the Department of Experimental Neurology at the Charité - University Medicine Berlin, Germany since 2014.
-Since version 5 it is aviable for all research laboratories
-
-If you use it and find it useful please give us a note.
+- `docs/quickstart.md <docs/quickstart.md>`_: installation step by step, first accounts, backups, tests
+- `docs/configuration.md <docs/configuration.md>`_: every setting, mail, security defaults, running on the host network
+- `docs/upgrade.md <docs/upgrade.md>`_: moving an installation from v5, v6 or v7
+- `docs/branding.md <docs/branding.md>`_: name, logo, colours, footer links
 
 Included software
 -----------------
 
-LabCIRS uses `Bootstrap <http://getbootstrap.com/>`_ and `jQuery <https://jquery.com>`_ with `DataTables <https://datatables.net>`_ which are included in this repository.
-The copyright of these software packages is hold by its respective owners.
+Two files in this repository were not written for LabCIRS: ``static/css/core.css`` and ``static/js/formular.js``. The first is a design-system stylesheet, the second a small script for forms. They carry no licence notice of their own and are covered by the AGPL of this repository. No other JavaScript, font or image from a third party is bundled. The pages use system fonts and load nothing from other hosts.
+
+Python packages (Django, Pillow, django-parler, django-multiselectfield, psycopg, gunicorn, whitenoise) are installed from PyPI when the image is built, see ``requirements.txt``. The images ``python``, ``postgres`` and ``nginx`` come from Docker Hub.
+
+Acknowledgements
+----------------
+
+The development of the multi-department version was sponsored by the `Stiftung Charité <http://www.stiftung-charite.de>`_. Thanks to Claudia Kurreck, Nikolas Offenhauser and Ingo Przesdzing for ideas and testing.
 
 License
 -------
 
 Copyright (C) 2016-2025 Sebastian Major <sebastian.major@charite.de>
+
+Copyright (C) 2026 Philipp Bätz (this fork)
 
 LabCIRS is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as

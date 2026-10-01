@@ -25,15 +25,6 @@
     "ALL_LANGUAGES_MANDATORY_DEFAULT": true,
     "_SESSION_COOKIE_SECURE": "Should always be set 'true' unless you are testing an unsecure http server",
     "SESSION_COOKIE_SECURE": true,
-    "ACCOUNT_ACTIVATION_DAYS": 1,
-    "DEFAULT_FROM_EMAIL": "",
-    "_ADMINS": "Enter 'email': 'name' of the admin. Email is the key! Multiple admins are possible", 
-    "ADMINS": {},
-    "REGISTRATION_OPEN": false,
-    "_REGISTRATION_RESTRICT_USER_EMAIL": "If user emails are restricted, at least one domain has to be specified",
-    "REGISTRATION_RESTRICT_USER_EMAIL": false,
-    "REGISTRATION_EMAIL_DOMAINS": [],
-    "_REGISTRATION_USE_TOS": "If new users have to agree to terms of service, you have to provide tos file for every used language",
-    "REGISTRATION_USE_TOS": false
+    "DEFAULT_FROM_EMAIL": ""
  }
  

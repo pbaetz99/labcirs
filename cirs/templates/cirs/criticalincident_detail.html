@@ -1,70 +1,141 @@
 {% extends "cirs/base.html" %}
+{% load i18n %}
+{% block title %}{% if user.reviewer %}{% translate "Report" %}{% else %}{% translate "Your report" %}{% endif %}{% endblock %}
 
 {% block content %}
-{% load i18n %}
-	<div class="container">
-	    <h4 class="text-center">{% trans "Incident" %}:</h4>
-	    <div class="clearfix">
-		    <div class="float-left">
-			    <table class="table table-borderless">
-				    <tbody>
-				    	<tr>
-				    		<th scope="row" class="align-text-top text-right">
-				    			{% trans "Date" %}:
-				    		</th>
-				    		<td>{{ incident.date }}</td>
-				    	</tr>
-				    	<tr>
-				    		<th scope="row" class="align-text-top text-right">
-				    			{% trans "Incident" %}:
-				    		</th>
-				    		<td class="border-top">{{ incident.incident }}</td>
-				    	</tr>
-				    	<tr>
-				    		<th scope="row" class="align-text-top text-right">
-				    			{% trans "Cause" %}:
-				    		</th>
-				    		<td class="border-top">{{ incident.reason }}</td>
-				    	</tr>
-				    	<tr>
-				    		<th scope="row" class="align-text-top text-right">
-				    			{% trans "Immediate action / suggestion" %}:
-				    		</th>
-				    		<td class="border-top">{{ incident.immediate_action }}</td>
-				    	</tr>
-				    	<tr>
-				    		<th scope="row" class="align-text-top text-right">{% trans "Preventability" %}:</th>
-				    		<td class="border-top">{% trans incident.preventability %}</td>
-				    	</tr>
-				    </tbody>
-				</table>
-			</div>
-		</div>
+  <h1>{% if user.reviewer %}{% translate "Report" %}{% else %}{% translate "Your report" %}{% endif %}</h1>
+  {% if not user.reviewer %}
+    <p class="ui-lede">{% translate "You see this report because you entered your code in this session." %}</p>
+  {% endif %}
 
-		{% if incident.comments.all|length > 0 %}
-			<hr/>
-			<div class="comments">
-	    		<h4 class="text-center">{% trans "Comments" %}:</h4>
-	    		<div class="table-responsive">
-		    		<table id="id_comment_table" class="table table-striped table-bordered">
-						{% for comment in incident.comments.all %}
-							<tr>
-								<td class="col-md-2">{{ comment.created }}</td>
-								<td class="col-md-1">{{ comment.author }}</td>
-								<td>{{ comment.text }}</td>
-							</tr>
-						{% endfor %}
-					</table>
-				</div>
-			</div>
-		{% endif %}
+  <div class="ui-stack-lg">
+    {# The status as a word next to the colour; info until it is closed. #}
+    <section class="ui-card" aria-labelledby="stand-titel">
+      <h2 class="ui-card__title" id="stand-titel">{% translate "Processing status" %}</h2>
+      <p>{% translate "Current status" %}: <span class="ui-badge ui-badge--{% if incident.status == 'completed' %}success{% else %}info{% endif %}">{{ incident.get_reporter_status_display }}</span></p>
+      {% if not user.reviewer %}
+        <p class="ui-secondary ui-mb-0">{% translate "A report goes through these four stages:" %}</p>
+        <ol class="ui-stack-sm ui-mb-0">
+          <li{% if incident.status == 'new' %} aria-current="step"{% endif %}>
+            <span class="ui-strong">{% translate "Received" %}</span>
+            {% if incident.status == 'new' %}<span class="ui-badge ui-badge--info">{% translate "current status" %}</span>{% endif %}
+            <span class="ui-secondary ui-secondary-block">{% translate "Your report has arrived and is waiting for the first review." %}</span>
+          </li>
+          <li{% if incident.status == 'in process' %} aria-current="step"{% endif %}>
+            <span class="ui-strong">{% translate "In progress" %}</span>
+            {% if incident.status == 'in process' %}<span class="ui-badge ui-badge--info">{% translate "current status" %}</span>{% endif %}
+            <span class="ui-secondary ui-secondary-block">{% translate "The quality management examines your report and clarifies causes and measures." %}</span>
+          </li>
+          <li{% if incident.status == 'under supervision' %} aria-current="step"{% endif %}>
+            <span class="ui-strong">{% translate "Measures in place, under observation" %}</span>
+            {% if incident.status == 'under supervision' %}<span class="ui-badge ui-badge--info">{% translate "current status" %}</span>{% endif %}
+            <span class="ui-secondary ui-secondary-block">{% translate "The measures are in place. The quality management observes whether they work." %}</span>
+          </li>
+          <li{% if incident.status == 'completed' %} aria-current="step"{% endif %}>
+            <span class="ui-strong">{% translate "Closed" %}</span>
+            {% if incident.status == 'completed' %}<span class="ui-badge ui-badge--success">{% translate "current status" %}</span>{% endif %}
+            <span class="ui-secondary ui-secondary-block">{% translate "The processing has ended." %}</span>
+          </li>
+        </ol>
+      {% endif %}
+    </section>
 
-    	<div class="comment">
-  			<h4 class="text-center">{% trans "Your comment" %}</h4>
-			<form action="" method="post">{% csrf_token %}
-				{{ form.as_p }}
-				<button type="submit" class="btn btn-danger">{% trans "Save" %}</button> 
-			</form>
-		</div>
-	</div>
+    <section class="ui-card" aria-labelledby="ereignis-titel">
+      <h2 class="ui-card__title" id="ereignis-titel">{% translate "Details of the report" %}</h2>
+      <dl class="ui-recht__daten">
+        <div>
+          <dt>{% translate "Date" %}</dt>
+          <dd><time datetime="{{ incident.date|date:'Y-m-d' }}">{{ incident.date|date:"SHORT_DATE_FORMAT" }}</time></dd>
+        </div>
+        <div>
+          <dt>{% translate "Incident" %}</dt>
+          <dd>{{ incident.incident|linebreaksbr }}</dd>
+        </div>
+        <div>
+          <dt>{% translate "Cause" %}</dt>
+          <dd>{{ incident.reason|linebreaksbr }}</dd>
+        </div>
+        <div>
+          <dt>{% translate "Immediate action / suggestion" %}</dt>
+          <dd>{{ incident.immediate_action|linebreaksbr }}</dd>
+        </div>
+        <div>
+          <dt>{% translate "Preventability" %}</dt>
+          <dd>{{ incident.get_preventability_display }}</dd>
+        </div>
+        {% if incident.photo %}
+        <div>
+          <dt>{% translate "Photo" %}</dt>
+          {# A link that opens the photo, no modal and no script; photo_tag gives the link its text. #}
+          <dd>{{ incident.photo_tag }}</dd>
+        </div>
+        {% endif %}
+      </dl>
+    </section>
+
+    {# Replies oldest first. Senders are roles, never user names: the reporter's replies are written by the technical reporter account of the department. #}
+    <section aria-labelledby="rueckmeldungen-titel">
+      <h2 class="ui-mt-0" id="rueckmeldungen-titel">{% translate "Replies" %}</h2>
+      {% if comments %}
+        <p class="ui-secondary">{% blocktranslate count counter=comments|length %}{{ counter }} reply{% plural %}{{ counter }} replies, oldest first{% endblocktranslate %}.</p>
+        <div class="ui-stack">
+          {% with reporter_user_id=incident.department.reporter.user_id %}
+          {% for comment in comments %}
+            <article class="ui-card" aria-labelledby="k{{ comment.pk }}-titel">
+              <h3 class="ui-mt-0" id="k{{ comment.pk }}-titel">{% if comment.author_id == reporter_user_id %}{% translate "Reporting person" %}{% else %}{% translate "Quality management" %}{% endif %} <span class="ui-secondary">&middot; <time datetime="{{ comment.created|date:'Y-m-d' }}">{{ comment.created|date:"SHORT_DATE_FORMAT" }}</time></span></h3>
+              <p class="ui-prose ui-mt-2 ui-mb-0">{{ comment.text|linebreaksbr }}</p>
+            </article>
+          {% endfor %}
+          {% endwith %}
+        </div>
+      {% else %}
+        <p class="ui-secondary">{% translate "There are no replies yet." %}</p>
+      {% endif %}
+    </section>
+
+    <section class="ui-card" aria-labelledby="antwort-titel">
+      <h2 class="ui-card__title" id="antwort-titel">{% translate "Reply" %}</h2>
+      {% if user.reviewer %}
+        <p class="ui-secondary">{% translate "Your reply is also sent by e-mail to the reporter if they have set up notifications. Do not write names or patient data." %}</p>
+      {% endif %}
+      <form method="post" action="" data-einmal-absenden>
+        {% csrf_token %}
+        {{ form }}
+        {% translate "Sending …" as busy_text %}
+        <button class="ui-btn ui-btn--primary" type="submit" data-busy-text="{{ busy_text }}">{% translate "Send reply" %}</button>
+      </form>
+    </section>
+
+    {# The address itself never stands on the page. #}
+    {% if reporter_email_active %}
+    <section class="ui-card" aria-labelledby="email-titel">
+      <h2 class="ui-card__title" id="email-titel">{% translate "Notification by e-mail" %}</h2>
+      <p>{% translate "E-mail notification is active." %}</p>
+      <p>{% translate "You receive an e-mail when your report has a new status or the quality management writes you a reply. The e-mail names the new status or contains the text of the reply, never your report itself." %}</p>
+      <p>{% translate "If you delete the address, you receive no more e-mails about this report. You cannot enter a new address." %}</p>
+      <form action="{% url 'remove_reporter_email' dept=incident.department.label pk=incident.pk %}" method="post" data-einmal-absenden>
+        {% csrf_token %}
+        <div class="ui-field">
+          <label class="ui-check" for="id_confirm">
+            <input type="checkbox" name="confirm" id="id_confirm" required>
+            <span>{% translate "I want to delete my e-mail address permanently." %}</span>
+          </label>
+        </div>
+        {% translate "Deleting …" as busy_text %}
+        <button class="ui-btn ui-btn--secondary" type="submit" data-busy-text="{{ busy_text }}">{% translate "Delete e-mail address" %}</button>
+      </form>
+    </section>
+    {% endif %}
+
+    {% if not user.reviewer %}
+    <div class="ui-card">
+      <form action="{% url 'end_incident_access' dept=incident.department.label pk=incident.pk %}" method="post" data-einmal-absenden>
+        {% csrf_token %}
+        <p>{% translate "End access before you leave a shared computer." %}</p>
+        {% translate "Ending access …" as busy_text %}
+        <button class="ui-btn ui-btn--secondary" type="submit" data-busy-text="{{ busy_text }}">{% translate "End access" %}</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
 {% endblock %}

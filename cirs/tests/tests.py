@@ -16,6 +16,7 @@
 # along with LabCIRS.
 # If not, see <https://www.gnu.org/licenses/>.
 
+import os
 from datetime import date, timedelta
 
 from django.contrib.admin.sites import AdminSite
@@ -24,30 +25,31 @@ from django.core.exceptions import ValidationError
 from django.core.files import File
 from django.test import TestCase, override_settings
 from django.urls import reverse
-from model_mommy import mommy
+from model_bakery import baker
 
 from cirs.admin import CriticalIncidentAdmin
 from cirs.models import (CriticalIncident, Department, LabCIRSConfig,
-                         PublishableIncident, Reporter)
+                         PublishableIncident)
 from cirs.views import IncidentCreateForm
 
-from .helpers import create_role, create_user, create_user_with_perm
+from .helpers import create_user
 
 
 class CriticalIncidentModelTest(TestCase):
     
     def setUp(self):
         # create first incident
-        self.first_incident = mommy.make(CriticalIncident, public=True, category = ['other'])
+        self.first_incident = baker.make(CriticalIncident, public=True, category = ['other'])
     
     def test_saving_and_retriving_incidents(self):
-        self.first_incident.photo = File(open("./cirs/tests/test.jpg", 'rb'))
-        self.first_incident.save()
+        with open("./cirs/tests/test.jpg", 'rb') as photo:
+            self.first_incident.photo = File(photo)
+            self.first_incident.save()
 
-        p = CriticalIncident.objects.get(id=1).photo.path
+        p = CriticalIncident.objects.get(id=self.first_incident.id).photo.path
 
         # TODO: not really working. Compare files
-        self.assertTrue(open(p), 'file not found')
+        self.assertTrue(os.path.isfile(p), 'file not found')
         # TODO: move category testing to another test
         my_incident = CriticalIncident.objects.first()
         self.assertIn('other', my_incident.category)
@@ -66,8 +68,14 @@ class CriticalIncidentModelTest(TestCase):
         # TODO: test for unique code
         
     def test_get_absolute_url_returns_valid_url(self):
-        my_incident = CriticalIncident.objects.get(pk=1)
-        self.assertEqual(my_incident.get_absolute_url(), '/incidents/{}/1/'.format(my_incident.department.label))
+        my_incident = CriticalIncident.objects.get(pk=self.first_incident.pk)
+        self.assertEqual(my_incident.get_absolute_url(),
+                         '/incidents/{}/{}/'.format(my_incident.department.label, my_incident.pk))
+
+    def test_photo_tag_has_no_inline_style(self):
+        html = CriticalIncident(photo='photos/2026/01/01/x.jpg').photo_tag()
+        self.assertIn('class="labcirs-thumb"', html)
+        self.assertNotIn('style=', html)
 
 class CriticalIncidentFormTest(TestCase):
 
@@ -83,11 +91,9 @@ class CriticalIncidentFormTest(TestCase):
 
 class CriticalIncidentCreateViewTest(TestCase):
   
-    def test_create_view_returns_message(self):
-        user = create_user_with_perm('reporter', 'add_criticalincident')
-        create_role(Reporter, user)
-        mommy.make(Department, reporter=user.reporter)
-          
+    def test_create_view_hands_the_code_to_the_success_page(self):
+        dept = baker.make_recipe('cirs.department')
+
         test_incident = {'date': '07/24/2015',
                          'incident': 'A strang incident happened',
                          'reason': 'No one knows',
@@ -96,18 +102,19 @@ class CriticalIncidentCreateViewTest(TestCase):
                          'public': True,
                          }
           
-        self.client.login(username=user.username, password=user.username)
-        create_url = reverse('create_incident', kwargs={'dept': user.reporter.department.label})
+        # anonymous, reporting needs no login
+        create_url = reverse('create_incident', kwargs={'dept': dept.label})
         response = self.client.post(create_url, test_incident, follow=True)
         comment_code = CriticalIncident.objects.last().comment_code
-        messages = list(response.context['messages'])
-        self.assertEqual(comment_code, messages[0].message, "Comment code should be sent as message")
+        # not as a message: a message pending for another reason would be taken for the code
+        self.assertEqual(list(response.context['messages']), [])
+        self.assertEqual(response.context['comment_code'], comment_code)
 
 
 class SendNotificationEmailTest(TestCase):
 
     def setUp(self):
-        self.department = mommy.make(Department)
+        self.department = baker.make(Department)
         incident_date = date(2015, 7, 31)
         self.test_incident = {
             'date': incident_date,
@@ -134,6 +141,7 @@ class SendNotificationEmailTest(TestCase):
         return self.department.labcirsconfig
        
 
+    @override_settings(LANGUAGE_CODE='en')  # the QM mails follow the site language
     def test_send_email_after_form_is_saved(self):
         self.prepare_config(recipient=self.reviewer)
         self.save_form()
@@ -183,7 +191,7 @@ class SendNotificationEmailTest(TestCase):
         self.assertEqual('labcirs@labcirs.edu', mail.outbox[0].from_email)
         
     def test_sender_email_for_dept_in_email_header(self):
-        dept2 = mommy.make_recipe('cirs.department')
+        dept2 = baker.make_recipe('cirs.department')
         config2 = dept2.labcirsconfig
         config2.notification_sender_email = 'labcirs@localhost'
         config2.send_notification = True
@@ -214,7 +222,7 @@ def generate_three_incidents(department):
     department.labcirsconfig.save()
     
     def new_incident(month):
-        return mommy.make(CriticalIncident, public=True, 
+        return baker.make(CriticalIncident, public=True,
                           date=date(2015, month, 31), department=department)
 
     incidents = [new_incident(month) for month in (7,8,5)]
@@ -240,12 +248,10 @@ class PublishedIncidentTest(TestCase):
     def test_new_published_incidents_are_displayed_first(self):
         """Tests if newest published incidents appear first in the table.
         Neglects jQuery.DataTables!!!"""
-        reporter = create_role(Reporter, 'reporter')
-        department = mommy.make(Department, reporter=reporter)
+        department = baker.make_recipe('cirs.department')
         generate_three_incidents(department)
 
-        self.client.force_login(reporter.user)
-
+        # the list of published incidents needs no login
         response = self.client.get(department.get_absolute_url(), follow=True)
 
         # newest should come first

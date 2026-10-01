@@ -1,0 +1,148 @@
+/* =============================================================================
+   LabCIRS -- additions to the design system (core.css)
+   =============================================================================
+   Only what core.css lacks. Tokens only (var(--ui-...)), no hex values, except the
+   duck colours in the last block (named exception).
+   Every rule says why it exists.
+
+   Deliberate deviation from the workspace shell with a side bar: reporters are anonymous
+   and have three routes, reviewers work in the Django admin. LabCIRS keeps the white top
+   bar (ui-topbar) and adds its navigation there. No bottom bar either: the top bar wraps
+   on narrow screens.
+   ============================================================================= */
+
+/* --- Logo in the top bar ---
+   core.css draws its own logo as inline SVG (ui-logo__bild); LabCIRS shows LOGO_URL as <img>
+   or ORGANIZATION as word mark. 32 px fit the 56 px bar (--ui-topbar-h); below 48rem 24 px
+   keep logo and site name on one line. The margin keeps logo and focus ring off the edge when
+   the bar wraps; 600 is the weight for names. */
+.ui-logo { margin-block: var(--ui-s2); font-weight: 600; }
+.ui-logo > img { display: block; height: var(--ui-s8); width: auto; }
+@media (max-width: 48rem) { .ui-logo > img { height: var(--ui-s6); } }
+
+/* --- Navigation in the top bar ---
+   core.css has no ui-nav any more (the portal's routes are in the side bar). On the white
+   bar: links muted, current page and hover in the brand colour with underline, so the state
+   is not only a colour; as high as the bar. */
+.ui-nav { display: flex; flex-wrap: wrap; align-items: stretch; gap: 2px; }
+.ui-nav__link {
+  display: inline-flex; align-items: center; min-height: var(--ui-topbar-h);
+  padding: 0 var(--ui-s3); border-bottom: 2px solid transparent;
+  color: var(--ui-text-muted); font-size: var(--ui-fs-sm); font-weight: 600; text-decoration: none;
+}
+.ui-nav__link:hover, .ui-nav__link[aria-current] {
+  color: var(--ui-marke); border-bottom-color: var(--ui-marke); text-decoration: none;
+}
+.ui-nav__link:focus-visible { outline-offset: -3px; }
+.ui-nav__sep { width: 1px; height: var(--ui-s5); align-self: center; margin: 0 var(--ui-s2); background: var(--ui-border); }
+.ui-nav__user {
+  display: inline-flex; align-items: center; gap: var(--ui-s2);
+  padding: 0 var(--ui-s2); color: var(--ui-text); font-size: var(--ui-fs-sm);
+}
+/* Log out and the language choice are POST forms whose buttons look like the links;
+   the bottom border stays for the aria-current underline. */
+.ui-nav__form { display: inline-flex; margin: 0; }
+.ui-nav__form > button { border-width: 0 0 2px; background: none; cursor: pointer; font-family: inherit; }
+
+/* --- Focus never under the sticky top bar (WCAG 2.4.11) ---
+   core.css only protects elements with an id ([id] { scroll-margin-top }). Buttons and links
+   without id ended up under the bar on keyboard focus. */
+html { scroll-padding-top: calc(var(--ui-topbar-h) + var(--ui-s2)); }
+
+/* --- Narrow screens: the top bar wraps and stops sticking ---
+   Wrapped, the bar is two or more rows high; sticky it would cover focused elements
+   (WCAG 2.4.11, scroll-padding covers one row) and much of a landscape phone.
+   One row needs (measured in German, anonymous, list page): word mark "LabCIRS" with both
+   language buttons 811 px; a 270 x 32 px logo with "Example-CIRS" and German only 948 px.
+   62rem (992 px) leaves room for other font metrics. At 320 px the bar has four rows.
+   Known limit: a logo together with the language buttons needs about 69rem -- raise the
+   limit if a deployment shows both. */
+@media (max-width: 62rem) { .ui-topbar { position: static; } }
+
+/* --- A table inside a flush card needs no second frame ---
+   The card (ui-card--flush) has the frame and the radius, ui-tablewrap brings its own: a
+   double line. core.css does not have this rule. */
+.ui-tablewrap--eingebettet { border: 0; border-radius: 0; }
+/* core.css sets `.ui-card { padding }` again in its media query below 48rem, after
+   `.ui-card--flush { padding: 0 }` with the same specificity: on a phone the flush card got
+   16 px padding around its table (measured at 320 px).
+   Repeated here, where it wins by order; drop it when core.css puts the flush rule after the
+   media query. */
+.ui-card--flush { padding: 0; }
+
+/* --- The active search of the case list ---
+   core.css has no filter status; this block adds one, only tokens. */
+.ui-filterstand {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--ui-s2) var(--ui-s4);
+  padding: var(--ui-s3) var(--ui-s4); margin-bottom: var(--ui-s5);
+  background: var(--ui-surface-sunken); border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+}
+.ui-filterstand__text { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ui-s2); }
+.ui-filterstand__hinweis { margin: 0; flex: 1 1 100%; font-size: var(--ui-fs-sm); color: var(--ui-text-muted); }
+
+/* --- The error page with the duck (templates/errors/http.html) ---
+   Named exception to "tokens only": the duck's colours, valid only here. "Quak!" and the
+   waves carry the brand. The duck grows with the window up to 10rem and stays small on a
+   phone, so the error text and the button stay in view. ui-row--zentriert is not in
+   core.css either. */
+.ui-ente {
+  --ui-ente-gelb: #facc15;
+  --ui-ente-fluegel: #eab308;
+  --ui-ente-schnabel: #f97316;
+  --ui-ente-auge: #111111;
+}
+.ui-state > svg.ui-ente__bild { display: block; width: clamp(6.5rem, 26vw, 10rem); height: auto; margin: 0 auto var(--ui-s3); }
+.ui-ente__gelb { fill: var(--ui-ente-gelb); stroke: none; }
+.ui-ente__fluegel { fill: var(--ui-ente-fluegel); stroke: none; }
+.ui-ente__schnabel { fill: var(--ui-ente-schnabel); stroke: none; }
+.ui-ente__auge { fill: var(--ui-ente-auge); stroke: none; }
+.ui-ente__welle { fill: none; stroke: var(--ui-marke); stroke-width: 4; stroke-linecap: butt; }
+.ui-ente__quak { fill: var(--ui-marke); stroke: none; font-weight: 600; }
+.ui-ente h1 { margin: var(--ui-s1) 0 var(--ui-s3); }
+.ui-row--zentriert { justify-content: center; }
+
+/* --- The report form and the pages after it ---
+   Rules that core.css lacks for the reporter's pages. Tokens only. */
+
+/* Lists in an alert: core.css leaves the browser's 40 px indent, which is much on a phone;
+   the hint box "Before you report" is the only list in an alert. */
+.ui-alert__body ul { margin: var(--ui-s2) 0 0; padding-left: var(--ui-s5); }
+.ui-alert__body li + li { margin-top: var(--ui-s1); }
+
+/* The file choice of the field "Photo". Its width comes from .ui-w-full on the input: Chrome
+   gives it a fixed 253 px otherwise, which stuck out of the card at 320 px. core.css exempts the
+   file input from min-height, so it is only 21 px high without this class; controls should
+   be 40 px high. A class instead of input[type="file"], so no other file input changes silently. */
+.ui-dateiwahl { min-height: var(--ui-control-h); }
+
+/* The code after reporting: the main thing on the page, in mono and one size up
+   (--ui-fs-lg is 19 px). It is shown in groups of four, separated by spaces, and the line may
+   wrap between the groups only: break-all used to wrap it after any character, and
+   a reporter noted the 11 characters of the first line and lost the second. At 320 px the 16
+   characters (202 px measured) and three spaces do not fit the 228 px of content in
+   one line, so it wraps; text-wrap: balance then makes it 2 + 2 groups where supported.
+   user-select: all marks the whole code with one click, no script. letter-spacing has no
+   token. */
+.ui-meldecode {
+  display: block; padding: var(--ui-s2) var(--ui-s3);
+  font-family: var(--ui-font-mono); font-size: var(--ui-fs-lg); font-weight: 600;
+  letter-spacing: .08em; text-wrap: balance; user-select: all;
+  background: var(--ui-surface-sunken); border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-sm);
+}
+.ui-meldecode__gruppe { white-space: nowrap; }
+
+/* The photo of a report on its detail page: photo_tag gives the link a thumbnail, and the
+   admin rule for it (admin-theme.css) does not load here. Both limits together keep the aspect
+   ratio; max-width stops a wide photo at the card edge on a phone. */
+.labcirs-thumb { width: auto; height: auto; max-width: 100%; max-height: calc(var(--ui-s12) * 4); }
+
+/* A check or radio row is a target of its own. core.css gives .ui-check no height, so a
+   one-line row was 24 px high (measured at 1279 px wide, consent question) and two
+   rows of a group touched each other. Controls should be 40 px (--ui-control-h); the
+   whole row is the label, so the padding makes the whole row the target. */
+.ui-check { padding-block: var(--ui-s2); }
+
+/* The warning in the hint of the reporter e-mail field: giving an address costs anonymity. */
+.labcirs-warnung { color: var(--ui-danger); font-weight: 700; }

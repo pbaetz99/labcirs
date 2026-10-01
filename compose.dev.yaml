@@ -1,0 +1,72 @@
+services:
+  app:
+    build:
+      target: test
+    # Browser tests: the browser in the selenium container opens the live server of the test run
+    # under this name (run the tests with --use-aliases, see functional_tests/base.py).
+    hostname: app
+    depends_on:
+      selenium:
+        condition: service_healthy
+        required: false  # only with --profile e2e
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    # development and tests do not read a production .env
+    env_file: !reset []
+    command: python manage.py runserver 0.0.0.0:8000 --settings=labcirs.settings.dev
+    environment:
+      LABCIRS_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      LABCIRS_SECRET_KEY: dev-only-not-secret
+      LABCIRS_ALLOWED_HOSTS: '["*"]'
+      LABCIRS_LANGUAGES: '{"en": "English", "de": "Deutsch"}'
+      LABCIRS_PARLER_LANGUAGES: '["en", "de"]'
+      LABCIRS_PARLER_DEFAULT_LANGUAGE_CODE: en
+      # Mails of the development stack go to mailpit (service below, only with --profile e2e). The
+      # tests send through the mail backend of the test runner and do not reach it.
+      LABCIRS_EMAIL_HOST: mailpit
+      LABCIRS_EMAIL_PORT: "1025"
+      LABCIRS_SESSION_COOKIE_SECURE: "false"
+      LABCIRS_DEBUG: "true"
+      LIVE_SERVER_HOST: app
+      SELENIUM_REMOTE_URL: http://selenium:4444/wd/hub
+
+  # Browser for the tests in functional_tests (only with --profile e2e):
+  #   sh scripts/dc --profile e2e run --rm --use-aliases app python manage.py test functional_tests --settings=labcirs.settings.dev
+  # Exact version (Firefox, geckodriver, Selenium grid, build date): no surprises from "latest".
+  selenium:
+    image: selenium/standalone-firefox:156.0-geckodriver-0.37.1-grid-4.49.0-20260909
+    profiles: [e2e]
+    shm_size: 2gb
+    healthcheck:
+      test: ["CMD", "/opt/bin/check-grid.sh", "--host", "0.0.0.0", "--port", "4444"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Mail catcher (only with --profile e2e): takes every mail the app sends on port 1025 and shows it
+  # in a web page on port 8025 (http://mailpit:8025, API under /api/v1/). Nothing leaves the stack.
+  # Exact version, no surprises from "latest".
+  mailpit:
+    image: axllent/mailpit:v1.31.3
+    profiles: [e2e]
+    environment:
+      MP_MAX_MESSAGES: 500
+
+  # Browser for scripts/sichtkontrolle.py and scripts/abnahme.py, see scripts/acceptance.sh (only with
+  # --profile e2e). The image holds the browsers; the packages of scripts/acceptance-requirements.txt
+  # (Playwright of the same version as the image, Pillow, psycopg) are installed when it starts.
+  playwright:
+    image: mcr.microsoft.com/playwright/python:v1.63.0-noble
+    profiles: [e2e]
+    working_dir: /work
+    volumes:
+      - .:/work
+    ipc: host
+    init: true
+    entrypoint:
+      - sh
+      - -c
+      - pip install --quiet --root-user-action=ignore -r scripts/acceptance-requirements.txt && exec "$$@"
+      - --

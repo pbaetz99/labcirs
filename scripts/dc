@@ -1,0 +1,6 @@
+#!/bin/sh
+# Development stack: compose.yaml plus compose.dev.yaml. compose.yaml requires POSTGRES_PASSWORD
+# even for services that are not started, so the development database password is set here.
+POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-labcirs}"
+export POSTGRES_PASSWORD
+exec docker compose -f compose.yaml -f compose.dev.yaml "$@"

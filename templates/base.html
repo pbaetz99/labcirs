@@ -1,97 +1,122 @@
-<!DOCTYPE html>
-
-{% load i18n %}
-
-<html lang="{{ LANGUAGE_CODE }}">
-
+{% load i18n static %}<!DOCTYPE html>
+{% comment %}
+  Page frame in the design system of core.css:
+  white top bar with logo and navigation, blue footer. Not the workspace shell with side bar:
+  reporters are anonymous and have three routes, see static/css/labcirs.css.
+  Branding comes from the settings via cirs.context_processors: LOGO_URL, THEME_CSS_URL,
+  IMPRINT_URL, PRIVACY_URL, SOURCE_URL, SITE_NAME.
+  Blocks: title (concrete part of the page title), layout (content, form, wide or auth),
+  messages, content.
+{% endcomment %}
+{% comment %}
+  Always light: an <img> logo is not readable on the dark surface, so data-theme="hell" keeps
+  core.css from following the dark preference of the browser.
+{% endcomment %}
+{# Error pages render without context processors (templates/errors/http.html). #}
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE }}" data-theme="hell">
 <head>
-    {% block head %}
-        <meta charset="utf-8">
-        <title>{% block head_title %}LabCIRS {% trans "for" %} {{ ORGANIZATION|default:"LabCIRS" }}{% endblock %}</title>
-        <meta name="description" content="">
-        <meta name="author" content="Sebastian Major">
-
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <!-- Bootstrap -->
-        <link href="{{ STATIC_URL }}css/bootstrap.min.css" rel="stylesheet">
-        <link href="{{ STATIC_URL }}css/sticky-footer-navbar.css" rel="stylesheet">
-    {% endblock %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {# Title pattern "Page · Product": the concrete part first. #}
+  <title>{% block title %}{{ ORGANIZATION }}{% endblock %} · {{ SITE_NAME }}</title>
+  <link rel="stylesheet" href="{% static 'css/core.css' %}">
+  <link rel="stylesheet" href="{% static 'css/labcirs.css' %}">
+  {% if THEME_CSS_URL %}<link rel="stylesheet" href="{{ THEME_CSS_URL }}">{% endif %}
+  {# Behaviour scripts for all pages, never per template block; inert without their data attributes. #}
+  <script src="{% static 'js/formular.js' %}" defer></script>
 </head>
+<body class="ui-shell">
+  <a class="ui-skip" href="#inhalt">{% translate "Skip to content" %}</a>
 
-<body>
-	<nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
-		{% url 'labcirs_home' as home %}
-		{% url 'departments_list' as dept_list %}
-    	<a class="navbar-brand" href={{ dept_list }} >{{ ORGANIZATION|default:"LabCIRS" }}
-    		{% if department %}
-    			/ {{ department }}
-    		{% elif view.kwargs.dept %}
-    			/ {{ view.kwargs.dept }}
-    		{% endif %}
-    	</a>
-    	{% if user.is_authenticated == True %}
-    		{% block cirs_nav %}
-        	{% endblock %}
-        {% else %}
-            <ul class="navbar-nav nav-pills">
-            	{% url 'registration_register' as url %}
-            	<li class="nav-item">
-    				<a class="nav-link{% if request.path == url %} active text-light bg-dark
-                		{% endif %}" href="{{ url }}">{% trans "Register" %}</a>
-    			</li>
-        	</ul>
-		{% endif %}
-
-        <h5 class="mx-auto">
-        	<span class="nav-item badge badge-danger d-none d-lg-block">Anonymous Lab Critical Incident Reporting System</span>
-        	<span class="nav-item badge badge-danger d-block d-lg-none">Anonymous LabCIRS</span>
-        </h5>
-
-        {% if user.is_authenticated == True %}
-            <span class="navbar-text mr-sm-2 d-none d-md-block">{% trans "Welcome," %}<em>{{ user.first_name }} {{ user.last_name }} ({{ user.username }})</em></span>
+  <header class="ui-topbar">
+    <div class="ui-topbar__inner">
+      <a class="ui-logo" href="{% url 'labcirs_home' %}">
+        {% if LOGO_URL %}<img src="{{ LOGO_URL }}" alt="{{ ORGANIZATION }}">{% else %}{{ ORGANIZATION }}{% endif %}
+        {# Without a logo and with the default names the word mark would read "LabCIRS LabCIRS". #}
+        {% if LOGO_URL or SITE_NAME != ORGANIZATION %}<span class="ui-logo__produkt">{{ SITE_NAME }}</span>{% endif %}
+      </a>
+      <div class="ui-spacer"></div>
+      {% block nav %}
+      <nav class="ui-nav" aria-label="{% translate 'Main navigation' %}">
+        {# firstof ignores a missing view (login page); the routes need a department. #}
+        {% firstof department view.kwargs.dept as dept %}
+        {% if dept %}
+          {# Reviewers are sent away from reporting and the code search, so they do not see them. #}
+          {% if not user.is_authenticated %}
+            {% url 'create_incident' dept=dept as url %}
+            <a class="ui-nav__link" href="{{ url }}"{% if request.path == url %} aria-current="page"{% endif %}>{% translate "Report incident" %}</a>
+            {% url 'incident_search' dept=dept as url %}
+            <a class="ui-nav__link" href="{{ url }}"{% if request.path == url or request.path == incident.get_absolute_url %} aria-current="page"{% endif %}>{% translate "My report" %}</a>
+          {% endif %}
+          {% url 'incidents_for_department' dept=dept as url %}
+          <a class="ui-nav__link" href="{{ url }}"{% if request.path == url %} aria-current="page"{% endif %}>{% translate "Published cases" %}</a>
         {% endif %}
-
-        <form name="select_language" class="form-inline" action="{% url 'set_language' %}" method="post">
+        {% if user.is_staff %}
+          <a class="ui-nav__link" href="{% url 'admin:index' %}">{% translate "Admin" %}</a>
+        {% endif %}
+        {% if dept or user.is_staff %}<span class="ui-nav__sep" aria-hidden="true"></span>{% endif %}
+        {% if user.is_authenticated %}
+          {% firstof user.get_full_name user.get_username as display_name %}
+          <span class="ui-nav__user">
+            <span class="ui-avatar" aria-hidden="true">{{ display_name|first|upper }}</span>
+            <span>{{ display_name }}</span>
+          </span>
+          {# Logging out changes state, so it is a form, not a link. #}
+          <form class="ui-nav__form" method="post" action="{% url 'logout' %}" data-einmal-absenden>
             {% csrf_token %}
-            <input name="next" type="hidden" value="{{ redirect_to }}" />
-            <div class="form-group">
-                <select name="language" class="form-control" onchange="this.form.submit();">
-                    {% get_language_info_list for LANGUAGES as languages %}
-                    {% for language in languages %}
-                        <option value="{{ language.code }}"{% if language.code == LANGUAGE_CODE %} selected="selected"{% endif %}>
-                            {{ language.name_local }} ({{ language.code }})
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-        </form>
-
-        
-        <ul class="navbar-nav nav-pills">    
-            <li class="nav-item">
-            {% if user.is_authenticated == True %}
-            	<a class="nav-link" href="{% url 'logout' %}">{% trans "Log out" %}</a>
-            {% else %}
-            	<a class="nav-link" href="{% url 'login' %}">{% trans "Log in" %}</a>
-            {% endif %}
-            </li>
-        </ul>
-    </nav>
- 	<div class="container">
-    {% block content %}
-    {% endblock %}
+            <button type="submit" class="ui-nav__link">{% translate "Log out" %}</button>
+          </form>
+        {% else %}
+          {% url 'login' as url %}
+          <a class="ui-nav__link" href="{{ url }}"{% if request.path == url %} aria-current="page"{% endif %}>{% translate "Log in" %}</a>
+        {% endif %}
+        {% if SHOW_LANGUAGE_SWITCH %}
+          <span class="ui-nav__sep" aria-hidden="true"></span>
+          <form class="ui-nav__form" method="post" action="{% url 'set_language' %}" aria-label="{% translate 'Language' %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            {% get_language_info_list for LANGUAGES as languages %}
+            {% for language in languages %}
+              <button type="submit" name="language" value="{{ language.code }}" lang="{{ language.code }}" class="ui-nav__link"{% if language.code == LANGUAGE_CODE %} aria-current="true"{% endif %}>{{ language.name_local }}</button>
+            {% endfor %}
+          </form>
+        {% endif %}
+      </nav>
+      {% endblock %}
     </div>
+  </header>
 
-    <footer class="footer">
-        <div class="container">
-            <p class="text-muted">
-                LabCIRS v{{ APP_VERSION }} by <a target="_blank" rel="noopener noreferrer" href="https://github.com/major-s">{{ AUTHOR }}</a>
-            </p>
+  <main class="ui-main ui-main--{% block layout %}content{% endblock %}" id="inhalt">
+    {# Pages that show a message themselves (the code after reporting) empty this block. #}
+    {% block messages %}
+      {% for message in messages %}
+        <div class="ui-alert ui-alert--{% if message.level_tag == 'error' %}danger{% elif message.level_tag == 'debug' %}info{% else %}{{ message.level_tag }}{% endif %}" role="{% if message.level_tag == 'error' %}alert{% else %}status{% endif %}">
+          <div class="ui-alert__body">{{ message }}</div>
         </div>
-    </footer>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery-3.7.1.min.js"></script>
-    {% block javascript %}
+      {% endfor %}
     {% endblock %}
-    <script src="{{ STATIC_URL }}js/bootstrap.bundle.min.js"></script>
+    {% block content %}{% endblock %}
+  </main>
+
+  {% comment %}
+    Imprint and privacy on every page, also before logging in, if they are configured.
+    Links on the blue footer only inside ui-fuss__wege, elsewhere they would be blue on blue.
+  {% endcomment %}
+  <footer class="ui-fuss">
+    <div class="ui-fuss__inner">
+      <span class="ui-fuss__traeger">{{ ORGANIZATION }}
+        {% if APP_VERSION %}<span class="ui-fuss__version">{% blocktranslate with version=APP_VERSION %}Version {{ version }}{% endblocktranslate %}</span>{% endif %}
+      </span>
+      {% if IMPRINT_URL or PRIVACY_URL or SOURCE_URL %}
+      <nav class="ui-fuss__wege" aria-label="{% translate 'Legal' %}">
+        {% if IMPRINT_URL %}<a href="{{ IMPRINT_URL }}">{% translate "Imprint" %}</a>{% endif %}
+        {% if PRIVACY_URL %}<a href="{{ PRIVACY_URL }}">{% translate "Privacy" %}</a>{% endif %}
+        {# The AGPL asks for a way to the source code for users over the network. #}
+        {% if SOURCE_URL %}<a href="{{ SOURCE_URL }}">{{ SITE_NAME }} &middot; {% translate "based on LabCIRS (AGPL)" %}</a>{% endif %}
+      </nav>
+      {% endif %}
+    </div>
+  </footer>
 </body>
 </html>

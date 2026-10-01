@@ -1,0 +1,1166 @@
+/* Design-system stylesheet: tokens, layout, typography and components of the page frame.
+   Vendored into this repository; LabCIRS additions belong in labcirs.css. */
+/* =============================================================================
+   Designsystem: gemeinsamer Kern
+   =============================================================================
+
+   Neutrale Voreinstellung: ein ruhiges Blau, Serife fuer die Ueberschriften, Grotesk fuer
+   den Text; weisse Kopfzeile, flache, kaum gerundete Flaechen, helle graue Kacheln. Die
+   Farben sind Tokens (Abschnitt 1) und lassen sich ueberschreiben (docs/branding.md). Es
+   werden keine Schriften gebuendelt: Systemschriften derselben Gattung.
+
+   Die Marke traegt Text UND Flaeche: Das Blau erreicht auf Weiss 8,12 : 1 und traegt Weiss
+   darauf ebenso. Ein und dasselbe Token darf Flaeche UND Text sein.
+
+   FARBEN SIND GERECHNET, NICHT GESCHAETZT:
+     - Weiss auf Marke #00528c           = 8,12 (Text 4,5 / UI 3,0)
+     - Marke auf Weiss / bg / abgesenkt  = 8,12 / 7,38 / 7,11
+     - Sekundaertext #5f6b78 auf bg      = 4,94 (auf Weiss 5,44, auf abgesenkt 4,76)
+     - Interaktionsrahmen #8a939d        = 3,12 gegen Weiss (WCAG 1.4.11)
+     - Marke auf heller Markenflaeche    = 6,98 (Marken-Badge, aktive Kennzahl)
+     - Fokus auf dunklem Grund #8fc4ef   = 4,37 auf Marke, 6,02 auf Marke dunkel
+     - Info (Tuerkis) #0f6a73            = 6,31 auf Weiss, 5,48 auf eigener Flaeche
+   Jede weitere Farbaenderung bitte erneut nachrechnen.
+
+   Aufbau: 1 Tokens - 2 Reset/Basis - 3 Layout - 4 Typografie - 5 Komponenten - 6 Zustaende
+   ============================================================================= */
+
+/* ---------- 1 TOKENS ------------------------------------------------------ */
+:root {
+  /* Marke: ein neutrales Blau; hier aendert sich das Erscheinungsbild (docs/branding.md) */
+  --ui-marke: #00528c;           /* Flaeche UND Text: 8,12 auf Weiss, Weiss darauf 8,12 */
+  --ui-marke-dunkel: #003d6b;    /* Hover der Hauptaktion, Sitzleiste der Verwaltung */
+  --ui-marke-hell: #e6eff6;      /* zarte Markenflaeche: Auswahl, Marken-Badge, Initialen */
+  --ui-marke-rand: #b7cfe3;      /* Rahmen auf der hellen Markenflaeche */
+  --ui-marke-akzent: #8fc4ef;    /* die Marke auf DUNKLEM Grund: Fuss, Sitzleiste, Bildbetrachter */
+  --ui-ink: #1b2430;             /* Haupttext, dunkle Flaechen */
+  --ui-ink-soft: #2b3a4a;
+
+  /* Text */
+  --ui-text: var(--ui-ink);
+  --ui-text-muted: #556270;      /* 6,24 auf Weiss */
+  --ui-text-secondary: #5f6b78;  /* 5,44 Weiss / 4,94 bg / 4,76 abgesenkt */
+  --ui-text-on-marke: #ffffff;   /* Schrift auf der Markenflaeche (Hauptaktion, Fuss) */
+  --ui-text-on-dark: #ffffff;
+  --ui-text-on-dark-soft: #cfe0ee; /* 6,01 auf Marke: Nebenzeilen im Fuss */
+
+  /* Flaechen: Weiss auf hellem Grau */
+  --ui-bg: #f3f4f6;
+  --ui-surface: #ffffff;
+  --ui-surface-sunken: #eef0f2;
+  --ui-surface-hover: #f4f8fb;
+
+  /* Rahmen: dekorativ vs. interaktiv bewusst getrennt (1.4.11 gilt nur fuer interaktiv) */
+  --ui-border: #dfe3e8;          /* Trennlinien, Karten */
+  --ui-border-strong: #c8cfd6;
+  --ui-border-interactive: #8a939d; /* Formularfelder, 3,12 */
+
+  /* Semantik. Info ist ein Tuerkis (abgedunkelt bis 6,31 auf Weiss), deutlich von der Marke
+     unterscheidbar, damit „wartet auf jemand anderen" nie wie „hier klicken" aussieht. */
+  --ui-danger: #b3261e;       --ui-danger-bg: #fbeceb;   --ui-danger-border: #e7a9a5;
+  --ui-success: #1b5e20;      --ui-success-bg: #e9f5ea;  --ui-success-border: #a3cba7;
+  --ui-warning: #83681e;      --ui-warning-bg: #f6ecd4;  --ui-warning-border: #ddc48a;
+  --ui-info: #0f6a73;         --ui-info-bg: #e3f2f3;     --ui-info-border: #9fd3d8;
+  /* Sechs Toene und keiner mehr: neutral, info, warning, success, danger, Marke. Feinere
+     Unterschiede (etwa „signiert" und „freigegeben") traegt das Wort, nicht eine siebte Farbe. */
+  /* Der Problem-Zaehler auf der dunklen Seitenleiste: die Fehlerfarbe, aufgehellt wie die
+     Marke (`--ui-marke-akzent`), mit dunkler Schrift: Tinte darauf 9,3 : 1. */
+  --ui-danger-akzent: #f2c4bf;
+
+  /* Fokus: muss auf heller UND dunkler Flaeche sichtbar sein */
+  --ui-focus: var(--ui-marke);
+  --ui-focus-on-dark: var(--ui-marke-akzent);
+  --ui-focus-ring: 0 0 0 3px rgba(0, 82, 140, .28);
+
+  /* Typografie: Serife fuer Titel, Grotesk fuer alles Uebrige.
+     Georgia liegt auf jedem Windows-Arbeitsplatz und auf Apple-Geraeten; die
+     Rueckfaelle sind die Serifen der Linux-Desktops. */
+  --ui-font: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ui-font-titel: Georgia, Cambria, "Noto Serif", "DejaVu Serif", "Times New Roman", serif;
+  --ui-font-mono: "Cascadia Mono", Consolas, "SF Mono", "Liberation Mono", monospace;
+  /* Eine Stufe groesser als ueblich, damit die Schrift die Augen nicht anstrengt: 13/14/16
+     statt 12/13/15 px. Nebenzeilen und Marken (xs) bleiben damit ueber 12 px. */
+  --ui-fs-xs: .8125rem; --ui-fs-sm: .875rem;   --ui-fs-base: 1rem;
+  --ui-fs-md: 1.0625rem; --ui-fs-lg: 1.1875rem; --ui-fs-xl: 1.4375rem;
+  --ui-fs-2xl: 1.8125rem;
+  --ui-lh-tight: 1.25;  --ui-lh: 1.5;          --ui-lh-relaxed: 1.65;
+
+  /* Raster: 4px-Basis */
+  --ui-s1: .25rem; --ui-s2: .5rem;  --ui-s3: .75rem; --ui-s4: 1rem;
+  --ui-s5: 1.25rem; --ui-s6: 1.5rem; --ui-s8: 2rem;  --ui-s10: 2.5rem; --ui-s12: 3rem;
+
+  /* Radien: flach, nicht 6/10/16 */
+  --ui-radius-sm: 3px; --ui-radius: 4px; --ui-radius-lg: 8px; --ui-radius-pill: 999px;
+
+  /* Schatten: zurueckhaltend; die Flaechen trennt der Rahmen, nicht der Schatten */
+  --ui-shadow-sm: 0 1px 2px rgba(27, 36, 48, .06);
+  --ui-shadow: 0 4px 12px rgba(27, 36, 48, .09);
+  --ui-shadow-lg: 0 12px 32px rgba(27, 36, 48, .16);
+  /* Kante einer seitwaerts scrollenden Tabelle, siehe .ui-tablewrap. */
+  --ui-kantenschatten: rgba(27, 36, 48, .16);
+
+  /* Z-Ebenen: zentral, damit Sticky/Dialog/Toast sich nicht gegenseitig verdecken */
+  --ui-z-sticky: 10; --ui-z-header: 20; --ui-z-dropdown: 30;
+  --ui-z-dialog: 40; --ui-z-toast: 50;
+
+  /* Layoutbreiten: KEIN globaler Einheitscontainer mehr */
+  --ui-w-auth: 30rem;      /* 480px  Login/TOTP/Setup */
+  --ui-w-form: 52rem;      /* 832px  Formularseiten */
+  --ui-w-content: 72rem;   /* 1152px Leseseiten */
+  --ui-w-wide: 96rem;      /* 1536px Arbeitslisten/Admin */
+  --ui-w-editor: 85rem;    /* 1360px Dreispaltiger Editor */
+  --ui-w-prose: 68ch;      /* Fliesstext bleibt lesbar */
+
+  /* Der Kopf der Arbeitsflaeche klebt; alles, was darunter kleben soll (etwa der Kopf einer
+     Detailseite), rechnet mit DIESER Hoehe statt mit einer eigenen Zahl. */
+  --ui-topbar-h: 3.5rem;
+  /* Die Seitenleiste: ausgeklappt mit Wort und Zaehler, eingeklappt nur die Symbole. Unter
+     der Tabletbreite gibt es sie nicht; dort traegt die untere Leiste die Hauptwege. */
+  --ui-seite-w: 15.5rem;
+  --ui-seite-w-schmal: 4.25rem;
+
+  /* Bedienelemente: WCAG 2.2 Target Size (Minimum) 24x24 */
+  --ui-target-min: 24px;
+  --ui-control-h: 2.5rem;
+  --ui-control-h-sm: 2rem;
+
+  /* Motion */
+  --ui-motion-fast: 120ms; --ui-motion: 200ms; --ui-motion-slow: 320ms;
+  --ui-ease: cubic-bezier(.2, .7, .3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --ui-motion-fast: 1ms; --ui-motion: 1ms; --ui-motion-slow: 1ms; }
+  *, *::before, *::after {
+    animation-duration: 1ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important; scroll-behavior: auto !important;
+  }
+}
+
+/* Forced Colors / Windows-Kontrastmodus: eigene Farben zuruecknehmen, Struktur behalten.
+   Viele Arbeitsplaetze nutzen das real; ohne diesen Block verschwinden Rahmen und
+   Statusflaechen komplett. */
+@media (forced-colors: active) {
+  :root { --ui-shadow-sm: none; --ui-shadow: none; --ui-shadow-lg: none; }
+  /* Der Kantenschatten waere hier ein Farbfleck ohne Bedeutung; die Tabelle
+     scrollt weiterhin, nur ohne den Verlauf. */
+  .ui-tablewrap { background: var(--ui-surface); }
+  .ui-btn, .ui-card, .ui-field, .ui-badge, .ui-alert, .ui-dialog { border: 1px solid; }
+  .ui-badge::before { forced-color-adjust: none; }
+  :focus-visible { outline: 3px solid Highlight !important; outline-offset: 2px; }
+}
+
+
+/* --- Dunkelmodus --------------------------------------------------------------------
+   Dieselben Tokens, andere Werte, kein zweites Stylesheet. Gilt, wenn das System dunkel
+   will (`prefers-color-scheme`) und nichts anderes gewaehlt ist, oder wenn
+   `data-theme="dunkel"` am Wurzelelement steht; `data-theme="hell"` haelt die Seite hell.
+   Die Werte sind nicht die Umkehrung der hellen: dunkle, entsaettigte Flaechen, aufgehellte
+   Marke und Semantikfarben, jede Paarung ueber 4,5 : 1. */
+:root[data-theme="dunkel"] {
+  color-scheme: dark;
+  /* Marke auf DUNKLEM Grund: das aufgehellte Blau als Text UND als Flaeche der Hauptaktion
+     (dann mit dunkler Schrift). 7,4 : 1 auf der Karte, Tinte darauf 8,6 : 1. */
+  --ui-marke: #6db3f0;
+  --ui-marke-dunkel: #0b2233;
+  --ui-marke-hell: #17324a;
+  --ui-marke-rand: #2f5a80;
+  --ui-marke-akzent: #8fc4ef;
+  --ui-ink: #e6edf3;
+  --ui-ink-soft: #cbd5df;
+  --ui-text-muted: #9fb0c0;
+  --ui-text-secondary: #aab8c6;
+  --ui-text-on-marke: #0f1720;
+  --ui-bg: #0f1720;
+  --ui-surface: #16212c;
+  --ui-surface-sunken: #1c2834;
+  --ui-surface-hover: #1e2c3a;
+  --ui-border: #2a3947;
+  --ui-border-strong: #3a4c5e;
+  --ui-border-interactive: #7a8fa3;
+  --ui-danger: #f4a9a3;   --ui-danger-bg: #3a1f1e;   --ui-danger-border: #6e3330;
+  --ui-success: #9bd8a0;  --ui-success-bg: #17301b;  --ui-success-border: #2e5a33;
+  --ui-warning: #e6c66a;  --ui-warning-bg: #35300f;  --ui-warning-border: #6b5a1f;
+  --ui-info: #8fd3da;     --ui-info-bg: #123137;     --ui-info-border: #1f5a62;
+  --ui-danger-akzent: #f2c4bf;
+  --ui-focus: var(--ui-marke-akzent);
+  --ui-shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
+  --ui-shadow: 0 2px 8px rgba(0, 0, 0, .5);
+  --ui-shadow-lg: 0 8px 24px rgba(0, 0, 0, .6);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="hell"]) {
+  color-scheme: dark;
+    /* Marke auf DUNKLEM Grund: das aufgehellte Blau als Text UND als Flaeche der Hauptaktion
+       (dann mit dunkler Schrift). 7,4 : 1 auf der Karte, Tinte darauf 8,6 : 1. */
+    --ui-marke: #6db3f0;
+    --ui-marke-dunkel: #0b2233;
+    --ui-marke-hell: #17324a;
+    --ui-marke-rand: #2f5a80;
+    --ui-marke-akzent: #8fc4ef;
+    --ui-ink: #e6edf3;
+    --ui-ink-soft: #cbd5df;
+    --ui-text-muted: #9fb0c0;
+    --ui-text-secondary: #aab8c6;
+    --ui-text-on-marke: #0f1720;
+    --ui-bg: #0f1720;
+    --ui-surface: #16212c;
+    --ui-surface-sunken: #1c2834;
+    --ui-surface-hover: #1e2c3a;
+    --ui-border: #2a3947;
+    --ui-border-strong: #3a4c5e;
+    --ui-border-interactive: #7a8fa3;
+    --ui-danger: #f4a9a3;   --ui-danger-bg: #3a1f1e;   --ui-danger-border: #6e3330;
+    --ui-success: #9bd8a0;  --ui-success-bg: #17301b;  --ui-success-border: #2e5a33;
+    --ui-warning: #e6c66a;  --ui-warning-bg: #35300f;  --ui-warning-border: #6b5a1f;
+    --ui-info: #8fd3da;     --ui-info-bg: #123137;     --ui-info-border: #1f5a62;
+    --ui-danger-akzent: #f2c4bf;
+    --ui-focus: var(--ui-marke-akzent);
+    --ui-shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
+    --ui-shadow: 0 2px 8px rgba(0, 0, 0, .5);
+    --ui-shadow-lg: 0 8px 24px rgba(0, 0, 0, .6);
+  }
+}
+:root[data-theme="dunkel"] .ui-btn--primary:hover { background: var(--ui-marke-akzent); border-color: var(--ui-marke-akzent); color: var(--ui-text-on-marke); }
+:root[data-theme="dunkel"] .ui-btn--danger { color: var(--ui-text-on-marke); }
+:root[data-theme="dunkel"] .ui-fuss { background: var(--ui-surface-sunken); color: var(--ui-text-secondary); border-top: 1px solid var(--ui-border); }
+:root[data-theme="dunkel"] .ui-fuss__wege > a, :root[data-theme="dunkel"] .ui-fuss__wege > a:hover { color: var(--ui-text); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="hell"]) .ui-btn--primary:hover { background: var(--ui-marke-akzent); border-color: var(--ui-marke-akzent); color: var(--ui-text-on-marke); }
+  :root:not([data-theme="hell"]) .ui-btn--danger { color: var(--ui-text-on-marke); }
+  :root:not([data-theme="hell"]) .ui-fuss { background: var(--ui-surface-sunken); color: var(--ui-text-secondary); border-top: 1px solid var(--ui-border); }
+  :root:not([data-theme="hell"]) .ui-fuss__wege > a, :root:not([data-theme="hell"]) .ui-fuss__wege > a:hover { color: var(--ui-text); }
+}
+
+/* ---------- 2 RESET / BASIS ---------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+/* Die Wurzel bleibt auf allen Breiten bei 16 px: mehr passt auf den Schirm. Die
+   Schrifttokens bleiben eine Stufe ueber dem ueblichen Stand. */
+body {
+  margin: 0;
+  font-family: var(--ui-font);
+  font-size: var(--ui-fs-base);
+  line-height: var(--ui-lh);
+  color: var(--ui-text);
+  background: var(--ui-bg);
+  -webkit-font-smoothing: antialiased;
+}
+img, video { max-width: 100%; height: auto; }
+
+/* Symbole sind Strichzeichnungen: nur `<path d="…">` ohne eigene fill-/stroke-Attribute.
+   Ohne diese Grundregel greift der SVG-Standardwert `fill: black`, und ein Symbol ohne
+   Groessenangabe skaliert auf die volle Containerbreite (ein schwarzer Block ueber den
+   halben Bildschirm im Leerzustand einer Liste).
+   `currentColor` laesst das Symbol der Textfarbe folgen, auch im Forced-Colors-Modus. */
+svg {
+  max-width: 100%;
+  fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+/* Eine ausdrueckliche Groesse (Attribut oder Klasse) gewinnt; ohne sie folgt das Symbol der
+   Schriftgroesse statt dem Container. */
+svg:not([width]):not([height]) { width: 1.15em; height: 1.15em; }
+:focus-visible {
+  outline: 3px solid var(--ui-focus);
+  outline-offset: 2px;
+  border-radius: var(--ui-radius-sm);
+}
+/* Fokus darf nie hinter einem Sticky-Element verschwinden. */
+:target, [id] { scroll-margin-top: 5rem; }
+
+a { color: var(--ui-marke); text-decoration-thickness: 1px; text-underline-offset: .15em; }
+a:hover { color: var(--ui-marke-dunkel); }
+a.ui-plain { color: inherit; text-decoration: none; }
+a.ui-plain:hover { text-decoration: underline; }
+
+hr { border: 0; border-top: 1px solid var(--ui-border); margin: var(--ui-s6) 0; }
+/* Eine Kennung ohne Leerzeichen (zum Beispiel ein Name aus einer Umgebungsvariable) ist ein
+   einziges langes Wort und schiebt bei 320 px die ganze Seite nach rechts (die Seite selbst
+   scrollt nie waagrecht). `anywhere` statt `break-word`, weil nur `anywhere` auch die
+   Mindestbreite des Kastens mitzieht. */
+code, .ui-mono { font-family: var(--ui-font-mono); font-size: .9em; overflow-wrap: anywhere; }
+
+/* Skip-Link: sichtbar, sobald er Fokus bekommt */
+.ui-skip {
+  position: absolute; left: var(--ui-s4); top: -4rem; z-index: var(--ui-z-toast);
+  background: var(--ui-surface); color: var(--ui-ink);
+  padding: var(--ui-s2) var(--ui-s4); border-radius: var(--ui-radius-sm);
+  box-shadow: var(--ui-shadow); font-weight: 600; text-decoration: none;
+  transition: top var(--ui-motion-fast) var(--ui-ease);
+}
+.ui-skip:focus { top: var(--ui-s4); }
+
+.ui-visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* ---------- 3 LAYOUT ------------------------------------------------------ */
+.ui-shell { min-height: 100vh; display: flex; flex-direction: column; }
+/* `overflow-wrap: break-word` fuer den ganzen Inhaltsbereich: Die Anwendung zeigt an vielen
+   Stellen Kennungen ohne Leerzeichen: Meldecodes, Umgebungsvariablen, UUIDs.
+   Ein solches Wort ist ein einziger unteilbarer Block und schob bei 320 px die SEITE nach
+   rechts (waagrecht scrollt hoechstens ein Container, nie die Seite).
+   `break-word` und nicht `anywhere`: Es greift erst, wenn ein Wort sonst ueberliefe, und
+   laesst die Mindestbreiten von Tabellen und Rastern unveraendert. */
+.ui-main {
+  flex: 1; width: 100%; margin: 0 auto;
+  padding: var(--ui-s8) var(--ui-s5) var(--ui-s12);
+  overflow-wrap: break-word;
+}
+.ui-main--auth    { max-width: var(--ui-w-auth); }
+.ui-main--form    { max-width: var(--ui-w-form); }
+.ui-main--content { max-width: var(--ui-w-content); }
+.ui-main--wide    { max-width: var(--ui-w-wide); }
+.ui-main--editor  { max-width: var(--ui-w-editor); }
+/* Die ganze Arbeitsflaeche: zwei Spalten nebeneinander bis zum Rand. */
+.ui-main--voll    { max-width: none; }
+.ui-prose { max-width: var(--ui-w-prose); }
+
+.ui-stack > * + * { margin-top: var(--ui-s4); }
+.ui-stack-sm > * + * { margin-top: var(--ui-s2); }
+.ui-stack-lg > * + * { margin-top: var(--ui-s6); }
+.ui-row { display: flex; gap: var(--ui-s3); flex-wrap: wrap; align-items: center; }
+.ui-row--between { justify-content: space-between; }
+.ui-row--end { justify-content: flex-end; }
+.ui-spacer { flex: 1 1 auto; }
+.ui-grid { display: grid; gap: var(--ui-s4); }
+.ui-grid--2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); }
+.ui-grid--3 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
+
+/* ---------- 4 TYPOGRAFIE --------------------------------------------------
+   Ueberschriften in der Serife und in der Markenfarbe. Zahlen bleiben in der Grotesk: Die
+   Ziffern der Serife sind Mediaevalziffern und stehen in einer Zaehlkachel schief. */
+/* Feiner fuers Auge: Titel in der Serife REGULAER, nicht fett, damit sie leicht wirken;
+   Zwischentitel und Auszeichnungen in 600 (Segoe UI Semibold), 700 gibt es im System nicht. */
+h1, h2, h3, h4 { margin: 0; line-height: var(--ui-lh-tight); text-wrap: balance; font-weight: 600; }
+h1, h2 { font-family: var(--ui-font-titel); color: var(--ui-marke); letter-spacing: 0; font-weight: 400; }
+h1 { font-size: var(--ui-fs-2xl); }
+h2 { font-size: 1.25rem; margin-top: var(--ui-s8); }
+h3 { font-size: var(--ui-fs-md); margin-top: var(--ui-s5); }
+p { margin: 0 0 var(--ui-s3); }
+.ui-lede { color: var(--ui-text-muted); font-size: var(--ui-fs-md); }
+.ui-muted { color: var(--ui-text-muted); }
+.ui-secondary { color: var(--ui-text-secondary); font-size: var(--ui-fs-sm); }
+.ui-num { font-variant-numeric: tabular-nums; }
+.ui-label-xs {
+  font-size: var(--ui-fs-xs); font-weight: 600; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--ui-text-muted);
+}
+
+/* ---------- 5 KOMPONENTEN ------------------------------------------------- */
+
+/* --- Der Arbeitsplatz: Seitenleiste links, Kopf und Inhalt rechts ----------------------
+   Eine Kopfleiste mit allen Hauptwegen brach bei Standardbreite um. Die Seitenleiste traegt
+   Symbol, Wort UND Zaehler je Weg, laesst sich einklappen und bleibt beim Blaettern stehen.
+   Unter 48rem verschwindet sie: Dort gilt die untere Leiste, nie beides. */
+.ui-arbeitsplatz {
+  display: grid; grid-template-columns: var(--ui-seite-w) minmax(0, 1fr);
+  flex: 1; min-height: 100vh;
+  transition: grid-template-columns var(--ui-motion) var(--ui-ease);
+}
+.ui-arbeitsplatz[data-schmal="true"] { grid-template-columns: var(--ui-seite-w-schmal) minmax(0, 1fr); }
+/* Ohne Sitzung gibt es keine Wege: Rechtsseiten, Fehlerseiten, alles vor der Anmeldung. */
+.ui-arbeitsplatz--ohne-seite, .ui-arbeitsplatz--ohne-seite[data-schmal="true"] { grid-template-columns: minmax(0, 1fr); }
+.ui-haupt { min-width: 0; display: flex; flex-direction: column; min-height: 100vh; }
+
+/* --- Seitenleiste: die dunkle Fassung der Marke ---------------------------------------- */
+.ui-seite {
+  background: var(--ui-marke-dunkel); color: var(--ui-text-on-dark-soft);
+  position: sticky; top: 0; height: 100vh; overflow: hidden auto;
+  display: flex; flex-direction: column;
+}
+.ui-seite :focus-visible { outline-color: var(--ui-focus-on-dark); }
+.ui-seite__kopf { padding: var(--ui-s4) var(--ui-s4) var(--ui-s3); border-bottom: 1px solid rgba(255, 255, 255, .14); min-height: 4.5rem; display: flex; align-items: center; }
+.ui-seite__gruppe { padding: var(--ui-s3) var(--ui-s2) 0; display: grid; gap: 2px; }
+.ui-seite__titel {
+  font-size: var(--ui-fs-xs); font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ui-marke-akzent); padding: 0 var(--ui-s3) var(--ui-s1);
+}
+/* Ein Weg: Symbol, Wort, Zaehler. Die aktuelle Seite traegt aria-current: heller Grund UND
+   Kante, damit die Aussage nicht an der Farbe allein haengt. */
+.ui-seite__weg {
+  display: flex; align-items: center; gap: var(--ui-s3);
+  padding: var(--ui-s2) var(--ui-s3); border-radius: var(--ui-radius);
+  color: var(--ui-text-on-dark-soft); text-decoration: none; font-weight: 600;
+  font-size: var(--ui-fs-base); min-height: var(--ui-control-h); position: relative;
+  border: 0; background: transparent; font-family: inherit; width: 100%; text-align: left; cursor: pointer;
+}
+.ui-seite__weg:hover { background: rgba(255, 255, 255, .08); color: var(--ui-text-on-dark); text-decoration: none; }
+.ui-seite__weg[aria-current="page"] { background: rgba(255, 255, 255, .14); color: var(--ui-text-on-dark); box-shadow: inset 3px 0 0 var(--ui-marke-akzent); }
+.ui-seite__weg > svg { width: 1.25rem; height: 1.25rem; flex: 0 0 auto; }
+.ui-seite__wort { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Der Zaehler nennt, wie viel dort wartet (nur, wenn etwas wartet). Ein Zaehler mit 0 waere
+   Rauschen. Vorgelesen wird er als ganzer Satz (`ui-visually-hidden` daneben). */
+.ui-seite__zaehler {
+  flex: 0 0 auto; background: var(--ui-marke-akzent); color: var(--ui-ink);
+  font-size: var(--ui-fs-xs); font-weight: 600; border-radius: var(--ui-radius-pill);
+  padding: 0 .45rem; min-width: 1.4rem; line-height: 1.4rem; text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.ui-seite__zaehler--problem { background: var(--ui-danger-akzent); }
+.ui-seite__fuss { margin-top: auto; padding: var(--ui-s3) var(--ui-s2) var(--ui-s4); border-top: 1px solid rgba(255, 255, 255, .14); display: grid; gap: var(--ui-s2); }
+.ui-konto {
+  display: flex; align-items: center; gap: var(--ui-s3); padding: var(--ui-s2) var(--ui-s3);
+  border-radius: var(--ui-radius); color: var(--ui-text-on-dark); text-decoration: none; min-width: 0;
+}
+.ui-konto:hover { background: rgba(255, 255, 255, .08); color: var(--ui-text-on-dark); text-decoration: none; }
+.ui-konto[aria-current] { background: rgba(255, 255, 255, .14); }
+.ui-konto__text { min-width: 0; display: grid; }
+.ui-konto__name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ui-konto__sub { font-size: var(--ui-fs-xs); color: var(--ui-text-on-dark-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Abmelden aendert Zustand: ein Formular, kein Link; es sieht aus wie ein Weg. */
+.ui-seite__abmelden { margin: 0; }
+.ui-seite__abmelden > .ui-seite__weg { color: var(--ui-text-on-dark-soft); }
+
+/* Eingeklappt: nur Symbole, alles Uebrige bleibt im Baum (Screenreader lesen weiter). */
+.ui-arbeitsplatz[data-schmal="true"] .ui-seite__wort,
+.ui-arbeitsplatz[data-schmal="true"] .ui-seite__titel,
+.ui-arbeitsplatz[data-schmal="true"] .ui-konto__text,
+.ui-arbeitsplatz[data-schmal="true"] .ui-seite__kopf .ui-logo > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ui-arbeitsplatz[data-schmal="true"] .ui-seite__weg { justify-content: center; padding: var(--ui-s2) 0; }
+.ui-arbeitsplatz[data-schmal="true"] .ui-seite__zaehler {
+  position: absolute; top: .15rem; right: .3rem; margin: 0;
+  font-size: var(--ui-fs-xs); line-height: 1.2rem; min-width: 1.2rem; padding: 0 .3rem;
+}
+.ui-arbeitsplatz[data-schmal="true"] .ui-konto { justify-content: center; padding: var(--ui-s2) 0; }
+.ui-arbeitsplatz[data-schmal="true"] .ui-seite__kopf { padding: var(--ui-s4) 0; justify-content: center; }
+.ui-arbeitsplatz[data-schmal="true"] .ui-seite__kopf .ui-logo { gap: 0; }
+
+/* --- Der Kopf der Arbeitsflaeche: wo bin ich, wonach suche ich, fuer wen arbeite ich --- */
+.ui-kopf {
+  background: var(--ui-surface); color: var(--ui-text);
+  position: sticky; top: 0; z-index: var(--ui-z-header);
+  box-shadow: 0 1px 0 var(--ui-border), var(--ui-shadow-sm);
+  display: flex; align-items: center; gap: var(--ui-s3);
+  padding: 0 var(--ui-s5); min-height: var(--ui-topbar-h);
+}
+/* Erscheint erst mit JavaScript (formular.js-Muster): Ohne Skript gibt es nichts zu klappen,
+   und ein toter Knopf ist schlechter als keiner. */
+.ui-kopf__klapp {
+  flex: 0 0 auto; width: 2.25rem; height: 2.25rem; display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid var(--ui-border-strong); border-radius: var(--ui-radius-sm);
+  color: var(--ui-text-muted); cursor: pointer;
+}
+.ui-kopf__klapp:hover { color: var(--ui-marke); border-color: var(--ui-marke); }
+/* Brotkrumen: die Gruppe, dann die Seite. Nur die Seite ist fett; ein Pfad mit einem
+   Glied ist einfach der Seitenname (Brotkrumen erst ab drei Ebenen). */
+.ui-brotkrumen { display: flex; align-items: center; gap: var(--ui-s2); font-size: var(--ui-fs-sm); color: var(--ui-text-muted); min-width: 0; }
+.ui-brotkrumen > a { color: var(--ui-text-muted); text-decoration: none; white-space: nowrap; }
+.ui-brotkrumen > a:hover { color: var(--ui-marke); text-decoration: underline; }
+.ui-brotkrumen > b { color: var(--ui-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ui-brotkrumen__trenner { color: var(--ui-border-strong); }
+/* Die Suche im Kopf: ein Feld, das per POST an die Suche geht, weil ein Suchbegriff
+   in keiner Adresszeile stehen soll. Mit Skript springt Strg+K hinein. */
+.ui-kopf__suche { margin-left: auto; flex: 0 1 26rem; min-width: 0; display: flex; align-items: center; gap: var(--ui-s2); }
+.ui-kopf__suche > label { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; }
+.ui-kopf__suche > label > svg { position: absolute; left: .7rem; color: var(--ui-text-secondary); pointer-events: none; }
+.ui-kopf__suche input[type="search"] { min-height: 2.5rem; padding-left: 2.2rem; background: var(--ui-surface-sunken); border-color: var(--ui-border); }
+.ui-kopf__suche input[type="search"]:hover { border-color: var(--ui-border-interactive); background: var(--ui-surface); }
+.ui-kopf__suche input[type="search"]:focus { background: var(--ui-surface); }
+.ui-kopf__taste {
+  position: absolute; right: .5rem; font: 600 var(--ui-fs-xs)/1.4 var(--ui-font-mono); color: var(--ui-text-muted);
+  background: var(--ui-surface); border: 1px solid var(--ui-border-strong); border-radius: 3px; padding: 0 .35rem; pointer-events: none;
+}
+/* --- Die Suchpalette: haengt unter dem Suchfeld ------------------------------------------
+   Ein Feld, zwei Wege: Mit Skript schlaegt es beim Tippen vor,
+   Enter ohne Auswahl bleibt das Formular. Das Feld ist die Combobox (role, aria-expanded),
+   die Palette das Listenfeld; ein Eintrag ist ein gewoehnlicher Verweis: Tastatur und Maus
+   oeffnen dasselbe Ziel. Position: absolut unter dem Formular, das dafuer `relative` ist. */
+.ui-kopf__suche { position: relative; }
+.ui-palette {
+  position: absolute; top: calc(100% + .35rem); right: 0; width: min(38rem, calc(100vw - 2rem)); max-height: min(70vh, 32rem);
+  overflow: auto; z-index: var(--ui-z-dropdown);
+  background: var(--ui-surface); color: var(--ui-text); border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-lg); box-shadow: var(--ui-shadow-lg); padding: var(--ui-s2) 0 0; text-align: left;
+}
+.ui-palette__gruppe { padding: var(--ui-s1) var(--ui-s2); }
+.ui-palette__gruppe + .ui-palette__gruppe { border-top: 1px solid var(--ui-border); }
+.ui-palette__titel {
+  font-size: var(--ui-fs-xs); font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ui-text-muted); padding: var(--ui-s1) var(--ui-s3);
+}
+.ui-palette__liste { list-style: none; margin: 0; padding: 0; }
+.ui-palette__eintrag > a {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 var(--ui-s3);
+  padding: var(--ui-s2) var(--ui-s3); border-radius: var(--ui-radius-sm);
+  color: var(--ui-text); text-decoration: none; min-height: 2.25rem;
+}
+.ui-palette__eintrag > a > b { font-weight: 600; }
+.ui-palette__eintrag > a > span { font-size: var(--ui-fs-sm); color: var(--ui-text-secondary); }
+.ui-palette__eintrag > a:hover { background: var(--ui-surface-hover); text-decoration: none; }
+/* Der Tastaturzeiger: dieselbe Farbe wie der gewaehlte Weg in der Seitenleiste. Ein
+   Zustand, ein Aussehen. Der Fokus bleibt im Feld (aria-activedescendant). */
+.ui-palette__eintrag[aria-selected="true"] > a { background: var(--ui-marke); color: var(--ui-text-on-dark); }
+.ui-palette__eintrag[aria-selected="true"] > a > span { color: var(--ui-text-on-dark-soft); }
+.ui-palette__leer, .ui-palette__stoerung { margin: 0; padding: var(--ui-s3) var(--ui-s4); font-size: var(--ui-fs-sm); color: var(--ui-text-secondary); }
+.ui-palette__stoerung { color: var(--ui-warning); }
+.ui-palette__fuss {
+  position: sticky; bottom: 0; display: flex; gap: var(--ui-s4); padding: var(--ui-s2) var(--ui-s4);
+  background: var(--ui-surface-sunken); border-top: 1px solid var(--ui-border);
+  font-size: var(--ui-fs-xs); color: var(--ui-text-secondary); margin-top: var(--ui-s2);
+}
+.ui-palette__fuss kbd {
+  font: 600 var(--ui-fs-xs)/1.4 var(--ui-font-mono); background: var(--ui-surface);
+  border: 1px solid var(--ui-border-strong); border-radius: 3px; padding: 0 .3rem;
+}
+
+/* Der Kontext als Chip: fuer wen oder was gearbeitet wird, ist die Angabe, bei der ein
+   Irrtum am teuersten ist. Sichtbar auf jeder Seite. */
+.ui-kontext {
+  display: inline-flex; align-items: center; gap: var(--ui-s2); flex: 0 0 auto;
+  background: var(--ui-marke-hell); border: 1px solid var(--ui-marke-rand); color: var(--ui-marke);
+  border-radius: var(--ui-radius-pill); padding: .15rem var(--ui-s3) .15rem .2rem;
+  font-size: var(--ui-fs-sm); font-weight: 600; white-space: nowrap; text-decoration: none; min-height: 2rem;
+}
+.ui-kontext:hover { border-color: var(--ui-marke); color: var(--ui-marke-dunkel); text-decoration: none; }
+.ui-kontext > .ui-avatar { width: 1.5rem; height: 1.5rem; font-size: var(--ui-fs-xs); }
+/* Das Logo im Kopf gibt es nur am Telefon; am Schreibtisch traegt es die Seitenleiste
+   (Ausnahme im Responsive-Block). Der Selektor wiegt 0,2,0, weil `.ui-logo` (0,1,0,
+   `display: inline-flex`) weiter unten steht und eine einfache Klasse hier verlor: Das
+   Logo stand sonst zweimal in jeder Seite, links und im Kopf. */
+.ui-kopf > .ui-kopf__logo { display: none; }
+
+/* --- Kopfleiste OHNE Seitenleiste: Anmeldung und alles vor der Anmeldung ----------------
+   Wer hier ist, hat keine Wege, nur das Logo. */
+.ui-topbar {
+  background: var(--ui-surface); color: var(--ui-text);
+  position: sticky; top: 0; z-index: var(--ui-z-header);
+  box-shadow: 0 1px 0 var(--ui-border), var(--ui-shadow-sm);
+}
+.ui-topbar__inner {
+  max-width: var(--ui-w-wide); margin: 0 auto;
+  display: flex; align-items: center; gap: var(--ui-s4);
+  padding: 0 var(--ui-s5); min-height: var(--ui-topbar-h); flex-wrap: wrap;
+}
+
+/* --- Das Logo -----------------------------------------------------------------------
+   Ein Vektorlogo als Bild in `currentColor`: Es faerbt sich mit dem Text, auch
+   im Kontrastmodus. Zwei Fassungen im Markup: `__bild` ist das ganze Logo,
+   `__marke` nur das Symbol. Gezeigt wird je Lage eine: das ganze Logo, wo Platz ist;
+   das Symbol in der eingeklappten Seitenleiste und im Kopf am Telefon. Der Produktname
+   steht abgesetzt dahinter: Logo ist Logo, Produkt ist Produkt.
+
+   Die SVGs tragen KEINE `width`/`height`-Attribute, damit die Grundregel
+   `svg:not([width]):not([height])` (0,2,1) greift. Deshalb sind die Selektoren hier
+   genauso schwer (Klasse plus Element plus Klasse) und stehen spaeter. */
+.ui-logo {
+  display: inline-flex; align-items: center; gap: var(--ui-s3);
+  color: var(--ui-marke); text-decoration: none; min-width: 0;
+}
+.ui-logo:hover { color: var(--ui-marke-dunkel); text-decoration: none; }
+.ui-logo > svg.ui-logo__bild { width: 13.5rem; max-width: 100%; height: auto; flex: 0 1 auto; fill: currentColor; stroke: none; }
+.ui-logo > svg.ui-logo__marke { display: none; width: 2.375rem; height: 2.375rem; flex: 0 0 auto; fill: currentColor; stroke: none; }
+.ui-logo__produkt {
+  margin-left: var(--ui-s1); padding-left: var(--ui-s3);
+  border-left: 1px solid var(--ui-border-strong);
+  color: var(--ui-text-muted); font-size: var(--ui-fs-sm); font-weight: 600; white-space: nowrap;
+  align-self: stretch; display: inline-flex; align-items: center;
+}
+.ui-logo--gross > svg.ui-logo__bild { width: 20rem; }
+/* Auf dunklem Grund (Seitenleiste) in Weiss. */
+.ui-logo--hell { color: var(--ui-text-on-dark); }
+.ui-logo--hell:hover { color: var(--ui-text-on-dark); }
+.ui-logo--hell .ui-logo__produkt { color: var(--ui-text-on-dark-soft); border-color: rgba(255, 255, 255, .3); }
+/* Gestapelt fuer die Seitenleiste: das Logo ueber die ganze Breite, das Produkt darunter. */
+.ui-logo--gestapelt { display: grid; gap: var(--ui-s2); width: 100%; }
+.ui-logo--gestapelt > svg.ui-logo__bild { width: 100%; }
+.ui-logo--gestapelt .ui-logo__produkt {
+  margin: 0; padding: 0; border: 0; font-size: var(--ui-fs-xs); letter-spacing: .06em; text-transform: uppercase;
+}
+/* Eingeklappt bleibt das Symbol. */
+.ui-arbeitsplatz[data-schmal="true"] .ui-seite__kopf .ui-logo > svg.ui-logo__bild { display: none; }
+.ui-arbeitsplatz[data-schmal="true"] .ui-seite__kopf .ui-logo > svg.ui-logo__marke { display: block; }
+.ui-arbeitsplatz[data-schmal="true"] .ui-seite__kopf .ui-logo { display: inline-flex; width: auto; }
+
+.ui-avatar {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.75rem; height: 1.75rem; border-radius: 50%; flex: 0 0 auto;
+  background: var(--ui-marke); color: var(--ui-text-on-marke);
+  font-weight: 600; font-size: var(--ui-fs-xs);
+}
+/* In der Seitenleiste hebt sich der Kreis auf dem dunklen Grund nur hell ab. */
+.ui-seite .ui-avatar { background: var(--ui-marke-akzent); color: var(--ui-ink); }
+
+/* --- Karte --- */
+.ui-card {
+  background: var(--ui-surface); border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius); padding: var(--ui-s5);
+  box-shadow: var(--ui-shadow-sm);
+}
+.ui-card__title { margin: 0 0 var(--ui-s3); font-size: var(--ui-fs-md); }
+.ui-card--flush { padding: 0; overflow: hidden; }
+
+/* --- Buttons ---
+   Hauptaktion: Markenflaeche mit weisser Schrift (8,12).
+   Zweitaktion: weiss mit blauer Schrift, damit sie als Handlung lesbar bleibt und trotzdem
+   hinter der Hauptaktion zuruecktritt. Genau EINE Hauptaktion je Seite. */
+.ui-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--ui-s2);
+  min-height: var(--ui-control-h); min-width: var(--ui-target-min);
+  padding: 0 var(--ui-s4);
+  font: inherit; font-weight: 600; font-size: var(--ui-fs-base);
+  border-radius: var(--ui-radius-sm); border: 1px solid transparent;
+  cursor: pointer; text-decoration: none; white-space: nowrap;
+  transition: background var(--ui-motion-fast) var(--ui-ease),
+              border-color var(--ui-motion-fast) var(--ui-ease),
+              color var(--ui-motion-fast) var(--ui-ease);
+}
+.ui-btn--primary { background: var(--ui-marke); color: var(--ui-text-on-marke); border-color: var(--ui-marke); }
+.ui-btn--primary:hover { background: var(--ui-marke-dunkel); border-color: var(--ui-marke-dunkel); color: var(--ui-text-on-marke); }
+.ui-btn--secondary { background: var(--ui-surface); color: var(--ui-marke); border-color: var(--ui-border-strong); }
+.ui-btn--secondary:hover { background: var(--ui-marke-hell); border-color: var(--ui-marke); color: var(--ui-marke-dunkel); }
+.ui-btn--quiet { background: transparent; color: var(--ui-text-muted); border-color: transparent; }
+.ui-btn--quiet:hover { background: var(--ui-surface-sunken); color: var(--ui-marke); }
+.ui-btn--danger { background: var(--ui-danger); color: #fff; border-color: var(--ui-danger); }
+.ui-btn--danger:hover { background: #8f1e18; border-color: #8f1e18; color: #fff; }
+.ui-btn--sm { min-height: var(--ui-control-h-sm); font-size: var(--ui-fs-sm); padding: 0 var(--ui-s3); }
+.ui-btn[disabled], .ui-btn[aria-disabled="true"] {
+  opacity: .55; cursor: not-allowed; pointer-events: none;
+}
+/* Alle Symbole sind Strichzeichnungen (nur `<path d="...">` ohne eigene Attribute). Ohne
+   diese Regel greift der SVG-Standardwert `fill: black` und die Umrisse werden zu gefuellten
+   Flaechen: Ein Kreispfeil wird dann zur schwarzen Scheibe. `currentColor` laesst das
+   Symbol der Textfarbe des Knopfes folgen, auch im
+   Hover- und Forced-Colors-Modus. */
+/* `hidden` muss jede Layoutregel schlagen. Ein Element mit `display: flex` aus einer
+   Komponentenklasse bleibt sonst sichtbar, obwohl das Attribut gesetzt ist (eine leere
+   Erfolgsmeldung, ein Loeschkreuz im Suchfeld).
+   Das ist der eine Fall, in dem !important die richtige Antwort ist: `hidden` ist eine
+   Aussage ueber die Existenz im Layout, keine Gestaltungsfrage. */
+[hidden] { display: none !important; }
+
+.ui-btn__icon {
+  width: 1em; height: 1em; flex: 0 0 auto;
+  fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* --- Formulare --- */
+.ui-field { margin-bottom: var(--ui-s4); }
+.ui-field__label { display: block; font-size: var(--ui-fs-sm); font-weight: 600; color: var(--ui-text-muted); margin-bottom: var(--ui-s1); }
+.ui-field__hint { display: block; font-size: var(--ui-fs-sm); color: var(--ui-text-secondary); margin-top: var(--ui-s1); }
+.ui-field__error { display: block; font-size: var(--ui-fs-sm); color: var(--ui-danger); font-weight: 600; margin-top: var(--ui-s1); }
+.ui-required { color: var(--ui-marke); font-weight: 600; }
+
+/* Die Elemente selbst sind die Basis, nicht nur die Klassen. Eine Klasse, die an jedes
+   Feld geschrieben werden muss, wird irgendwo vergessen, und das Feld erscheint dann mitten
+   in der gestalteten Oberflaeche als rohes Browser-Steuerelement. `.ui-input` & Co. bleiben
+   als ausdrueckliche
+   Schreibweise gueltig und aendern nichts.
+
+   Ausgenommen sind Elemente, die keine Texteingabe sind: Ankreuz- und Auswahlfelder
+   (sie wuerden auf Feldbreite aufgeblasen), Knoepfe, Dateiwahl und Farbwahl. */
+input:not([type]),
+input[type="text"], input[type="search"], input[type="email"], input[type="url"],
+input[type="tel"], input[type="password"], input[type="number"],
+input[type="date"], input[type="datetime-local"], input[type="month"],
+input[type="week"], input[type="time"],
+select, textarea,
+.ui-input, .ui-select, .ui-textarea {
+  width: 100%; min-height: var(--ui-control-h);
+  padding: var(--ui-s2) var(--ui-s3);
+  font: inherit; font-size: var(--ui-fs-base); color: var(--ui-ink);
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border-interactive);
+  border-radius: var(--ui-radius-sm);
+  transition: border-color var(--ui-motion-fast) var(--ui-ease),
+              box-shadow var(--ui-motion-fast) var(--ui-ease);
+}
+textarea, .ui-textarea { min-height: 6rem; line-height: var(--ui-lh-relaxed); resize: vertical; }
+/* Mehrzeilige Auswahllisten (size > 1) sind Listen, keine Zeilen, also ohne feste Hoehe. */
+select[size], select[multiple] { min-height: 0; padding: var(--ui-s1); }
+
+input:hover, select:hover, textarea:hover,
+.ui-input:hover, .ui-select:hover, .ui-textarea:hover { border-color: var(--ui-ink-soft); }
+/* Rahmenwechsel und Ring sind ZUGABE, nicht der Fokusindikator.
+   Ein `outline: none` haette die globale Regel
+   `:focus-visible { outline: 3px solid var(--ui-focus) }` (weiter oben) sowohl in der
+   Spezifitaet als auch in der Reihenfolge geschlagen. Uebrig bliebe an der haeufigsten
+   Interaktion der ganzen Anwendung ein Ring mit 1,63:1 und ein Rahmenwechsel mit 1,77:1,
+   beides unter den 3,0:1, die WCAG 1.4.11 fuer Bedienelement-Grafik verlangt; Fokusstile
+   werden nie entfernt. Ohne `outline: none` greift die globale Regel. */
+input:focus, select:focus, textarea:focus,
+.ui-input:focus, .ui-select:focus, .ui-textarea:focus {
+  border-color: var(--ui-marke); box-shadow: var(--ui-focus-ring);
+}
+[aria-invalid="true"] { border-color: var(--ui-danger); }
+input[disabled], select[disabled], textarea[disabled],
+.ui-input[disabled], .ui-textarea[disabled], .ui-select[disabled] {
+  background: var(--ui-surface-sunken); color: var(--ui-text-muted); cursor: not-allowed;
+}
+/* Ankreuz- und Auswahlfelder behalten ihre Groesse und den Markenakzent. */
+input[type="checkbox"], input[type="radio"] {
+  width: auto; min-height: 0; padding: 0; accent-color: var(--ui-marke);
+}
+input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible {
+  outline: 2px solid var(--ui-marke); outline-offset: 2px; box-shadow: none;
+}
+/* Knoepfe holen ihr Aussehen aus .ui-btn, nicht von hier. */
+input[type="submit"], input[type="button"], input[type="reset"] {
+  width: auto; min-height: 0; padding: revert; border: revert; border-radius: revert;
+  background: revert; color: revert;
+}
+.ui-input--sm { min-height: var(--ui-control-h-sm); }
+/* `min-inline-size: 0` hebt den Browser-Vorgabewert `min-content` fuer fieldset auf: Mit ihm
+   weigert sich ein Fieldset, schmaler als sein laengstes unteilbares Wort zu werden. Bei
+   320 px ragte eine Gruppe von Auswahlfeldern ueber die Seite hinaus. */
+.ui-fieldset { min-inline-size: 0; border: 1px solid var(--ui-border); border-radius: var(--ui-radius); padding: var(--ui-s4); margin: 0 0 var(--ui-s4); }
+.ui-fieldset > legend { padding: 0 var(--ui-s2); font-weight: 600; font-size: var(--ui-fs-base); }
+.ui-check { display: flex; align-items: flex-start; gap: var(--ui-s2); }
+.ui-check input { width: 1.15rem; height: 1.15rem; margin: .18rem 0 0; flex: 0 0 auto; accent-color: var(--ui-marke); }
+
+/* --- Alerts / Fehlerzusammenfassung --- */
+.ui-alert {
+  display: flex; gap: var(--ui-s3); align-items: flex-start;
+  padding: var(--ui-s3) var(--ui-s4); border-radius: var(--ui-radius);
+  border: 1px solid; margin-bottom: var(--ui-s4);
+}
+.ui-alert--success { background: var(--ui-success-bg); border-color: var(--ui-success-border); color: var(--ui-success); }
+.ui-alert--danger  { background: var(--ui-danger-bg);  border-color: var(--ui-danger-border);  color: var(--ui-danger); }
+.ui-alert--warning { background: var(--ui-warning-bg); border-color: var(--ui-warning-border); color: var(--ui-warning); }
+/* Eine Karte, deren ZUSTAND eine Warnung ist, nicht eine Karte MIT Warnung darin.
+   Beispiel: ein Konto, dem noch eine Angabe fehlt. Eine Marke allein sagt "da steht
+   etwas"; die getoente Flaeche sagt "hier stimmt etwas nicht". Dieselben Merkmale wie
+   beim Warnton, keine neue Rechnung. */
+.ui-card--warnung { border-color: var(--ui-warning-border); background: var(--ui-warning-bg); }
+.ui-alert--info    { background: var(--ui-info-bg);    border-color: var(--ui-info-border);    color: var(--ui-info); }
+/* `min-width: 0` und der Umbruch langer Kennungen: Ein Flex-Kind ist von Haus aus mindestens
+   so breit wie sein laengstes Wort, und in Meldungen stehen Umgebungsvariablen und
+   Secret-Namen. Bei 320 px schob das die ganze Seite nach rechts. */
+.ui-alert__body { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.ui-alert__body > *:last-child { margin-bottom: 0; }
+/* Kein pauschales `display: block` fuer <strong> in Hinweisen: das zerlegte jede
+   Hervorhebung im Fliesstext in eigene Zeilen ("... wird <strong>nur jetzt</strong>
+   angezeigt", "PATNR <strong>1000123</strong>"). Wer eine Ueberschrift will, sagt es. */
+.ui-alert__titel { display: block; }
+
+/* --- Badges: Text + Farbe + Punkt. Farbe ist NIE das einzige Merkmal. ---
+   Eckig statt Pille: Flache Flaechen, und eine Marke, die aussieht wie ein Knopf,
+   wird angeklickt. */
+.ui-badge {
+  display: inline-flex; align-items: center; gap: var(--ui-s1);
+  padding: .15rem .55rem; border-radius: var(--ui-radius-sm);
+  font-size: var(--ui-fs-xs); font-weight: 600; white-space: nowrap;
+  border: 1px solid transparent;
+}
+.ui-badge::before { content: ""; width: .45rem; height: .45rem; border-radius: 50%; background: currentColor; flex: 0 0 auto; }
+/* Zeichen statt Punkt, wo der Zustand eines ist (Statusangaben eher als Symbole, etwa ein
+   gruener Haken oder ein rotes X): erledigt ist ein Haken, gescheitert ein Kreuz, Achtung ein
+   Ausrufezeichen. Der Punkt bleibt, wo etwas nur IST (Entwurf, in Arbeit, Marke). */
+.ui-badge--success::before, .ui-badge--danger::before, .ui-badge--warning::before {
+  width: auto; height: auto; background: none; border-radius: 0;
+  font-size: .95em; line-height: 1; font-weight: 600;
+}
+.ui-badge--success::before { content: "\2713"; }
+.ui-badge--danger::before { content: "\2715"; }
+.ui-badge--warning::before { content: "!"; }
+.ui-badge--neutral { background: var(--ui-surface-sunken); color: var(--ui-text-muted); border-color: var(--ui-border); }
+.ui-badge--info    { background: var(--ui-info-bg);    color: var(--ui-info);    border-color: var(--ui-info-border); }
+.ui-badge--warning { background: var(--ui-warning-bg); color: var(--ui-warning); border-color: var(--ui-warning-border); }
+.ui-badge--success { background: var(--ui-success-bg); color: var(--ui-success); border-color: var(--ui-success-border); }
+.ui-badge--danger  { background: var(--ui-danger-bg);  color: var(--ui-danger);  border-color: var(--ui-danger-border); }
+.ui-badge--brand   { background: var(--ui-marke-hell); color: var(--ui-marke);   border-color: var(--ui-marke-rand); }
+/* Der Punkt trotz Ton: Ein Entwurf oder eine laufende Ergaenzung IST nur; sie warnen nicht,
+   auch wenn sie gelb sind („Entwurf" gelb mit Punkt). Steht NACH den Toenen, damit
+   die Regel gewinnt. */
+.ui-badge--punkt::before {
+  content: ""; width: .45rem; height: .45rem; border-radius: 50%; background: currentColor;
+}
+
+/* --- Tabellen --- */
+/* `position: relative` haelt absolut positionierte Nachfahren (die `ui-visually-hidden`-
+   Beschriftungen in Tabellenkoepfen) im Scrollbereich. Ohne Bezugsrahmen liegen sie am
+   Dokument und ziehen die ganze Seite so breit wie die Tabelle. Bei 320 px scrollte eine
+   Tabelle so die ganze Seite waagrecht. */
+/* Der Schatten an der Kante sagt: hier geht es weiter.
+   Auf 320 px steht eine breite Tabelle in einer schmalen Huelle; man sieht knapp ein
+   Drittel. Spalten ausserhalb liegen da, ohne dass irgendetwas darauf hinwiese;
+   wer nicht zufaellig seitwaerts wischt, haelt die Tabelle fuer vollstaendig.
+   Reines CSS, kein Skript: Die beiden `local`-Verlaeufe scrollen MIT dem Inhalt und decken
+   den jeweiligen Schatten zu, sobald das Ende erreicht ist. Der Hinweis erscheint und
+   verschwindet also von selbst und behauptet nie etwas Falsches. */
+.ui-tablewrap {
+  position: relative; overflow-x: auto;
+  border: 1px solid var(--ui-border); border-radius: var(--ui-radius);
+  background:
+    linear-gradient(to right, var(--ui-surface) 40%, rgba(255, 255, 255, 0)) 0 0 / 2.5rem 100% no-repeat local,
+    linear-gradient(to left, var(--ui-surface) 40%, rgba(255, 255, 255, 0)) 100% 0 / 2.5rem 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, var(--ui-kantenschatten), rgba(27, 36, 48, 0)) 0 0 / .75rem 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, var(--ui-kantenschatten), rgba(27, 36, 48, 0)) 100% 0 / .75rem 100% no-repeat scroll,
+    var(--ui-surface);
+}
+.ui-table { width: 100%; border-collapse: collapse; }
+.ui-table caption { text-align: left; padding: var(--ui-s3) var(--ui-s4); font-weight: 600; }
+.ui-table th, .ui-table td { text-align: left; padding: var(--ui-s2) var(--ui-s3); border-bottom: 1px solid var(--ui-border); font-size: var(--ui-fs-base); vertical-align: middle; }
+.ui-table th {
+  font-size: var(--ui-fs-xs); text-transform: uppercase; letter-spacing: .04em;
+  color: var(--ui-text-muted); background: var(--ui-surface-sunken);
+  position: sticky; top: 0; z-index: 1;
+}
+.ui-table tbody tr:last-child td { border-bottom: 0; }
+.ui-table tbody tr:hover td { background: var(--ui-surface-hover); }
+.ui-table--fixed { table-layout: fixed; }
+
+/* --- Dialoge --- */
+.ui-dialog {
+  border: 1px solid var(--ui-border); border-radius: var(--ui-radius-lg);
+  padding: var(--ui-s6); max-width: min(34rem, calc(100vw - 2rem));
+  box-shadow: var(--ui-shadow-lg); color: var(--ui-text); background: var(--ui-surface);
+}
+.ui-dialog::backdrop { background: rgba(27, 36, 48, .45); }
+/* Ein Fenster, das OHNE Skript offen im Markup steht (eine Rueckfrage im Seitenfluss):
+   Der Browser gibt `dialog` von Haus aus `position: absolute`, und der Block legte sich
+   damit ueber alles, was ihm folgt, bei langem Inhalt ueber den Seitenfuss. Im normalen
+   Fluss steht er dort, wo er hingehoert. Gilt nur fuer
+   den NICHT modalen Zustand: `showModal()` braucht die absolute Lage. Kennt ein Browser
+   `:modal` nicht, faellt die Regel weg und es bleibt beim Stand davor. */
+.ui-dialog[open]:not(:modal) { position: static; margin: var(--ui-s5) auto; }
+.ui-dialog__title { margin: 0 0 var(--ui-s2); font-size: var(--ui-fs-lg); }
+.ui-dialog__actions { display: flex; gap: var(--ui-s2); justify-content: flex-end; margin-top: var(--ui-s5); flex-wrap: wrap; }
+
+/* --- Zustaende: leer / laden / fehler --- */
+.ui-state {
+  text-align: center; padding: var(--ui-s10) var(--ui-s5);
+  color: var(--ui-text-muted); background: var(--ui-surface);
+  border: 1px dashed var(--ui-border-strong); border-radius: var(--ui-radius);
+}
+.ui-state__title { font-weight: 600; color: var(--ui-ink); margin-bottom: var(--ui-s1); }
+/* Symbol im Leerzustand: gross genug, um den Zustand zu tragen, aber ruhig. */
+.ui-state > svg:first-child {
+  width: 2.5rem; height: 2.5rem; margin-bottom: var(--ui-s3);
+  color: var(--ui-border-strong);
+}
+
+/* --- Ladeanzeige: Animation NIE allein, immer mit Statustext --- */
+.ui-busy { display: flex; align-items: center; gap: var(--ui-s3); }
+.ui-spinner {
+  width: 1.15em; height: 1.15em; flex: 0 0 auto; border-radius: 50%;
+  border: 2px solid var(--ui-border-strong); border-top-color: var(--ui-marke);
+  animation: ui-spin 720ms linear infinite;
+}
+@keyframes ui-spin { to { transform: rotate(360deg); } }
+/* Ohne Bewegung: statischer, aber weiterhin erkennbarer Indikator. Information bleibt
+   vollstaendig; der Statustext daneben traegt sie ohnehin. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-spinner { animation: none; border-top-color: var(--ui-marke); border-style: dotted; }
+}
+.ui-progress { height: 4px; border-radius: var(--ui-radius-pill); background: var(--ui-border); overflow: hidden; }
+.ui-progress__bar { height: 100%; width: 35%; background: var(--ui-marke); animation: ui-indeterminate 1.4s var(--ui-ease) infinite; }
+@keyframes ui-indeterminate { 0% { transform: translateX(-100%); } 100% { transform: translateX(400%); } }
+@media (prefers-reduced-motion: reduce) {
+  .ui-progress__bar { animation: none; width: 100%; opacity: .5; }
+}
+.ui-skeleton {
+  background: linear-gradient(90deg, var(--ui-surface-sunken) 25%, var(--ui-border) 37%, var(--ui-surface-sunken) 63%);
+  background-size: 400% 100%; animation: ui-shimmer 1.4s ease infinite;
+  border-radius: var(--ui-radius-sm); min-height: 1rem;
+}
+@keyframes ui-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+@media (prefers-reduced-motion: reduce) { .ui-skeleton { animation: none; } }
+
+
+/* ---------- 7 UTILITIES ---------------------------------------------------
+   Bewusst eine kleine, geschlossene Menge, kein Utility-Framework. Sie existieren, damit
+   Templates OHNE `style=`-Attribute auskommen: solche Attribute erzwingen sonst
+   `style-src 'unsafe-inline'` in der CSP (sie fallen unter dieselbe Direktive wie
+   <style>-Bloecke). Erst ohne sie laesst sich die Richtlinie schaerfen.
+   -------------------------------------------------------------------------- */
+.ui-w-full { width: 100%; }
+.ui-text-center { text-align: center; }
+.ui-text-right { text-align: right; }
+.ui-nowrap { white-space: nowrap; }
+.ui-break { overflow-wrap: anywhere; }
+/* Umgebungsvariablen in Hinweisen sind laenger
+   als 320 px und haben keine Trennstelle; sie duerfen umbrechen statt die Seite zu dehnen. */
+.ui-field__hint code { overflow-wrap: anywhere; }
+.ui-truncate-url { max-width: 22rem; overflow-wrap: anywhere; }
+.ui-mt-0 { margin-top: 0; }
+.ui-mt-2 { margin-top: var(--ui-s2); }
+.ui-mt-3 { margin-top: var(--ui-s3); }
+.ui-mt-4 { margin-top: var(--ui-s4); }
+.ui-mb-0 { margin-bottom: 0; }
+.ui-mb-3 { margin-bottom: var(--ui-s3); }
+.ui-mb-4 { margin-bottom: var(--ui-s4); }
+.ui-strong { font-weight: 600; }
+/* Zweitzeile unter einem fetten Eintrag: Blockdarstellung, aber normale Staerke. */
+.ui-secondary-block { display: block; font-weight: 400; }
+/* Aktionsgruppe am Zeilenende: haeufig genug, um eine eigene Klasse zu verdienen. */
+.ui-row--actions { gap: var(--ui-s2); flex-wrap: nowrap; justify-content: flex-end; }
+
+/* ---------- 6 RESPONSIVE -------------------------------------------------- */
+@media (max-width: 48rem) {
+  .ui-main { padding: var(--ui-s5) var(--ui-s4) var(--ui-s10); }
+  .ui-topbar__inner { padding: 0 var(--ui-s4); }
+  h1 { font-size: var(--ui-fs-xl); }
+  .ui-card { padding: var(--ui-s4); }
+  .ui-dialog { padding: var(--ui-s5); }
+  /* Tabellenkopf darf auf kleinen Geraeten nicht kleben: Er verdeckt sonst Inhalt. */
+  .ui-table th { position: static; }
+  /* Ein Knopf mit langer Beschriftung ist bei 320 px breiter als die Karte, in der er steht,
+     und schob die ganze Seite nach rechts. Er darf hier umbrechen statt zu ueberstehen; die
+     Bedienhoehe bleibt, weil `min-height` und `align-items: center` weiter gelten. */
+  .ui-btn { white-space: normal; max-width: 100%; text-align: center; }
+  /* Im Kopf nur das Symbol: Bei 320 px teilen sich Logo, Suche und Kontext eine
+     Zeile, und 786 Einheiten Wortmarke liessen dem Rest nichts. */
+  .ui-kopf > .ui-kopf__logo > svg.ui-logo__bild { display: none; }
+  .ui-kopf > .ui-kopf__logo > svg.ui-logo__marke { display: block; width: 2rem; height: 2rem; }
+  /* Keine Seitenleiste unter der Tabletbreite: die untere Leiste traegt die Hauptwege,
+     und zwei Navigationen zugleich waeren fuer Tastatur und Vorlesen doppelte
+     Arbeit. Der Kopf traegt dann Logo, Suche und Kontext. */
+  .ui-arbeitsplatz, .ui-arbeitsplatz[data-schmal="true"] { grid-template-columns: minmax(0, 1fr); }
+  .ui-seite { display: none; }
+  .ui-kopf { padding: 0 var(--ui-s4); gap: var(--ui-s2); }
+  .ui-kopf__klapp, .ui-brotkrumen { display: none; }
+  .ui-kopf > .ui-kopf__logo { display: inline-flex; }
+  .ui-kopf__suche { flex: 1 1 auto; }
+  .ui-kopf__taste { display: none; }
+  /* Die Palette ueber die ganze Breite des Kopfs: Rechts am Feld ausgerichtet passte sie
+     nicht mehr neben Logo und Kontext. `position: fixed` am Kopf vorbei: Der Kopf ist
+     `sticky`, und ein absolut gesetztes Kind bliebe in seiner Breite gefangen. */
+  .ui-palette { position: fixed; left: var(--ui-s2); right: var(--ui-s2); top: calc(var(--ui-topbar-h) + .25rem); width: auto; max-height: calc(100vh - var(--ui-topbar-h) - 4.5rem); }
+  .ui-palette__fuss { display: none; }
+  .ui-kontext > span:not(.ui-avatar) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .ui-kontext { padding: .15rem .2rem; }
+}
+
+@media (max-width: 30rem) {
+  /* Telefon im Hochformat: Logo, Suche und Kontext teilen sich 320 px, und der
+     Produktname stand abgeschnitten dazwischen. Er weicht;
+     die Fusszeile nennt das Produkt weiterhin. Bei Tabletbreite bleibt er. */
+  .ui-kopf > .ui-kopf__logo .ui-logo__produkt { display: none; }
+}
+
+@media print {
+  .ui-topbar, .ui-seite, .ui-kopf, .ui-skip, .ui-btn { display: none !important; }
+  .ui-arbeitsplatz { display: block; }
+  body { background: #fff; }
+}
+
+/* ============================================================================
+   Fusszeile und Rechtsseiten
+   Impressum und Datenschutz sind Pflichtangaben und muessen von jeder Seite aus
+   erreichbar sein, auch vor der Anmeldung.
+   Der Fuss traegt die Markenfarbe; der Kopf ist dafuer weiss.
+   ========================================================================== */
+.ui-fuss {
+  margin-top: auto;
+  background: var(--ui-marke); color: var(--ui-text-on-dark-soft);
+}
+.ui-fuss__inner {
+  max-width: var(--ui-w-wide); margin: 0 auto;
+  padding: var(--ui-s4) var(--ui-s5);
+  display: flex; align-items: center; gap: var(--ui-s4); flex-wrap: wrap;
+  font-size: var(--ui-fs-xs);
+}
+.ui-fuss__traeger { flex: 1 1 auto; }
+/* Der Programmstand ist eine Fussnote in der Fussnote. Zurueckhaltung ueber den ABSTAND,
+   nicht ueber Groesse und Deckkraft: `font-size: .85em` waere auf 12 px Grundlage 10,2 px,
+   `opacity: .65` brachte den Sekundaertext auf 2,62:1. Gebraucht wird der Programmstand
+   selten, aber dann sofort, etwa beim Melden eines Fehlers; dann soll er nicht die am
+   schlechtesten lesbare Zeile der Anwendung sein. */
+.ui-fuss__version {
+  margin-left: var(--ui-s3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.ui-fuss__wege { display: flex; gap: var(--ui-s4); }
+.ui-fuss__wege > a { color: var(--ui-text-on-dark); text-decoration: none; }
+.ui-fuss__wege > a:hover { color: var(--ui-text-on-dark); text-decoration: underline; }
+/* Auf der blauen Flaeche braucht der Fokus die helle Fassung. */
+.ui-fuss a:focus-visible { outline-color: var(--ui-focus-on-dark); }
+
+/* Rechtstexte werden GELESEN, nicht ueberflogen: enge Zeilenlaenge, ruhige Abstaende. */
+.ui-recht { display: flex; flex-direction: column; gap: var(--ui-s4); }
+.ui-recht__lede {
+  margin: 0 0 var(--ui-s2); font-size: var(--ui-fs-md); color: var(--ui-text-secondary);
+  max-width: 65ch;
+}
+.ui-recht .ui-card { padding: var(--ui-s5) var(--ui-s6); }
+.ui-recht .ui-card p, .ui-recht .ui-card li { max-width: 65ch; }
+.ui-recht h3 { font-size: var(--ui-fs-md); margin: var(--ui-s4) 0 var(--ui-s2); }
+.ui-recht__adresse { font-style: normal; line-height: var(--ui-lh-relaxed); margin-bottom: var(--ui-s4); }
+.ui-recht__liste { margin: 0; padding-left: var(--ui-s5); display: flex; flex-direction: column; gap: var(--ui-s2); }
+.ui-recht__daten { margin: 0; display: flex; flex-direction: column; gap: var(--ui-s3); }
+.ui-recht__daten dt {
+  margin: 0; font-size: var(--ui-fs-xs); font-weight: 600; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--ui-text-muted);
+}
+.ui-recht__daten dd { margin: 2px 0 0; max-width: 65ch; }
+
+/* ---------- Vier-Angaben-Bausteine ---------------------------------------
+   Je Einstellung vier Angaben: Wirkung, wirksamer Wert, Herkunft, Rueckweg.
+   Die Wortwahl der Herkunft: "Vorgabe" / "aus der Umgebung" / "hier gesetzt". */
+
+/* Was die Einstellung bewirkt: unter der Bezeichnung, nicht in einer
+   eigenen Spalte, die auf schmalen Schirmen ohnehin umbraeche. */
+.ui-wirkung {
+  display: block; margin-top: var(--ui-s1);
+  font-size: var(--ui-fs-sm); font-weight: 400; color: var(--ui-text-secondary);
+  max-width: 46ch;
+}
+.ui-wert { font-family: var(--ui-font-mono); font-size: var(--ui-fs-sm); }
+/* Ein Geheimnis wird nie zurueck angezeigt; sichtbar ist nur, OB eines gesetzt ist. */
+.ui-wert--geheim { font-family: var(--ui-font); font-style: italic; }
+
+/* Herkunftsmarke. Nicht nur ueber Farbe unterschieden: Der Text sagt es selbst.
+   „hier gesetzt" traegt die Marke: Das Haus hat entschieden. */
+.ui-quelle {
+  display: inline-flex; align-items: center;
+  padding: 0 var(--ui-s2); border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-sm); background: var(--ui-surface-sunken);
+  font-size: var(--ui-fs-xs); font-weight: 600; color: var(--ui-text-muted);
+  white-space: nowrap;
+}
+.ui-quelle--hier-gesetzt {
+  border-color: var(--ui-marke-rand); background: var(--ui-marke-hell);
+  color: var(--ui-marke);
+}
+
+/* Eine Grenze, die bewusst im Code steht: sichtbar, aber nicht editierbar. */
+.ui-gesperrt { display: inline-flex; align-items: center; gap: var(--ui-s2); }
+.ui-gesperrt__icon {
+  width: .875rem; height: .875rem; flex: 0 0 auto;
+  fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+  color: var(--ui-text-muted);
+}
+
+/* Woraus eine erzeugte Uebersicht stammt; ohne diese Zeile sieht sie aus wie gepflegt. */
+.ui-quellzeile {
+  margin: var(--ui-s3) 0 0;
+  font-size: var(--ui-fs-xs); color: var(--ui-text-secondary);
+}
+
+/* ---------- Segmentierter Umschalter -------------------------------------
+   Eine Reihe sich ausschliessender Wege ("Alle" / je Art). */
+/* Der Umschalter bricht um statt die Seite zu verbreitern: Eine lange Reihe von Eintraegen
+   stand bei 320 px weit ueber den Rand. Jede Zeile bekommt ihre Trennlinie ueber den oberen Rand der Eintraege,
+   den die erste Zeile mit `margin-top: -1px` unter den Rahmen schiebt. */
+.ui-segmented { display: inline-flex; flex-wrap: wrap; max-width: 100%; border: 1px solid var(--ui-border-strong); border-radius: var(--ui-radius-sm); overflow: hidden; }
+.ui-segmented > a, .ui-segmented > button {
+  padding: var(--ui-s2) var(--ui-s4); border: 0; border-top: 1px solid var(--ui-border-strong); margin-top: -1px; background: var(--ui-surface);
+  font: inherit; font-size: var(--ui-fs-sm); font-weight: 600;
+  color: var(--ui-text-muted); text-decoration: none; cursor: pointer;
+}
+.ui-segmented > * + * { border-left: 1px solid var(--ui-border-strong); }
+.ui-segmented [aria-current], .ui-segmented > .active { background: var(--ui-marke); color: var(--ui-text-on-marke); }
+.ui-segmented > a:hover:not([aria-current]),
+.ui-segmented > button:hover:not([aria-current]) { background: var(--ui-marke-hell); color: var(--ui-marke); }
+.ui-segmented--klein > a, .ui-segmented--klein > button { padding: var(--ui-s1) var(--ui-s3); }
+/* Die Zahl am Weg („Aktuell 8"): eine Pille, auf der gewaehlten Flaeche hell. */
+.ui-segmented__zahl { margin-left: .25rem; padding: 0 .4rem; border-radius: var(--ui-radius-pill); font-size: .75rem; line-height: 1.3rem; font-weight: 600; font-variant-numeric: tabular-nums; background: var(--ui-surface-sunken); color: var(--ui-text-muted); }
+.ui-segmented [aria-current] .ui-segmented__zahl { background: var(--ui-marke-hell); color: var(--ui-marke); }
+.ui-segmented__zahl:empty { display: none; }
+
+/* ---------- Die Verwaltung als Konsole ----------------------------------------
+   Fuer die Person, die verwaltet, soll jede Verwaltung gleich aussehen: dieselbe
+   Titelzeile, dieselbe Konsole mit den Bereichen links. Masse: 14 rem fuer die Bereiche,
+   1,5 rem Abstand. */
+.ui-titelzeile { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--ui-s3) var(--ui-s6); flex-wrap: wrap; margin-bottom: var(--ui-s5); }
+.ui-titelzeile__text { min-width: 0; flex: 1 1 24rem; }
+.ui-titelzeile__text > h1 { margin: 0; }
+.ui-titelzeile__satz { margin: var(--ui-s1) 0 0; color: var(--ui-text-secondary); font-size: var(--ui-fs-sm); max-width: 60ch; }
+.ui-titelzeile__rechts { flex: 0 1 auto; min-width: 0; }
+/* Das Suchfeld der Titelzeile: dieselbe Form wie die Suche im Kopf, ohne deren Palette. */
+.ui-verwaltungssuche { position: relative; display: flex; align-items: center; min-width: min(100%, 20rem); }
+.ui-verwaltungssuche > input { margin: 0; width: 100%; min-height: var(--ui-control-h); padding-left: 2.3rem; font-size: var(--ui-fs-sm); }
+.ui-verwaltungssuche__icon {
+  position: absolute; left: var(--ui-s3); width: 1rem; height: 1rem; pointer-events: none;
+  fill: none; stroke: var(--ui-text-muted); stroke-width: 2; stroke-linecap: round;
+}
+.ui-verwaltungssuche > input::-webkit-search-cancel-button { display: none; }
+
+.ui-konsole { display: grid; grid-template-columns: 14rem minmax(0, 1fr); gap: var(--ui-s6); align-items: start; }
+.ui-konsole__inhalt { min-width: 0; }
+/* Ein Formular auf Leseweite: schmal INNERHALB der Konsole, statt die ganze Arbeitsflaeche
+   zu verengen. */
+.ui-konsole__inhalt--form { max-width: var(--ui-w-form); }
+/* Seitentitel INNERHALB der Verwaltung: unter der Titelzeile „Verwaltung", deutlich, aber
+   eine Stufe darunter. */
+.ui-admin-titel { font-size: var(--ui-fs-xl); font-weight: 400; margin: 0 0 var(--ui-s4); }
+/* Die Bereiche bleiben beim Scrollen stehen: unter der Kopfleiste, wie eine Detailseite neben
+   ihrer Liste. Gruppen mit Namen in Kapitaelchen; der aktuelle Bereich traegt die
+   helle Markenflaeche UND die Kante links (nicht nur Farbe). */
+.ui-unternav { position: sticky; top: calc(var(--ui-topbar-h) + var(--ui-s5)); display: grid; gap: var(--ui-s4); }
+.ui-unternav__gruppe { display: grid; gap: .1rem; }
+.ui-unternav__titel {
+  padding: 0 var(--ui-s3) var(--ui-s1);
+  font-size: var(--ui-fs-xs); font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ui-text-muted);
+}
+.ui-unternav a {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--ui-s2);
+  padding: var(--ui-s2) var(--ui-s3); border-radius: var(--ui-radius-sm);
+  font-size: var(--ui-fs-sm); font-weight: 600; color: var(--ui-text); text-decoration: none;
+}
+.ui-unternav a:hover { background: var(--ui-surface-sunken); text-decoration: none; }
+.ui-unternav a[aria-current="page"] { background: var(--ui-marke-hell); color: var(--ui-marke); box-shadow: inset 3px 0 0 var(--ui-marke); }
+/* Die Zahl am Weg: so viele Hinweise wie die Lage zeigt. Gelb ist die Vorgabe (ein Hinweis
+   ist eine Aufgabe, kein Ausfall); rot nur, wenn einer der Hinweise rot ist. */
+.ui-unternav__zahl {
+  font-size: var(--ui-fs-xs); font-weight: 600; line-height: 1.3; padding: 0 var(--ui-s2);
+  border-radius: var(--ui-radius-pill); border: 1px solid var(--ui-warning-border);
+  background: var(--ui-warning-bg); color: var(--ui-warning); font-variant-numeric: tabular-nums;
+}
+.ui-unternav__zahl--problem { border-color: var(--ui-danger-border); background: var(--ui-danger-bg); color: var(--ui-danger); }
+/* Unter 64 rem gibt es keine zwei Spalten: Die Bereiche werden eine umbrechende Reihe ueber
+   dem Inhalt, die Gruppennamen entfallen. */
+@media (max-width: 64rem) {
+  .ui-konsole { grid-template-columns: minmax(0, 1fr); }
+  /* Unter der Konsolenbreite ein EIN-zeiliger Streifen, der in sich scrollt. Sonst brechen
+     zwanzig Wege als Wand ueber jede Seite (bei 390 px eine halbe Bildschirmhoehe Verweise,
+     bevor der Inhalt beginnt). Der aktuelle Weg traegt Marke UND Kante. */
+  .ui-unternav { position: static; display: flex; flex-wrap: nowrap; gap: var(--ui-s1); overflow-x: auto; scrollbar-width: thin; scroll-snap-type: x proximity; padding-bottom: var(--ui-s2); margin-bottom: var(--ui-s2); border-bottom: 1px solid var(--ui-border); }
+  .ui-unternav__gruppe { display: contents; }
+  .ui-unternav__titel { display: none; }
+  .ui-unternav a { flex: 0 0 auto; white-space: nowrap; scroll-snap-align: start; border: 1px solid var(--ui-border-strong); border-radius: var(--ui-radius-pill); padding: var(--ui-s1) var(--ui-s3); }
+  .ui-unternav a[aria-current="page"] { box-shadow: none; border-color: var(--ui-marke); }
+}
+
+/* ---------- Das Zeilenmenue ----------------------------------------------
+   `details` ohne Skript, aufklappend nach links unten: die seltenen Wege einer Zeile
+   hinter einem Knopf statt als dritter und vierter Knopf je Zeile. */
+.ui-zeilenmenue { display: inline-block; position: relative; vertical-align: middle; }
+.ui-zeilenmenue__knopf, .ui-zeilenmenue > summary { list-style: none; cursor: pointer; width: 2rem; padding: 0; font-size: 1.1rem; letter-spacing: .05em; }
+.ui-zeilenmenue > summary::-webkit-details-marker { display: none; }
+.ui-zeilenmenue__liste {
+  position: absolute; right: 0; top: calc(100% + .25rem); z-index: var(--ui-z-dropdown); min-width: 14rem;
+  display: grid; gap: .25rem; padding: var(--ui-s2); text-align: left;
+  background: var(--ui-surface); border: 1px solid var(--ui-border-strong); border-radius: var(--ui-radius); box-shadow: var(--ui-shadow-lg);
+}
+.ui-zeilenmenue__liste .ui-btn, .ui-zeilenmenue__liste form { display: flex; width: 100%; justify-content: flex-start; white-space: normal; text-align: left; }
+.ui-zeilenmenue__liste form > .ui-btn { width: 100%; }
+
+/* ---------- Zwei Spalten, Stapel, Hinweis --------------------------------- */
+.ui-zwei { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: var(--ui-s5); align-items: start; }
+@media (max-width: 56rem) { .ui-zwei { grid-template-columns: 1fr; } }
+.ui-stapel { display: grid; gap: var(--ui-s5); }
+/* Rasterkinder sind sonst so breit wie ihr Inhalt: Eine Tabelle im Stapel schob am Telefon
+   die Karte ueber den Rand, statt in ihrer Huelle zu scrollen. */
+.ui-stapel > * { min-width: 0; }
+/* Ein Hinweis mit Aktion rechts: Die Stufe faerbt Grund
+   UND Titel; der Titel traegt die Aussage, die Flaeche nur den Ton. */
+.ui-hinweis {
+  display: flex; align-items: center; gap: var(--ui-s4); flex-wrap: wrap;
+  padding: var(--ui-s4) var(--ui-s5); border-radius: var(--ui-radius);
+  border: 1px solid var(--ui-border); background: var(--ui-surface);
+  margin-bottom: var(--ui-s3);
+}
+.ui-hinweis__text { flex: 1 1 20rem; min-width: 0; }
+.ui-hinweis__titel { margin: 0; font-size: var(--ui-fs-base); font-weight: 600; }
+.ui-hinweis__sub { margin: var(--ui-s1) 0 0; font-size: var(--ui-fs-sm); }
+/* Die Stufe faerbt Grund UND Titel; der Titel traegt die Aussage, die Flaeche nur den Ton. */
+.ui-hinweis--danger  { background: var(--ui-danger-bg);  border-color: var(--ui-danger-border); }
+.ui-hinweis--danger  .ui-hinweis__titel { color: var(--ui-danger); }
+.ui-hinweis--warning { background: var(--ui-warning-bg); border-color: var(--ui-warning-border); }
+.ui-hinweis--warning .ui-hinweis__titel { color: var(--ui-warning); }
+.ui-hinweis--success { background: var(--ui-success-bg); border-color: var(--ui-success-border); }
+.ui-hinweis--success .ui-hinweis__titel { color: var(--ui-success); }
+/* Sachlicher Hinweis ohne Bewertung: Etwas ist passiert, es ist weder gut noch schlecht.
+   Zum Beispiel ein automatischer Wechsel des Kontexts: eine Mitteilung, keine Warnung
+   und kein Erfolg. Warnfarben dafuer zu benutzen wuerde die echten Warnungen entwerten. */
+.ui-hinweis--info { background: var(--ui-info-bg); border-color: var(--ui-info-border); }
+.ui-hinweis--info .ui-hinweis__titel { color: var(--ui-info); }
+

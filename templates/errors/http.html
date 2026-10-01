@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% comment %}
+  The error page with the duck: the empty state of the design system (ui-card > ui-state), the
+  duck instead of the symbol, the status only in the label, the error text as the one h1, one
+  button back to the start page. Included by 400, 403, 403_csrf, 404 and 500.html with
+  status, heading and text.
+
+  400, 500 and the CSRF page render without context processors (cirs.views.server_error and
+  friends), so this page touches no user, session or message: it must work while the database
+  is down. The top bar therefore carries only the logo (as on the pages before login).
+  Nothing from the request appears: no path, no exception text, no framework texts.
+{% endcomment %}
+
+{% block title %}{{ heading }}{% endblock %}
+{% block nav %}{% endblock %}
+{% block messages %}{% endblock %}
+{% block layout %}form{% endblock %}
+
+{% block content %}
+<div class="ui-card">
+  <div class="ui-state ui-ente">
+    <svg class="ui-ente__bild" width="190" height="134" viewBox="0 -2 190 134" aria-hidden="true">
+      <text class="ui-ente__quak" x="174" y="14.5" font-size="21" text-anchor="end">{% translate "Quack!" %}</text>
+      <path class="ui-ente__gelb" d="M152 75l14-6.5q6.5 0 6.5 6.5v16.5l-12.5-8.5z"/>
+      <ellipse class="ui-ente__gelb" cx="102.5" cy="88" rx="58.5" ry="33"/>
+      <circle class="ui-ente__gelb" cx="64.5" cy="41.5" r="27"/>
+      <path class="ui-ente__schnabel" d="M16 53.5q8-7.5 28-7.5v14q-17 1-28-6.5z"/>
+      <circle class="ui-ente__auge" cx="59" cy="35.5" r="3.5"/>
+      <path class="ui-ente__fluegel" d="M87 83q23-17 51 3q-26 18-51-3z"/>
+      <path class="ui-ente__welle" d="M1 123.5q26.85-10 53.7 0q13.43 5 26.85 5"/>
+      <path class="ui-ente__welle" d="M80.55 128.5h1q13.43 0 26.85-5q26.85-10 53.7 0q13.43 5 26.85 5"/>
+    </svg>
+    <p class="ui-label-xs">{% blocktranslate %}Error {{ status }}{% endblocktranslate %}</p>
+    <h1>{{ heading }}</h1>
+    <p>{{ text }}</p>
+    {# No dead end: one way on from every error page. #}
+    <div class="ui-row ui-mt-4 ui-row--zentriert">
+      <a class="ui-btn ui-btn--primary" href="{% url 'labcirs_home' %}">{% translate "Go to the start page" %}</a>
+    </div>
+    <p class="ui-secondary ui-mt-4">{% translate "Why a duck? Ducks are your IT admin's favourite animals." %}</p>
+  </div>
+</div>
+{% endblock %}

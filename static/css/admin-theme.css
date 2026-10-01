@@ -1,0 +1,71 @@
+/* LabCIRS admin theme, loaded by templates/admin/base_site.html.
+   Sets Django's admin variables to the light values of the design tokens in core.css.
+   The admin does not load core.css, so the values are repeated here; every line names its token and, for text, its contrast.
+   LabCIRS stays light: base_site.html switches Django's dark mode off. */
+:root {
+  --header-bg: #ffffff;                 /* --ui-surface (also module captions) */
+  --header-color: #1b2430;              /* --ui-ink, 15.65:1 */
+  --header-link-color: #00528c;         /* --ui-marke, 8.12:1 */
+  --accent: #00528c;                    /* --ui-marke, 8.12:1 (site name) */
+  --body-bg: #ffffff;                   /* --ui-surface */
+  --darkened-bg: #f3f4f6;               /* --ui-bg */
+  --body-fg: #1b2430;                   /* --ui-ink, 15.65:1 */
+  --body-quiet-color: #556270;          /* --ui-text-muted, 6.24:1 */
+  --link-fg: #00528c;                   /* --ui-marke, 8.12:1 */
+  --link-hover-color: #003d6b;          /* --ui-marke-dunkel */
+  --primary: #00528c;                   /* --ui-marke */
+  --button-bg: #00528c;                 /* --ui-marke */
+  --default-button-hover-bg: #00528c;   /* --ui-marke */
+  --breadcrumbs-bg: #00528c;            /* --ui-marke */
+  --primary-fg: #fff;                   /* --ui-text-on-marke, 8.12:1 */
+  --button-fg: #fff;                    /* --ui-text-on-marke, 8.12:1 */
+  --breadcrumbs-fg: #fff;               /* --ui-text-on-marke, 8.12:1 */
+  --breadcrumbs-link-fg: #fff;          /* --ui-text-on-marke, 8.12:1 */
+  --secondary: #003d6b;                 /* --ui-marke-dunkel, white on it 11.17:1 */
+  --button-hover-bg: #003d6b;           /* --ui-marke-dunkel */
+  --default-button-bg: #003d6b;         /* --ui-marke-dunkel */
+  --hairline-color: #dfe3e8;            /* --ui-border */
+  --border-color: #c8cfd6;              /* --ui-border-strong */
+  --selected-row: #e6eff6;              /* --ui-marke-hell, ink on it 13.45:1 */
+  --error-fg: #b3261e;                  /* --ui-danger, 6.54:1 */
+  --delete-button-bg: #b3261e;          /* --ui-danger */
+  --message-success-bg: #e9f5ea;        /* --ui-success-bg */
+  --message-warning-bg: #f6ecd4;        /* --ui-warning-bg */
+  --message-error-bg: #fbeceb;          /* --ui-danger-bg */
+  --close-button-bg: #556270;           /* --ui-text-muted, white on it 6.24:1 */
+}
+
+/* Widgets that Django colours with --header-link-color or a fixed #333 on a brand fill: after
+   the mapping above they would be blue on blue (1.4:1 on --secondary, 1:1 on --primary) or
+   #333 on --accent (1.56:1). Used by filter_horizontal (reviewers, notification recipients)
+   and the date picker. "body" outweighs widgets.css, which the form media load later. */
+body .selector-chosen-title, body .selector-chosen-title label,
+body .selector-chosen .list-footer-display,
+body .calendar caption, body .calendarbox h2 { color: #fff; } /* --ui-text-on-marke, 8.12 / 11.17:1 */
+body .calendar td a:active, body .timelist a:active { background: #003d6b; } /* --ui-marke-dunkel, 11.17:1 */
+
+/* Dark mode is switched off in base_site.html (LabCIRS stays light), so its toggle would do
+   nothing. */
+.theme-toggle { display: none; }
+
+/* Logo in the admin header, as high as in the public top bar. */
+.labcirs-admin-logo { display: block; height: 2rem; width: auto; } /* --ui-s8 */
+
+/* Translation status (TranslationStatusMixin.translation_info); the word says it too. */
+.labcirs-status { font-weight: 600; }
+.labcirs-status--complete { color: #1b5e20; }   /* --ui-success, 7.87:1 */
+.labcirs-status--incomplete { color: #b3261e; } /* --ui-danger, 6.54:1 */
+
+/* Model names in the tables of the admin index are long German compounds ("Organisationseinheiten")
+   and are wider than their cell at 320 px. The page carries lang, so the browser hyphenates them
+   instead of cutting them in the middle. */
+.module th { hyphens: auto; }
+
+/* Photo preview in the incident form (CriticalIncident.photo_tag). */
+.labcirs-thumb{max-width:300px;max-height:200px}
+
+/* Fields in the cells of an inline (the publishable incident: size 62, textareas of 60 columns):
+   the width of the cell, not of the HTML attributes. Three of them in a row did not fit next to
+   the navigation at 1440 px, and the page scrolled sideways. */
+.inline-group .tabular td input[type=text],
+.inline-group .tabular td textarea { width: 100%; box-sizing: border-box; }

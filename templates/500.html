@@ -1,0 +1,1 @@
+{% load i18n %}{% translate "Something went wrong" as heading %}{% translate "You did not cause this error. Please try again later." as text %}{% include "errors/http.html" with status=500 %}

@@ -16,25 +16,21 @@
 # along with LabCIRS.
 # If not, see <https://www.gnu.org/licenses/>.
 
-import time
 from datetime import date
 
 from django.core import mail
 from django.test import override_settings
 from django.urls import reverse
-from model_mommy import mommy
+from model_bakery import baker
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 
-from cirs.models import Reporter, Reviewer
+from cirs.models import Reporter, Reviewer, group_code
 from cirs.tests.helpers import create_role
 from cirs.tests.tests import generate_three_incidents
 
 from .base import FunctionalTest
-
-DEFAULT_WAIT = 5
-
 
 incident_date = date(2015, 7, 24)
 test_incident = {'date': incident_date,
@@ -63,57 +59,49 @@ class CriticalIncidentListTest(FunctionalTestWithBackendLogin):
     def setUp(self):
         super(CriticalIncidentListTest, self).setUp()
         create_role(Reporter, self.reporter)
-        self.dept = mommy.make_recipe('cirs.department', reporter=self.reporter.reporter)
+        self.dept = baker.make_recipe('cirs.department', reporter=self.reporter.reporter)
         self.dept.labcirsconfig.mandatory_languages=['en']
         self.dept.labcirsconfig.save()
-    
-    @override_settings(DEBUG=True)
-    def test_user_can_add_incident_with_photo(self):
-        self.quick_login_reporter()
-        self.click_link_with_text('Add incident')
+        self.create_url = reverse('create_incident', kwargs={'dept': self.dept.label})
 
-        # change to besser test
-        self.assertIn(reverse('create_incident', kwargs={'dept': self.dept.label}),
-                      self.browser.current_url)
+    def test_user_can_add_incident_with_photo(self):
+        # the reporter needs no login: the report form is open
+        self.browser.get(self.live_server_url + self.dept.get_absolute_url())
+        self.click_link_with_text('Report incident')
+        self.assertCurrentUrlIs(self.create_url)
 
         # the reporter enters incident data
         self.enter_test_incident(with_photo=True)
         # check for success
-        time.sleep(2)
-        self.assertIn(reverse('success', kwargs={'dept': self.dept.label}),
-                      self.browser.current_url)
+        self.assertCurrentUrlIs(reverse('success', kwargs={'dept': self.dept.label}))
 
-        # the reporter has to logout and the reviewer has to "publish" the incident
-        self.logout()
+        # the reviewer has to "publish" the incident
         self.go_to_test_incident_as_reviewer()
         # uncollapse the review panel
-        self.click_link_with_text('Show')
-        Select(self.browser.find_element(By.ID,
+        self.open_review_panel()
+        Select(self.find(By.ID,
             'id_status')).select_by_value("in process")
         for field in ('incident', 'description', 'measures_and_consequences'):
             #for lang in ('de', 'en'):  # TODO: import languages from settings
             self.find_input_and_enter_text(
                 'id_publishableincident-0-{}'.format(field), "a")
-        self.browser.find_element(By.ID, 'id_publishableincident-0-publish').click()
-        self.browser.find_element(By.NAME, '_save').click()
-        time.sleep(5)
-        headers1 = self.browser.find_elements(By.TAG_NAME, 'h1')
+        self.scroll_and_click(By.ID, 'id_publishableincident-0-publish')
+        self.save_in_admin()
+        headers1 = self.find_all(By.TAG_NAME, 'h1')
         self.assertIn("Select Critical incident to change", [header1.text for header1 in headers1])
-        # logout and check as normal user if photo is visible
+        # logout and check as anonymous visitor if the photo is offered
         self.logout_backend()
-        self.quick_login_reporter(self.dept.get_absolute_url())
+        self.browser.get(self.live_server_url + self.dept.get_absolute_url())
         # check if all expected fields are present in the table
-        table = self.wait.until(EC.presence_of_element_located((By.ID, 'tableIncidents')))
-        EXPECTED_HEADERS = [u'Incident', u'Description', u'Measures and consequences', u'Photo',
-                            u'Date']
-        header_elements = table.find_elements(By.TAG_NAME, 'th')
-        table_headers_list = []
-        for header in header_elements:
-            table_headers_list.append(header.text)
+        EXPECTED_HEADERS = [u'Month/year', u'Incident', u'Description',
+                            u'Measures and consequences', u'Photo']
+        header_elements = self.get_rows_from_table()[0].find_elements(By.TAG_NAME, 'th')
+        # textContent: the style shows the headers in capitals, and .text would say so
+        table_headers_list = [header.get_attribute('textContent').strip() for header in header_elements]
         self.assertListEqual(EXPECTED_HEADERS, table_headers_list)
 
-        all_images = self.browser.find_elements(By.TAG_NAME, 'img')
-        self.assertGreater(len(all_images), 0)
+        # the photo is a plain link, no modal
+        self.find(By.PARTIAL_LINK_TEXT, 'View photo')
 
     def test_new_publishes_incidents_are_displayed_first(self):
         """ Creates new critical incidents with published incidents and checks
@@ -123,15 +111,10 @@ class CriticalIncidentListTest(FunctionalTestWithBackendLogin):
 
         generate_three_incidents(self.dept)
 
-        # Now reporter goes to the list and should see the list of
+        # Now a visitor goes to the list and should see the list of
         # published incidents in order b, a, c
-        self.quick_login_reporter(self.dept.get_absolute_url())
-        table = self.browser.find_element(By.ID, 'tableIncidents')
-        rows = table.find_elements(By.TAG_NAME, 'tr')
-
-        self.assertIn('b', rows[1].text)
-        self.assertIn('a', rows[2].text)
-        self.assertIn('c', rows[3].text)
+        self.browser.get(self.live_server_url + self.dept.get_absolute_url())
+        self.assertListEqual(self.get_column_from_table_as_list(column=1), ['b', 'a', 'c'])
 
     @override_settings(EMAIL_HOST='smtp.example.com')
     def test_send_email_after_reporter_creates_an_incident(self):
@@ -140,11 +123,30 @@ class CriticalIncidentListTest(FunctionalTestWithBackendLogin):
         config.notification_sender_email = 'labcirs@labcirs.edu'
         config.notification_recipients.add(self.reviewer)
         config.save()
-        self.quick_login_reporter(reverse('create_incident', kwargs={'dept': self.dept.label}))
+        self.browser.get(self.live_server_url + self.create_url)
 
         # reporter enters incident data
-        self.enter_test_incident(wait_for_success=True)
+        self.enter_test_incident()
 
         # check if incident was sent by email
         self.assertEqual(len(mail.outbox), 1)  # @UndefinedVariable
         self.assertEqual(mail.outbox[0].subject, 'New critical incident')
+
+    def test_no_address_field_without_sender_address(self):
+        # Without DEFAULT_FROM_EMAIL (the development default) no mail can be sent, so the form
+        # does not ask for an address.
+        self.browser.get(self.live_server_url + self.create_url)
+        self.field_id('Date of incident')  # waits until the form is there
+        self.assert_absent(By.XPATH, '//label[starts-with(normalize-space(.), "E-mail for notifications")]')
+
+    @override_settings(DEFAULT_FROM_EMAIL='labcirs@labcirs.edu')
+    def test_reporter_can_leave_an_address_and_gets_the_code_by_mail(self):
+        self.browser.get(self.live_server_url + self.create_url)
+        self.fill_field('E-mail for notifications', 'reporter@example.org')
+
+        code = self.enter_test_incident()
+
+        self.assertEqual(len(mail.outbox), 1)  # @UndefinedVariable
+        self.assertEqual(mail.outbox[0].to, ['reporter@example.org'])
+        # the mail shows the code in groups of four, as the success page does
+        self.assertIn(group_code(code), mail.outbox[0].body)

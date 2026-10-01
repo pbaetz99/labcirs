@@ -1,16 +1,21 @@
 {% extends "cirs/base.html" %}
+{% load i18n %}
+{% block title %}{% translate "My report" %}{% endblock %}
+{% block layout %}form{% endblock %}
 
 {% block content %}
-    {{ block.super }}
-    {% load i18n %}
-    <div class="container">
-		<form action="" method="post" enctype="multipart/form-data" >
-			{% csrf_token %}
-			<p>{% trans "Please enter the code which you received after submitting the incident." %}</p>
-			
-			{{ form.as_p }}
-			
-			<button type="submit" class="btn btn-info">{% trans "Search" %}</button> 
-		</form>
-    </div>
+  <h1>{% translate "My report" %}</h1>
+  <p class="ui-lede">{% translate "With the code you received after sending your report you follow its status and answer questions from the quality management." %}</p>
+  <p>{% translate "Keep the code to yourself. Anyone who knows it can read your report and reply." %}</p>
+
+  {# The code goes by POST, never into the address. Messages come from base.html. #}
+  <div class="ui-card">
+    <form method="post" action="" data-einmal-absenden>
+      {% csrf_token %}
+      <p class="ui-secondary">{% blocktranslate trimmed %}Fields marked with <span class="ui-required">*</span> are required.{% endblocktranslate %}</p>
+      {{ form }}
+      {% translate "Checking …" as busy_text %}
+      <button class="ui-btn ui-btn--primary" type="submit" data-busy-text="{{ busy_text }}">{% translate "Check code" %}</button>
+    </form>
+  </div>
 {% endblock %}

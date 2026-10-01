@@ -1,0 +1,5 @@
+# Packages the Playwright container installs when it starts (compose.dev.yaml, service playwright).
+# playwright: the same version as the image tag. Pillow and psycopg: the versions of requirements.txt.
+playwright==1.63.0
+Pillow==12.3.0
+psycopg[binary]==3.2.13

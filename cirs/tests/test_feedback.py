@@ -21,9 +21,9 @@ import random
 import string
 
 from django.core import mail
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
-from model_mommy import mommy
+from model_bakery import baker
 
 from cirs.forms import CommentForm
 from cirs.models import Comment
@@ -34,14 +34,14 @@ from .helpers import create_user
 class BaseFeedbackTest(TestCase):
     def setUp(self):
         self.reporter = create_user('reporter')
-        self.ci = mommy.make_recipe('cirs.public_ci')
+        self.ci = baker.make_recipe('cirs.public_ci',
+                                    department=baker.make_recipe('cirs.department'))
 
 
 class SecurityTest(BaseFeedbackTest):
     
     def setUp(self):
         super(SecurityTest,self).setUp()
-        self.client.force_login(self.ci.department.reporter.user)
         self.search_url = reverse('incident_search', kwargs={'dept': self.ci.department.label})
 
     def test_reporter_cannot_acces_incident_directly(self):
@@ -74,8 +74,8 @@ class SecurityTest(BaseFeedbackTest):
         self.assertRedirects(response, self.search_url)
 
     def test_wrong_code_causes_form_error(self):
-        response = self.client.post(self.search_url, {'incident_code':'ab'}, follow=True)
-        self.assertFormError(response, 'form', 'incident_code', 'No matching critical incident found!')
+        response = self.client.post(self.search_url, {'incident_code':'abcdefgh'}, follow=True)
+        self.assertFormError(response.context['form'], 'incident_code', 'No matching critical incident found!')
 
 class CommentModelTest(BaseFeedbackTest):
     def setUp(self):
@@ -109,7 +109,6 @@ class CommentViewTest(BaseFeedbackTest):
                              'author': self.reporter,
                              'status': 'open'} 
 
-        self.client.force_login(self.ci.department.reporter.user)
         session = self.client.session
         session['accessible_incident'] = self.ci.id
         session.save()
@@ -135,6 +134,7 @@ class CommentViewTest(BaseFeedbackTest):
                                     follow=True)
         self.assertRedirects(response, self.ci_url)
 
+    @override_settings(LANGUAGE_CODE='en')  # the QM mails follow the site language
     def test_send_email_after_form_is_saved(self):
         reviewer = create_user('reviewer')
         config = self.ci.department.labcirsconfig

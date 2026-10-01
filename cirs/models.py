@@ -21,7 +21,7 @@ from datetime import date
 from django.conf import settings
 from django.contrib.auth.models import Permission, User
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.urls import reverse
@@ -41,7 +41,7 @@ class Role(models.Model):
     def clean(self):
         if self.user.is_superuser:
             raise ValidationError(
-                _('Superuser cannot become {}'.format(type(self).__name__.lower())))
+                _('Superuser cannot become {}').format(type(self).__name__.lower()))
 
     class Meta:
         abstract = True
@@ -66,7 +66,8 @@ class Reporter(Role):
 class Reviewer(Role):
     REVIEWER_PERM_CODES = ('change_criticalincident', 'add_publishableincident', 
                            'change_publishableincident', 'change_labcirsconfig',
-                           'change_user')
+                           'change_user', 'add_orgunit', 'change_orgunit', 'view_orgunit',
+                           'view_comment')
     
     def clean(self):
         super(Reviewer, self).clean()
@@ -91,10 +92,10 @@ class Department(models.Model):
             help_text=_('Label can only consist of letters, numbers, underscores and hyphens.'))
     name = models.CharField(_('Name'), max_length=255, unique=True)
     reporter = models.OneToOneField(Reporter, verbose_name=_("Reporter"), on_delete=models.PROTECT,
-            help_text='Reporters assigned to other departments are not listed here!')
+            help_text=_('Reporters assigned to other departments are not listed here!'))
     reviewers = models.ManyToManyField(Reviewer, verbose_name=_("Reviewers"), related_name='departments')
     active = models.BooleanField(_("Active"), 
-            help_text='Incidents can be created only if department is active.')
+            help_text=_('Incidents can be created only if department is active.'))
 
     class Meta:
         verbose_name = _('Department')
@@ -105,24 +106,6 @@ class Department(models.Model):
 
     def __str__(self):
         return self.label
-
-from registration.signals import user_approved
-
-
-@receiver(user_approved)
-def activate_department(sender, user, request, **kwargs):
-    if user.is_active and hasattr(user, 'reviewer'):
-        #print user 
-        # proceed only if user has one dept
-        if user.reviewer.departments.count() == 1:
-            dept = user.reviewer.departments.get()
-            if dept.active is False:
-                dept.active = True
-                dept.save()
-            # activate inactive reporter
-            if dept.reporter.user.is_active is False:
-                dept.reporter.user.is_active = True
-                dept.reporter.user.save()
 
 
 FREQUENCY_CHOICES = (('singular case', _('singular case (for the first time)')),
@@ -142,6 +125,24 @@ RISK_CHOICES = (('low', _('low')), ('middle', _('middle')), ('high', _('high')))
 STATUS_CHOICES = (('new', _('new')), ('in process', _('in process')),
                   ('under supervision', _('under supervision')),
                   ('completed', _('completed')))
+# Reporters see a plainer wording of the review status than the reviewers.
+REPORTER_STATUS_LABELS = {
+    'new': _('Received'),
+    'in process': _('In progress'),
+    'under supervision': _('Measures in place, under observation'),
+    'completed': _('Closed'),
+}
+# No look-alikes (0/o, 1/l/i), because reporters write the code down by hand.
+COMMENT_CODE_CHARS = 'abcdefghijkmnpqrstuvwxyz23456789'
+COMMENT_CODE_LENGTH = 16
+
+
+def group_code(code):
+    """The code in groups of four, as the reporter sees it and notes it down: 'abcd efgh ...'.
+    Only for display, the stored code has no spaces (normalize_code ignores them again)."""
+    return ' '.join(code[i:i + 4] for i in range(0, len(code), 4))
+
+
 CATEGORY_CHOICES = (('organisation/communication', _('organisation/communication')),
                     ('technique/methods', _('technique/methods')),
                     ('knowledge/training', _('knowledge/training')),
@@ -150,6 +151,23 @@ CATEGORY_CHOICES = (('organisation/communication', _('organisation/communication
                     ('infrastructure', _('infrastructure')),
                     ('other', _('other'))
                     )
+
+
+class OrgUnit(models.Model):
+    """Optional, self-chosen place of an incident, e.g. a ward. Only two levels are offered."""
+    name = models.CharField(_('Name'), max_length=100)
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.PROTECT,
+                               related_name='children', verbose_name=_('Parent unit'))
+    active = models.BooleanField(_('Active'), default=True)
+    position = models.PositiveSmallIntegerField(_('Position'), default=0)
+
+    class Meta:
+        ordering = ('position', 'name')
+        verbose_name = _('Organisational unit')
+        verbose_name_plural = _('Organisational units')
+
+    def __str__(self):
+        return '{} › {}'.format(self.parent.name, self.name) if self.parent else self.name
 
 
 class CriticalIncident(models.Model):
@@ -176,6 +194,8 @@ class CriticalIncident(models.Model):
     public = models.BooleanField(
         _("Publication"), choices=PUBLIC_CHOICES, default=None)
     comment_code = models.CharField(max_length=16, blank=True)
+    org_unit = models.ForeignKey(OrgUnit, null=True, blank=True, on_delete=models.PROTECT,
+                                 related_name='incidents', verbose_name=_('Where did it happen?'))
     # auto filled part, invisible for reporter
     # "auto_now_add" was changed to "default=today" to allow migration to new common DB
     # It should be switched back later to remove possibility of manipulation at python level 
@@ -208,24 +228,20 @@ class CriticalIncident(models.Model):
         if self.photo:
             image_url = str(settings.MEDIA_URL) + str(self.photo)
             photo_html_tag = format_html(
-                '<a href="%s" target="_blank"><img style="max-width:300px;max-height:200px" src="%s" /></a><br>%s' %
-                (image_url, image_url, _("Click to see full size in new window/tab")))
+                '<a href="{}" target="_blank" rel="noopener"><img class="labcirs-thumb" src="{}" alt=""><br>{}</a>',
+                image_url, image_url, _("Click to see full size in new window/tab"))
         return photo_html_tag
     photo_tag.short_description = _("Photo")
     photo_tag.help_text = _("Click to see full size in new window/tab")
-    photo_tag.allow_tags = True
 
     def clean(self):
         today = date.today()
         if self.date and self.date > today:
             raise ValidationError(_("Please report only incidents which already happened."))
-        # TODO: This is very ugly. Should find better option to force one choice from the users.  
-        if self.public == "Empty" or self.public == "Leer":
-            raise ValidationError(_("Please decide if this report may be published in the lab."))
         if self.id is not None:
             if self.status == 'new':
                 for field in ('action', 'responsibilty', 'review_date', 'risk', 'frequency'):
-                    if field != '':
+                    if getattr(self, field) not in ('', None):
                         raise ValidationError({'status': _('If anything was changed in the Review block, please set status at least to "in process".')})
     
     def get_absolute_url(self):
@@ -235,13 +251,49 @@ class CriticalIncident(models.Model):
         info = (self.incident[:25] + '..') if len(self.incident) > 25 else self.incident
         return info
     
+    def get_reporter_status_display(self):
+        return str(REPORTER_STATUS_LABELS[self.status])
+
+    # The status as loaded or last saved, to see a change. None: new, or status not loaded.
+    _saved_status = None
+
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        instance = super().from_db(db, field_names, values)
+        instance._saved_status = instance.__dict__.get('status')  # a deferred field stays unread
+        return instance
+
     def save(self, *agrs, **kwargs):
-        chars = 'abcdefghijklmnopqrstuvwxyz0123456789@#$%&*-_=+'
         while not self.comment_code:
-            random_string = get_random_string(8, chars)
+            random_string = get_random_string(COMMENT_CODE_LENGTH, COMMENT_CODE_CHARS)
             if CriticalIncident.objects.filter(comment_code=random_string).count() == 0:
                 self.comment_code = random_string
         super(CriticalIncident, self).save(*agrs, **kwargs)
+        changed = self._saved_status not in (None, self.status)
+        self._saved_status = self.status
+        if changed:
+            # After the commit: the admin saves in a transaction, and a rolled-back save must
+            # not tell the reporter a status that was not stored.
+            transaction.on_commit(self._notify_reporter_of_status)
+
+    def _notify_reporter_of_status(self):
+        from .reporter_mail import notify_reporter  # reporter_mail imports this module
+        notify_reporter(self, 'status')
+        if self.status == 'completed':
+            # The address is kept only as long as the report is open.
+            ReporterContact.objects.filter(incident=self).delete()
+
+
+class ReporterContact(models.Model):
+    """
+    Optional address for notifications to the reporter of an incident. It is the only data that
+    can identify a reporter, so it is not registered in the admin, has no readable string form
+    and is deleted when the incident is completed (see CriticalIncident.save).
+    """
+    incident = models.OneToOneField(CriticalIncident, on_delete=models.CASCADE,
+                                    related_name='reporter_contact')
+    email = models.EmailField(_('E-mail address'))
+    created = models.DateTimeField(auto_now_add=True)
 
 
 class TranslationStatusMixin(object):
@@ -271,11 +323,12 @@ class TranslationStatusMixin(object):
     translation_status = property(_translation_status)
     
     def _translation_info(self):
-        msg = '<span style="color: {}; font-weight: bold;">{}<br>{}!</span>'
+        # Colours come from static/css/admin-theme.css (no inline style, CSP).
+        msg = '<span class="labcirs-status labcirs-status--{}">{}<br>{}!</span>'
         if self.translation_status == 'complete':
-            return format_html(msg, 'green', _('Translation'), _('complete'))
+            return format_html(msg, 'complete', _('Translation'), _('complete'))
         else:
-            return format_html(msg,'red', _('Translation'), _('incomplete'))
+            return format_html(msg, 'incomplete', _('Translation'), _('incomplete'))
     _translation_info.short_description = _('Translation info')
 
     translation_info = property(_translation_info)
@@ -358,12 +411,12 @@ class LabCIRSConfig(TranslationStatusMixin, TranslatableModel):
         help_text=_('Enter a valid email address you want to use as a sender'))
     # TODO: Check if user has email!
     notification_recipients = models.ManyToManyField(
-        User, verbose_name=_('Notification recipients'), null=True, blank=True,
+        User, verbose_name=_('Notification recipients'), blank=True,
         help_text=_('Choose recipients of the notification email'))
     notification_text = models.TextField(
         _('Notification text'), blank=True,
-        help_text=('Enter the message which will be send to the reviewer(s) '
-                   'when a new incident is reported')
+        help_text=_('Enter the message which will be send to the reviewer(s) '
+                    'when a new incident is reported')
         )
 
     # auto filled part, invisible for reviewer

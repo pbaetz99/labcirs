@@ -19,7 +19,7 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
-from model_mommy import mommy
+from model_bakery import baker
 from parameterized import parameterized
 
 from cirs.models import LabCIRSConfig
@@ -33,12 +33,12 @@ class LabCIRSConfigModels(TestCase):
     """Tests LabCIRSConfig model"""
     
     def setUp(self):
-        self.dept = mommy.make_recipe('cirs.department')
+        self.dept = baker.make_recipe('cirs.department')
         self.config = self.dept.labcirsconfig
 
     def test_labcirs_config_save_and_retrieve(self):
         self.config.login_info = LOGIN_INFO
-        self.config.login_info_url = reverse('demo_login_data_page') # TODO: remove to clean urls.py
+        self.config.login_info_url = reverse('login')
         self.config.login_info_link_text = LINK_TEXT
         self.config.send_notification = False
         self.config.notification_sender_email = 'a@test.edu'
@@ -60,13 +60,14 @@ class LabCIRSConfigModels(TestCase):
         (LINK_TEXT,),
     ])
     def test_login_info_in_response(self, text):
-        self.config.login_info_en = LOGIN_INFO
-        self.config.login_info_url = reverse('demo_login_data_page') # TODO: remove to clean urls.py
-        self.config.login_info_link_text_en = LINK_TEXT
+        self.config.login_info = LOGIN_INFO
+        self.config.login_info_url = reverse('login')
+        self.config.login_info_link_text = LINK_TEXT
         self.config.clean()
         self.config.save()
 
-        response = self.client.get(self.dept.get_absolute_url(), follow=True)
+        # The list is public now, so the login page is opened directly with next=<list>.
+        response = self.client.get(reverse('login') + '?next=' + self.dept.get_absolute_url())
         self.assertIn(text, str(response.content))
 
     def test_add_reviewer_as_notification_recipient(self):

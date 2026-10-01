@@ -1,0 +1,10 @@
+.git
+**/__pycache__
+media
+.env
+.env.*
+artifacts
+tls
+branding
+labcirs/settings/local_config.json
+db.sqlite3

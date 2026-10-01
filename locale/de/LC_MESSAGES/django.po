@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LabCIRS\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-05-22 15:01+0200\n"
+"POT-Creation-Date: 2026-10-01 10:02+0000\n"
 "PO-Revision-Date: 2019-05-22 15:00+0200\n"
 "Last-Translator: Sebastian Major <sebastian.major@charite.de>\n"
 "Language-Team: \n"
@@ -19,201 +19,266 @@ msgstr ""
 "X-Generator: Poedit 2.2.3\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 
-#: .\templates\base.html:10
-msgid "for"
-msgstr "für"
+#: templates/400.html:1
+msgid "Request not understood"
+msgstr "Anfrage nicht verständlich"
 
-#: .\templates\base.html:40
-msgid "Register"
-msgstr "Registrieren"
+#: templates/400.html:1
+msgid "The request could not be processed. Please try again."
+msgstr ""
+"Die Anfrage konnte nicht verarbeitet werden. Bitte versuchen Sie es noch "
+"einmal."
 
-#: .\templates\base.html:51
-msgid "Welcome,"
-msgstr "Wilkommen,"
+#: templates/403.html:1
+msgid "Access denied"
+msgstr "Kein Zugriff"
 
-#: .\templates\base.html:73
+#: templates/403.html:1
+msgid "You do not have permission for this page."
+msgstr "Für diese Seite fehlt Ihnen die Berechtigung."
+
+#: templates/403_csrf.html:1
+msgid "Session expired"
+msgstr "Sitzung abgelaufen"
+
+#: templates/403_csrf.html:1
+msgid "Please reload the page and submit the form again."
+msgstr "Bitte laden Sie die Seite neu und senden Sie das Formular noch einmal."
+
+#: templates/404.html:1
+msgid "Page not found"
+msgstr "Seite nicht gefunden"
+
+#: templates/404.html:1
+msgid "This address does not exist or no longer exists."
+msgstr "Diese Adresse gibt es nicht oder nicht mehr."
+
+#: templates/500.html:1
+msgid "Something went wrong"
+msgstr "Etwas ist schiefgelaufen"
+
+#: templates/500.html:1
+msgid "You did not cause this error. Please try again later."
+msgstr ""
+"Der Fehler wurde nicht durch Sie verursacht. Bitte versuchen Sie es später "
+"noch einmal."
+
+#: templates/base.html:30
+msgid "Skip to content"
+msgstr "Zum Inhalt springen"
+
+#: templates/base.html:41
+msgid "Main navigation"
+msgstr "Hauptnavigation"
+
+#: templates/base.html:48
+msgid "Report incident"
+msgstr "Ereignis melden"
+
+#: templates/base.html:50
+msgid "My report"
+msgstr "Meine Meldung"
+
+#: templates/base.html:53
+msgid "Published cases"
+msgstr "Veröffentlichte Fälle"
+
+#: templates/base.html:56
+msgid "Admin"
+msgstr "Verwaltung"
+
+#: templates/base.html:68
 msgid "Log out"
 msgstr "Abmelden"
 
-#: .\templates\base.html:75
+#: templates/base.html:72
 msgid "Log in"
 msgstr "Anmelden"
 
-#: .\templates\registration\activation_email.html:6
-#: .\templates\registration\admin_approve_email.html:6
-msgid "registration"
-msgstr "Registrierung"
+#: templates/base.html:76
+msgid "Language"
+msgstr "Sprache"
 
-#: .\templates\registration\activation_email.html:11
-#: .\templates\registration\activation_email.txt:2
-msgid "You have asked to register a new LabCIRS account"
-msgstr "Sie möchten einen neuen LabCIRS-Account registrieren"
-
-#: .\templates\registration\activation_email.html:14
-#: .\templates\registration\activation_email.txt:4
-msgid "Username"
-msgstr "Benutzername"
-
-#: .\templates\registration\activation_email.html:17
-#: .\templates\registration\activation_email.txt:6
+#: templates/base.html:110
 #, python-format
-msgid ""
-"To activate this account, please click the following link within the next "
-"%(expiration_days)s days:"
-msgstr ""
-"Um diesen Account zu aktivieren klicken Sie bitte auf den folgenden Link "
-"innerhalb der nächsten %(expiration_days)s Tage:"
+msgid "Version %(version)s"
+msgstr "Version %(version)s"
 
-#: .\templates\registration\activation_email.html:25
-#: .\templates\registration\activation_email.txt:10
-msgid ""
-"If this wasn't you, please ignore this email and your address will be "
-"removed from our records."
-msgstr ""
-"Falls Sie es nicht waren, ignorieren Sie diese E-Mail und Ihre Adresse wird "
-"aus unserem System gelöscht."
+#: templates/base.html:113
+msgid "Legal"
+msgstr "Rechtliches"
 
-#: .\templates\registration\activation_email.html:28
-#: .\templates\registration\activation_email.txt:12
+#: templates/base.html:114
+msgid "Imprint"
+msgstr "Impressum"
+
+#: templates/base.html:115
+msgid "Privacy"
+msgstr "Datenschutz"
+
+#: templates/base.html:117
+msgid "based on LabCIRS (AGPL)"
+msgstr "basiert auf LabCIRS (AGPL)"
+
+#: templates/errors/http.html:24
+msgid "Quack!"
+msgstr "Quak!"
+
+#: templates/errors/http.html:34
 #, python-format
-msgid ""
-"\n"
-"Sincerely,\n"
-"%(ORGANIZATION)s - LabCIRS Management\n"
-msgstr ""
-"\n"
-"Mit freundlichen Grüßen,\n"
-"%(ORGANIZATION)s - LabCIRS Verwaltung\n"
+msgid "Error %(status)s"
+msgstr "Fehler %(status)s"
 
-#: .\templates\registration\activation_email_subject.txt:1
-msgid "Account activation at"
-msgstr "Accountaktivierung"
+#: templates/errors/http.html:39
+msgid "Go to the start page"
+msgstr "Zur Startseite"
 
-#: .\templates\registration\admin_approve_complete_email.html:6
-msgid "admin approval"
-msgstr "Admin Genehmigung"
+#: templates/errors/http.html:41
+msgid "Why a duck? Ducks are your IT admin's favourite animals."
+msgstr "Warum eine Ente? Enten sind die Lieblingstiere Ihres IT-Admins."
 
-#: .\templates\registration\admin_approve_complete_email.html:11
-msgid "Your account is now approved. You can"
-msgstr "Ihr Account ist jetzt aktiviert. Sie können sich"
+#~ msgid "for"
+#~ msgstr "für"
 
-#: .\templates\registration\admin_approve_complete_email.html:12
-msgid "log in."
-msgstr "anmelden."
+#~ msgid "Welcome,"
+#~ msgstr "Wilkommen,"
 
-#: .\templates\registration\admin_approve_complete_email.html:15
-#: .\templates\registration\admin_approve_complete_email.txt:6
-msgid "Username for Reviewer"
-msgstr "Benutzername des Reviewers"
+#~ msgid "Register"
+#~ msgstr "Registrieren"
 
-#: .\templates\registration\admin_approve_complete_email.html:17
-#: .\templates\registration\admin_approve_complete_email.txt:7
-msgid "Username for Reporter"
-msgstr "Benutzername des Reporters"
+#~ msgid "registration"
+#~ msgstr "Registrierung"
 
-#: .\templates\registration\admin_approve_complete_email.html:20
-#: .\templates\registration\admin_approve_complete_email.txt:9
-msgid ""
-"IMPORTANT: The initial password for the reporter is equal to his user name "
-"but you can change it after login!"
-msgstr ""
-"WICHTIG: Das erste Passwort des Reporters gleicht seinem Benutzernamen, Sie "
-"können es aber nach dem Login ändern!"
+#~ msgid "You have asked to register a new LabCIRS account"
+#~ msgstr "Sie möchten einen neuen LabCIRS-Account registrieren"
 
-#: .\templates\registration\admin_approve_complete_email.html:23
-#: .\templates\registration\admin_approve_complete_email.txt:11
-msgid "Sincerely, LabCIRS Management"
-msgstr "Mit freundlichen Grüßen, LabCIRS Verwaltung"
+#~ msgid "Username"
+#~ msgstr "Benutzername"
 
-#: .\templates\registration\admin_approve_complete_email.txt:2
-msgid "Your account is now approved. You can log in using the following link"
-msgstr ""
-"Ihr Account ist jetzt aktiviert. Sie können sich anmelden in dem sie den "
-"folgenden Link nutzen"
+#, python-format
+#~ msgid ""
+#~ "To activate this account, please click the following link within the next "
+#~ "%(expiration_days)s days:"
+#~ msgstr ""
+#~ "Um diesen Account zu aktivieren klicken Sie bitte auf den folgenden Link "
+#~ "innerhalb der nächsten %(expiration_days)s Tage:"
 
-#: .\templates\registration\admin_approve_complete_email_subject.txt:1
-msgid "Account activation in"
-msgstr "Accountaktivierung"
+#~ msgid ""
+#~ "If this wasn't you, please ignore this email and your address will be "
+#~ "removed from our records."
+#~ msgstr ""
+#~ "Falls Sie es nicht waren, ignorieren Sie diese E-Mail und Ihre Adresse "
+#~ "wird aus unserem System gelöscht."
 
-#: .\templates\registration\admin_approve_email.html:11
-#: .\templates\registration\admin_approve_email.txt:2
-msgid "A new user has asked to register an LabCIRS account"
-msgstr "Ein neuer Benutzer möchte einen neuen LabCIRS-Account registrieren"
+#, python-format
+#~ msgid ""
+#~ "\n"
+#~ "Sincerely,\n"
+#~ "%(ORGANIZATION)s - LabCIRS Management\n"
+#~ msgstr ""
+#~ "\n"
+#~ "Mit freundlichen Grüßen,\n"
+#~ "%(ORGANIZATION)s - LabCIRS Verwaltung\n"
 
-#: .\templates\registration\admin_approve_email.html:14
-#: .\templates\registration\admin_approve_email.txt:4
-msgid "User"
-msgstr "Benutzer"
+#~ msgid "Account activation at"
+#~ msgstr "Accountaktivierung"
 
-#: .\templates\registration\admin_approve_email.html:16
-#: .\templates\registration\admin_approve_email.txt:5
-msgid "Department"
-msgstr "Abteilung"
+#~ msgid "admin approval"
+#~ msgstr "Admin Genehmigung"
 
-#: .\templates\registration\admin_approve_email.html:19
-msgid "To approve this, please"
-msgstr "Um dies zu bestätigen, bitte"
+#~ msgid "Your account is now approved. You can"
+#~ msgstr "Ihr Account ist jetzt aktiviert. Sie können sich"
 
-#: .\templates\registration\admin_approve_email.html:20
-msgid "click here"
-msgstr "hier klicken"
+#~ msgid "log in."
+#~ msgstr "anmelden."
 
-#: .\templates\registration\admin_approve_email.txt:6
-msgid "To approve this, please click the following link"
-msgstr "Zur Bestätigung bitte auf den folgenden Link klicken"
+#~ msgid "Username for Reviewer"
+#~ msgstr "Benutzername des Reviewers"
 
-#: .\templates\registration\admin_approve_email_subject.txt:1
-msgid "Account approval for"
-msgstr "Accountgenehmigung für"
+#~ msgid "Username for Reporter"
+#~ msgstr "Benutzername des Reporters"
 
-#: .\templates\registration\registration_form.html:4
-msgid "Register for an LabCIRS account"
-msgstr "Registrierung eines LabCIRS-Accounts"
+#~ msgid ""
+#~ "IMPORTANT: The initial password for the reporter is equal to his user "
+#~ "name but you can change it after login!"
+#~ msgstr ""
+#~ "WICHTIG: Das erste Passwort des Reporters gleicht seinem Benutzernamen, "
+#~ "Sie können es aber nach dem Login ändern!"
 
-#: .\templates\registration\registration_form.html:8
-msgid "Register new reviewer and new department"
-msgstr "Registrierung eines neues Benutzers und einer neuen Einrichtung"
+#~ msgid "Sincerely, LabCIRS Management"
+#~ msgstr "Mit freundlichen Grüßen, LabCIRS Verwaltung"
 
-#: .\templates\registration\registration_form.html:11
-msgid ""
-"\n"
-"\t\tHere you can register a new department together  with new reviewer "
-"account.\n"
-"\t\t<br>\n"
-"\t\tTogether with the new depaertment a reporter user will be created. The "
-"password of the reporter\n"
-"\t\twill be the same as his username but you can change it after your "
-"account is activated.\n"
-"\t\t<br>\n"
-"\t\tPlease note that all user names have to be lowercase and will be "
-"converted if you enter capital letters!\n"
-"\t"
-msgstr ""
-"\n"
-"\t\tHier können Sie eine neue Abteilung und einen neuen Reviewer-Account "
-"registrieren.\n"
-"\t\t<br>\n"
-"\t\tFür die Abteilung wird auch ein Reporter-Benutzer erzeugt. Das Passwort "
-"wird gleich wie sein Benutzername lauten, aber Sie können es ändern, sobald "
-"Ihr Account aktiviert ist. \n"
-"\t\t<br>\n"
-"\t\tBitte beachten Sie, dass in Benutzernamen nur kleine Buchstaben benutzt "
-"werden dürfen. Großbuchstaben werden beim Anlegen der Benutzer entsprechend "
-"konvertiert.\n"
-"\t"
+#~ msgid ""
+#~ "Your account is now approved. You can log in using the following link"
+#~ msgstr ""
+#~ "Ihr Account ist jetzt aktiviert. Sie können sich anmelden in dem sie den "
+#~ "folgenden Link nutzen"
 
-#: .\templates\registration\registration_form.html:25
-msgid "Submit"
-msgstr "Abschicken"
+#~ msgid "Account activation in"
+#~ msgstr "Accountaktivierung"
 
-#: .\templates\registration\registration_form.html:27
-#: .\templates\registration\registration_form.html:40
-msgid "Terms of service"
-msgstr "AGB"
+#~ msgid "A new user has asked to register an LabCIRS account"
+#~ msgstr "Ein neuer Benutzer möchte einen neuen LabCIRS-Account registrieren"
 
-#: .\templates\registration\registration_form.html:49
-msgid "Close"
-msgstr "Schließen"
+#~ msgid "User"
+#~ msgstr "Benutzer"
+
+#~ msgid "Department"
+#~ msgstr "Abteilung"
+
+#~ msgid "To approve this, please"
+#~ msgstr "Um dies zu bestätigen, bitte"
+
+#~ msgid "click here"
+#~ msgstr "hier klicken"
+
+#~ msgid "To approve this, please click the following link"
+#~ msgstr "Zur Bestätigung bitte auf den folgenden Link klicken"
+
+#~ msgid "Account approval for"
+#~ msgstr "Accountgenehmigung für"
+
+#~ msgid "Register for an LabCIRS account"
+#~ msgstr "Registrierung eines LabCIRS-Accounts"
+
+#~ msgid "Register new reviewer and new department"
+#~ msgstr "Registrierung eines neues Benutzers und einer neuen Einrichtung"
+
+#~ msgid ""
+#~ "\n"
+#~ "\t\tHere you can register a new department together  with new reviewer "
+#~ "account.\n"
+#~ "\t\t<br>\n"
+#~ "\t\tTogether with the new depaertment a reporter user will be created. "
+#~ "The password of the reporter\n"
+#~ "\t\twill be the same as his username but you can change it after your "
+#~ "account is activated.\n"
+#~ "\t\t<br>\n"
+#~ "\t\tPlease note that all user names have to be lowercase and will be "
+#~ "converted if you enter capital letters!\n"
+#~ "\t"
+#~ msgstr ""
+#~ "\n"
+#~ "\t\tHier können Sie eine neue Abteilung und einen neuen Reviewer-Account "
+#~ "registrieren.\n"
+#~ "\t\t<br>\n"
+#~ "\t\tFür die Abteilung wird auch ein Reporter-Benutzer erzeugt. Das "
+#~ "Passwort wird gleich wie sein Benutzername lauten, aber Sie können es "
+#~ "ändern, sobald Ihr Account aktiviert ist. \n"
+#~ "\t\t<br>\n"
+#~ "\t\tBitte beachten Sie, dass in Benutzernamen nur kleine Buchstaben "
+#~ "benutzt werden dürfen. Großbuchstaben werden beim Anlegen der Benutzer "
+#~ "entsprechend konvertiert.\n"
+#~ "\t"
+
+#~ msgid "Submit"
+#~ msgstr "Abschicken"
+
+#~ msgid "Terms of service"
+#~ msgstr "AGB"
+
+#~ msgid "Close"
+#~ msgstr "Schließen"
 
 #~ msgid ""
 #~ "IMPORTANT: The initial password for the reporter user is equal to his "

@@ -1,22 +1,39 @@
 {% extends "cirs/base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Thank you!" %}{% endblock %}
+{% block layout %}form{% endblock %}
 
 {% block content %}
-{% load i18n %}
-    <div class="jumbotron">
-	<div class="container">
-	    <h1>{% trans "Thank you!" %}</h1>
-	    <br>
-	    <p class="alert alert-info">If you want to comment on this report in future, plesase write down this code: 
-	    {% for message in messages %}
-	    {{ message }}
-	    {% endfor %}
-	    </p>
-	    
-	    <a href="{% url 'logout' %}" class="btn btn-primary btn-lg" role="button">{% trans "Log out" %}</a>
-	    {% with department=user.reporter.department.label %}
-	    	<a href="{% url 'incidents_for_department' dept=department %}" class="btn btn-primary btn-lg" role="button">{% trans "View incidents" %}</a>
-	    	<a href="{% url 'create_incident' dept=department %}" class="btn btn-primary btn-lg" role="button">{% trans "One more" %}</a>
-	    {% endwith %}
-        </div>
+  <h1>{% translate "Thank you!" %}</h1>
+
+  {% if comment_code %}
+    <div class="ui-alert ui-alert--success ui-mt-4" role="status">
+      <div class="ui-alert__body">
+        <strong class="ui-alert__titel">{% translate "Your report has been received" %}.</strong>
+        <p>{% translate "The quality management will look at your report and can ask you questions under “My report”." %}</p>
+      </div>
     </div>
+
+    <div class="ui-card">
+      <h2 class="ui-card__title">{% translate "Your code" %}</h2>
+      {# Groups of four, each one unbreakable: the line may wrap between them only. #}
+      <code class="ui-meldecode">{% for group in comment_code_groups %}<span class="ui-meldecode__gruppe">{{ group }}</span>{% if not forloop.last %} {% endif %}{% endfor %}</code>
+      <p class="ui-mt-2">{% translate "Please note this code. You need it to follow the status of your report and to answer questions." %}</p>
+      <p><strong>{% translate "The code cannot be restored." %}</strong> {% translate "Nobody knows whom the code belongs to, so nobody can tell it to you again. Note it before you leave this page." %}</p>
+      {% if reporter_email_offered %}<p>{% translate "If you gave an e-mail address, you also receive the code by e-mail." %}</p>{% endif %}
+      <p class="ui-secondary ui-mb-0">{% translate "Spaces and upper or lower case do not matter when you enter it." %}</p>
+    </div>
+  {% else %}
+    {# Reloaded or opened without sending: the code was shown once and is not kept anywhere. #}
+    <div class="ui-alert ui-alert--info">
+      <div class="ui-alert__body">{% translate "This page shows the code only once, directly after sending. It is not shown again." %}</div>
+    </div>
+  {% endif %}
+
+  {# Through the code entry, not straight to the report: ward PCs are shared. #}
+  <div class="ui-row ui-mt-4">
+    <a class="ui-btn ui-btn--primary" href="{% url 'incident_search' dept=view.kwargs.dept %}">{% translate "View my report" %}</a>
+    <a class="ui-btn ui-btn--secondary" href="{% url 'incidents_for_department' dept=view.kwargs.dept %}">{% translate "View published cases" %}</a>
+    <a class="ui-btn ui-btn--secondary" href="{% url 'create_incident' dept=view.kwargs.dept %}">{% translate "Report another incident" %}</a>
+  </div>
 {% endblock %}

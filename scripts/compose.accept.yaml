@@ -1,0 +1,60 @@
+# Acceptance stack (scripts/acceptance.sh): the production image and the production
+# settings behind nginx with TLS, plus mailpit and the Playwright container from compose.dev.yaml.
+# Third file on top of compose.yaml and compose.dev.yaml. compose.dev.yaml turns the app into the
+# development server (test image, runserver, DEBUG on, source mounted); this file takes that back, so
+# that gunicorn, DEBUG off, ALLOWED_HOSTS and the logs are those of an installation.
+# The values come from artifacts/accept/accept.env, which acceptance.sh writes and loads.
+services:
+  app:
+    build:
+      target: base
+    hostname: !reset null
+    command: !reset null  # the entrypoint migrates and starts gunicorn
+    ports: !reset []
+    volumes: !override
+      - media:/media
+    depends_on: !override
+      db:
+        condition: service_healthy
+    environment: !override
+      LABCIRS_DB_ENGINE: django.db.backends.postgresql
+      LABCIRS_DB_HOST: db
+      LABCIRS_DB_NAME: labcirs
+      LABCIRS_DB_USER: labcirs
+      LABCIRS_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      LABCIRS_SECRET_KEY: ${LABCIRS_SECRET_KEY}
+      LABCIRS_ALLOWED_HOSTS: '["cirs.test"]'
+      LABCIRS_BEHIND_PROXY: "true"
+      LABCIRS_SESSION_COOKIE_SECURE: "true"
+      LABCIRS_DEBUG: "false"
+      LABCIRS_LANGUAGES: '{"de": "Deutsch", "en": "English"}'
+      LABCIRS_PARLER_LANGUAGES: '["de", "en"]'
+      LABCIRS_TIME_ZONE: Europe/Vienna
+      LABCIRS_ORGANIZATION: Demo-Organisation
+      LABCIRS_SITE_NAME: LabCIRS
+      LABCIRS_SITE_URL: https://cirs.test
+      LABCIRS_LOGO_URL: /branding/logo.svg
+      LABCIRS_THEME_CSS_URL: /branding/theme.css
+      # without a sender address the report form does not offer the e-mail field
+      LABCIRS_DEFAULT_FROM_EMAIL: no-reply@cirs.test
+      LABCIRS_EMAIL_HOST: mailpit
+      LABCIRS_EMAIL_PORT: "1025"
+
+  proxy:
+    networks:
+      default:
+        # the name of the site inside the stack: the Playwright container reaches https://cirs.test
+        aliases: [cirs.test]
+
+  playwright:
+    environment:
+      ACCEPT_URL: https://cirs.test
+      MAILPIT_URL: http://mailpit:8025
+      # the checks read the database directly (counts, addresses, hashes), as a test would
+      ACCEPT_DB_DSN: host=db dbname=labcirs user=labcirs password=${POSTGRES_PASSWORD}
+    env_file:
+      - path: artifacts/accept/accounts.env
+        required: false
+    depends_on:
+      - proxy
+      - mailpit
