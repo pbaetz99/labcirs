@@ -23,8 +23,6 @@ query: it is left out, and the page names it, so that nobody takes the list for 
 is not. A page that does not exist is a 404, as in the list of the published cases.
 """
 
-from datetime import date
-
 from django.conf import settings
 from django.core.paginator import EmptyPage, Paginator
 from django.db.models import Q
@@ -67,13 +65,6 @@ NARROWINGS = {
     'ohne_bearbeitung': lambda rows, flag: rows.filter(is_overdue=True),
     'q': lambda rows, value: rows.filter(incident__icontains=value),
 }
-
-
-def _places(incidents):
-    """The groups of places that occur in the incidents, as (id, name) in the order of the
-    units. They are the values of wo that the list takes, besides NO_PLACE."""
-    buckets = metrics.distribution(incidents, 'org_unit_group', date.min, date.max)
-    return [(bucket.key, bucket.label) for bucket in buckets if bucket.key is not None]
 
 
 def _read_params(query, place_ids):
@@ -139,7 +130,7 @@ class WorklistView(QMPage):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         incidents = scoped_incidents(self.request.user)
-        places = _places(incidents)
+        places = metrics.places(incidents)  # the values of wo, besides NO_PLACE
         values, ignored = _read_params(self.request.GET, {place for place, _name in places})
         if 'page' in ignored:
             raise Http404('No such page')

@@ -240,9 +240,9 @@ html { scroll-padding-top: calc(var(--ui-topbar-h) + var(--ui-s2)); }
 @media (min-width: 48rem) { .ui-kacheln { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .ui-kachel--breit { grid-column: 1 / -1; }
 .ui-kennzahlen { display: grid; gap: var(--ui-s2); margin: 0; }
-.ui-kennzahlen > div { display: flex; align-items: baseline; justify-content: space-between; gap: var(--ui-s3); }
+.ui-kennzahlen > div { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--ui-s1) var(--ui-s3); }
 .ui-kennzahlen dt { min-width: 0; }
-.ui-kennzahlen dd { margin: 0; font-size: var(--ui-fs-xl); font-weight: 600; font-variant-numeric: tabular-nums; }
+.ui-kennzahlen dd { margin: 0 0 0 auto; font-size: var(--ui-fs-xl); font-weight: 600; font-variant-numeric: tabular-nums; }
 .ui-kachel__liste th, .ui-kachel__liste td { padding-inline: var(--ui-s2); font-size: var(--ui-fs-sm); }
 .ui-kachel__liste thead th { letter-spacing: 0; text-transform: none; }
 
@@ -257,4 +257,20 @@ html { scroll-padding-top: calc(var(--ui-topbar-h) + var(--ui-s2)); }
 .ui-hinweise { display: flex; flex-wrap: wrap; gap: var(--ui-s1); }
 
 /* --- QM evaluations and print view (cirs/templates/cirs/qm/reports.html, reports_print.html) ---
-   The rules of the key figures, the period form and the paper layout of the print view. */
+   The rules of the key figures, the period form and the paper layout of the print view.
+   The period form: month and year of a bound are two selects side by side, the month the wider
+   one (the names of the months are the longer text); where the fieldset is too narrow for both,
+   the year wraps below the month, so nothing is cut off and nothing scrolls sideways at 320 px.
+   A key figure that is a text ("Median 7.5 days, count 4", "not recorded") is set in the size of
+   body text: in the size of the numbers it would break into many lines. The measures are blocks
+   below each other, not a table, because a title and a text of any length have to wrap. */
+.ui-zeitraum { display: flex; flex-wrap: wrap; gap: var(--ui-s3); }
+.ui-zeitraum > .ui-field { flex: 1 1 5rem; min-width: 0; margin-bottom: 0; }
+.ui-zeitraum > .ui-field:first-child { flex: 2 1 8rem; }
+.ui-kennzahlen dd.ui-kennzahlen__text { font-size: var(--ui-fs-base); text-align: end; }
+.ui-massnahmen { display: grid; gap: var(--ui-s4); margin: 0; padding: 0; list-style: none; }
+.ui-massnahmen > li { padding-top: var(--ui-s3); border-top: 1px solid var(--ui-border); }
+.ui-massnahmen__kopf { margin-bottom: var(--ui-s1); font-size: var(--ui-fs-sm); }
+.ui-begriffe dt { font-weight: 600; }
+.ui-begriffe dd { margin: 0 0 var(--ui-s3); }
+.ui-begriffe dd:last-child { margin-bottom: 0; }

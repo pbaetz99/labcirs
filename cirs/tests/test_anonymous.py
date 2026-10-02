@@ -235,7 +235,7 @@ class AnonymousAccessTest(TestCase):
         response = self.client.get(self.dept.get_absolute_url())
         self.assertContains(response, reverse('create_incident', kwargs={'dept': self.dept.label}))
         self.assertContains(response, self.search_url)
-        self.assertContains(response, 'Add new incident')
+        self.assertContains(response, '>Report incident</a>')
 
     def test_reviewer_sees_no_add_incident(self):
         self.client.force_login(self.make_reviewer(self.dept).user)

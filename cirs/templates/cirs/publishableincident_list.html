@@ -17,6 +17,14 @@
   {% blocktranslate with name=department_name %}Incidents of the department {{ name }} that were reported, anonymised by the quality management and approved for publication. They should help us to learn from errors and near misses.{% endblocktranslate %}
 </p>
 
+{# Visitors who are not logged in see the way to the report form first; reviewers do not report. #}
+{% if not user.is_authenticated %}
+<p class="ui-row ui-mt-4 ui-mb-4">
+  <a class="ui-btn ui-btn--primary" href="{% url 'create_incident' dept=department %}">{% translate "Report incident" %}</a>
+  <span class="ui-muted">{% translate "Reporting is voluntary and free of sanctions." %}</span>
+</p>
+{% endif %}
+
 {% if q or paginator.count %}
 <form method="get" class="ui-prose ui-mb-4" role="search">
   <div class="ui-field">
@@ -105,9 +113,4 @@
   </div>
 {% endif %}
 
-{% if not user.is_authenticated %}
-<p class="ui-mt-4">
-  <a class="ui-btn ui-btn--primary" href="{% url 'create_incident' dept=department %}">{% translate "Add new incident" %}</a>
-</p>
-{% endif %}
 {% endblock %}

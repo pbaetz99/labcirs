@@ -1,5 +1,142 @@
 {% extends "cirs/qm/base.html" %}
 {% load i18n %}
+{% comment %}
+  The evaluations of the QM, for a period of whole months and, if wished, one area. The form is a
+  GET form, so that the address can be shared; the quick choices are links to it. A request that is
+  not in order shows the summary of the errors (focus goes there on load, every item leads to its
+  field) and no numbers. Everything below the form is read from `report` (cirs.qm.report) and from
+  the texts that the view makes of it. The charts are the partials of cirs.qm.charts, each with an
+  id of its own; the key message of a chart is its description, the numbers are in its table. The
+  measures are a list and not a table: a text of any length has to wrap at 320 px.
+{% endcomment %}
 
 {% block title %}{% translate "Evaluations" %}{% endblock %}
 {% block heading %}{% translate "Evaluations" %}{% endblock %}
+
+{% block qm_content %}
+{% if not departments %}
+{{ block.super }}
+{% else %}
+
+{% if error_items %}
+<div class="ui-alert ui-alert--danger ui-mt-4" role="alert" tabindex="-1" autofocus aria-labelledby="auswertung-fehler-titel">
+  <div class="ui-alert__body">
+    <strong class="ui-alert__titel" id="auswertung-fehler-titel">{% translate "Please check your entries." %}</strong>
+    <ul>
+      {% for item in error_items %}<li><a href="#{{ item.target }}">{{ item.label }}</a>: {{ item.message }}</li>{% endfor %}
+    </ul>
+  </div>
+</div>
+{% endif %}
+
+<form method="get" class="ui-card ui-mt-4" aria-label="{% translate 'Choose the period' %}">
+  <div class="ui-grid ui-grid--2">
+    {% for legend, fields in form.period_groups %}
+    <fieldset class="ui-fieldset ui-mb-0">
+      <legend>{{ legend }}</legend>
+      <div class="ui-zeitraum">
+        {% for field in fields %}
+        <div class="ui-field">
+          <label class="ui-field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<div class="ui-field__error" id="{{ field.auto_id }}_error">{% for error in field.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</div>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </fieldset>
+    {% endfor %}
+  </div>
+  <div class="ui-field ui-prose ui-mt-4">
+    <label class="ui-field__label" for="{{ form.bereich.id_for_label }}">{{ form.bereich.label }}</label>
+    {{ form.bereich }}
+    {% if form.bereich.errors %}<div class="ui-field__error" id="{{ form.bereich.auto_id }}_error">{% for error in form.bereich.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</div>{% endif %}
+    <span class="ui-field__hint" id="{{ form.bereich.auto_id }}_helptext">{{ form.bereich.help_text }}</span>
+  </div>
+  <div class="ui-row">
+    <button type="submit" class="ui-btn ui-btn--primary">{% translate "Evaluate" %}</button>
+  </div>
+  <p class="ui-secondary ui-mt-4 ui-mb-3" id="auswertung-schnellwahl">{% translate "Quick selection" %}</p>
+  <div class="ui-row" role="group" aria-labelledby="auswertung-schnellwahl">
+    {% for link in quick_links %}<a class="ui-btn ui-btn--secondary ui-btn--sm" href="{{ link.url }}">{{ link.label }}</a>{% endfor %}
+  </div>
+</form>
+
+{% if report %}
+<div class="ui-stack ui-mt-4">
+  <p class="ui-secondary ui-mb-0">{% blocktranslate with period=period_text %}Period: {{ period }}{% endblocktranslate %}{% if area_name %} &middot; {% blocktranslate with area=area_name %}Area: {{ area }}{% endblocktranslate %}{% endif %}</p>
+
+  <section class="ui-card" aria-labelledby="auswertung-kennzahlen">
+    <h2 class="ui-card__title" id="auswertung-kennzahlen">{% translate "Key figures" %}</h2>
+    <dl class="ui-kennzahlen ui-prose">
+      {% for figure in figures %}
+      <div><dt>{{ figure.label }}</dt><dd{% if figure.text %} class="ui-kennzahlen__text"{% endif %}>{{ figure.value }}</dd></div>
+      {% endfor %}
+    </dl>
+    {% if recorded_note %}<p class="ui-secondary ui-mt-3 ui-mb-0">{{ recorded_note }}</p>{% endif %}
+  </section>
+
+  <section class="ui-card" aria-labelledby="auswertung-verlauf">
+    <h2 class="ui-card__title" id="auswertung-verlauf">{% translate "Monthly trend" %}</h2>
+    {% if development %}
+      {% include "cirs/qm/_columns.html" with chart=development.chart chart_id="chart-verlauf" title=development.title desc=development.desc label_header=development.label_header table_open=development.table_open %}
+    {% else %}
+      <p class="ui-muted">{% translate "No reports in this period." %}</p>
+    {% endif %}
+  </section>
+
+  <section class="ui-card" aria-labelledby="auswertung-verteilungen">
+    <h2 class="ui-card__title" id="auswertung-verteilungen">{% translate "Distributions" %}</h2>
+    {% if report.incoming %}
+    <div class="ui-grid ui-grid--2">
+      {% for item in distributions %}
+      <div>
+        <h3 class="ui-mt-0">{{ item.name }}</h3>
+        {% if item.note %}<p class="ui-secondary">{{ item.note }}</p>{% endif %}
+        {% include "cirs/qm/_bars.html" with chart=item.chart chart_id=item.id title=item.title desc=item.desc label_header=item.name %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+      <p class="ui-muted">{% translate "No reports in this period." %}</p>
+    {% endif %}
+  </section>
+
+  <section class="ui-card" aria-labelledby="auswertung-massnahmen">
+    <h2 class="ui-card__title" id="auswertung-massnahmen">{% translate "Measures" %}</h2>
+    {% if report.measures %}
+    <ul class="ui-massnahmen">
+      {% for measure in report.measures %}
+      <li>
+        <p class="ui-massnahmen__kopf"><a href="{{ measure.url }}">{% translate "No." %} {{ measure.number }}</a> &middot; <time datetime="{{ measure.reported|date:'Y-m-d' }}">{{ measure.reported|date:"SHORT_DATE_FORMAT" }}</time></p>
+        <p class="ui-strong ui-mb-0">{{ measure.title }}</p>
+        {% if measure.measures %}<p class="ui-mt-2 ui-mb-0">{{ measure.measures|linebreaksbr }}</p>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+      <p class="ui-muted">{% translate "No published cases for this period." %}</p>
+    {% endif %}
+  </section>
+
+  <section class="ui-card" aria-labelledby="auswertung-begriffe">
+    <h2 class="ui-card__title" id="auswertung-begriffe">{% translate "Definitions" %}</h2>
+    <dl class="ui-begriffe ui-prose">
+      <dt>{% translate "Incoming" %}</dt>
+      <dd>{% translate "Reports whose date of report falls in the period." %}</dd>
+      <dt>{% translate "Completed" %}</dt>
+      <dd>{% translate "Reports that are completed now and were last completed in the period." %}</dd>
+      <dt>{% translate "Open at the end of the period" %}</dt>
+      <dd>{% translate "Reports that are not completed; known only for a period that ends today or later." %}</dd>
+      <dt>{% translate "Published" %}</dt>
+      <dd>{% translate "Published cases of the reports received in the period; a case has no date of its own." %}</dd>
+      <dt>{% translate "Reaction time" %}</dt>
+      <dd>{% translate "Days from the report to the first change away from “new”, counted in the period of that change." %}</dd>
+      <dt>{% translate "Processing time" %}</dt>
+      <dd>{% translate "Days from the report to the last completion of a report that is completed now, counted in the period of that completion." %}</dd>
+    </dl>
+  </section>
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}

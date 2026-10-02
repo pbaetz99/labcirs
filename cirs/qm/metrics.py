@@ -42,12 +42,13 @@ for a median. The pages that are printed or exported show only redacted numbers.
 """
 
 from datetime import date, datetime, time, timedelta
+from statistics import median
 from typing import NamedTuple
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
-from django.db.models import (BooleanField, Count, DateField, ExpressionWrapper, Min, OuterRef,
-                              Q, Subquery)
+from django.db.models import (BooleanField, Count, DateField, Exists, ExpressionWrapper, Min,
+                              OuterRef, Q, Subquery)
 from django.db.models.functions import Coalesce, Greatest, TruncDate, TruncMonth
 from django.utils.translation import gettext_lazy as _
 
@@ -217,6 +218,68 @@ def monthly(qs, first_month, months, started=_ASK):
     return rows
 
 
+def _days(rows):
+    """The durations in days of (day of the report, moment) rows: from the day of the report to the
+    day the moment falls on, on the wall clock of the installation. A duration below 0 is left out:
+    it is a report dated after its own processing, a mistake in the data, not a negative time. The
+    median is taken over the rest, the count is their number."""
+    zone = _zone()
+    days = [(moment.astimezone(zone).date() - reported).days for reported, moment in rows]
+    days = [day for day in days if day >= 0]
+    return Durations(float(median(days)) if days else None, len(days))
+
+
+def _first_change():
+    """The moment of the first entry of the status log that is not "new"."""
+    return Subquery(IncidentStatusChange.objects.filter(incident=OuterRef('pk'))
+                    .exclude(status='new').order_by('changed_at', 'pk').values('changed_at')[:1])
+
+
+def reaction_days(qs, start, end):
+    """The days from the report to the first change away from "new", as Durations (the median and
+    the number of incidents it is taken from), for the changes on the days from `start` to `end`.
+
+    Only an incident with an entry "new" in the status log counts: it was created after the log
+    began, so its first change is in the log too. One from before has no such entry, and the first
+    entry it has would be a much later change than its first. The period is the day of the change,
+    not the day of the report. One query.
+    """
+    begin, after = _moments(start, end)
+    created = IncidentStatusChange.objects.filter(incident=OuterRef('pk'), status='new')
+    rows = (qs.filter(Exists(created)).annotate(reacted_at=_first_change())
+            .filter(reacted_at__gte=begin, reacted_at__lt=after)
+            .order_by().values_list('reported', 'reacted_at'))
+    return _days(rows)
+
+
+def processing_days(qs, start, end):
+    """The days from the report to the completion, as Durations, for the incidents that are
+    completed now and were completed on the days from `start` to `end`. The completion is the last
+    one in the status log (see _completions), so an incident that was reopened counts once, with
+    its last completion; one completed before the log began is in no period. One query."""
+    begin, after = _moments(start, end)
+    rows = (_completions(qs).filter(completed_at__gte=begin, completed_at__lt=after)
+            .order_by().values_list('reported', 'completed_at'))
+    return _days(rows)
+
+
+def open_at_end(qs, end, today):
+    """The number of open incidents at the end of a period, or None (not recorded) if it ended
+    before today: the number is the state of now (see open_by_status), and nothing records what the
+    state was on an earlier day."""
+    return sum(open_by_status(qs).values()) if end >= today else None
+
+
+def quick_ranges(today):
+    """Three periods for a quick choice, each as (first month, last month), both the first day of
+    their month: the last quarter that is over, the running year from January up to the running
+    month, and the whole year before."""
+    quarter = first_of_month(today, -((today.month - 1) % 3))
+    return {'last_quarter': (first_of_month(quarter, -3), first_of_month(quarter, -1)),
+            'this_year': (date(today.year, 1, 1), first_of_month(today)),
+            'last_year': (date(today.year - 1, 1, 1), date(today.year - 1, 12, 1))}
+
+
 def _is_overdue(today, days):
     """The condition of an incident without processing, see overdue."""
     return Q(status='new', reported__lt=today - timedelta(days=days))
@@ -349,6 +412,13 @@ def _with_not_specified(found, number):
     if number:
         found.append(Bucket(None, str(NOT_SPECIFIED), number))
     return found
+
+
+def places(qs):
+    """The groups of places that occur in the incidents, as (id, name) in the order of the units:
+    the values that a filter by place takes."""
+    buckets = distribution(qs, 'org_unit_group', date.min, date.max)
+    return [(bucket.key, bucket.label) for bucket in buckets if bucket.key is not None]
 
 
 def suppress(value, min_cell):

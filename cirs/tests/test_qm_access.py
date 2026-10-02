@@ -201,9 +201,10 @@ class PageFrameTest(QMTestCase):
             self.assertNoCanary(self.html(name), name)
 
     def test_the_page_stays_empty_until_it_has_something_to_show(self):
-        # the overview and the incident list have their content, and tests of their own
+        # the overview, the incident list and the evaluations have their content, and tests of
+        # their own
         for name, _ in PAGES:
-            if name not in ('qm_overview', 'qm_incidents'):
+            if name not in ('qm_overview', 'qm_incidents', 'qm_reports'):
                 self.assertIn('Hier gibt es noch nichts anzuzeigen.', self.html(name), name)
 
     def test_the_pages_are_wide_and_light(self):

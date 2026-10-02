@@ -216,6 +216,25 @@ class PublishedListTest(TestCase):
         self.assertIn(reverse('create_incident', kwargs={'dept': self.dept.label}), html)
         self.assertEqual(html.count('ui-btn--primary'), 1)
 
+    def test_the_report_button_comes_first_and_leads_to_the_report_form(self):
+        make_case(self.dept, 'Case A')
+        html = self.html()
+        create_url = reverse('create_incident', kwargs={'dept': self.dept.label})
+        button = '<a class="ui-btn ui-btn--primary" href="%s">Ereignis melden</a>' % create_url
+        self.assertIn(button, html)
+        self.assertIn('Meldungen sind freiwillig und sanktionsfrei.', html)
+        self.assertLess(html.index(button), html.index('<table'))
+        self.assertEqual(self.client.get(create_url).status_code, 200)
+
+    def test_the_report_button_is_there_without_cases_too(self):
+        self.assertIn('>Ereignis melden</a>', self.html())
+
+    def test_a_reviewer_gets_no_report_button(self):
+        reviewer = baker.make_recipe('cirs.reviewer')
+        self.dept.reviewers.add(reviewer)
+        self.client.force_login(reviewer.user)
+        self.assertNotIn('>Ereignis melden</a>', self.html())
+
     def test_title_and_one_h1(self):
         html = self.html()
         self.assertRegex(html, r'<title>Veröffentlichte Fälle · [^<]+</title>')

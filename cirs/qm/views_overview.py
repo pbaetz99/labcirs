@@ -30,9 +30,8 @@ from django.utils.translation import gettext
 
 from cirs.models import STATUS_CHOICES
 
-from . import metrics
+from . import chart_data, metrics
 from .access import QMPage, scoped_incidents
-from .charts import Bar, Cell, Series, bar_chart, column_chart
 from .params import worklist_url
 
 LIST_LENGTH = 10  # rows of each list of what is waiting
@@ -91,17 +90,11 @@ def _development(incidents, today):
     rows = metrics.monthly(incidents, first, MONTHS, started=started)
     if not any(row.incoming or row.completed for row in rows):
         return None
-    not_recorded = gettext('not recorded')
-    series = [
-        Series(gettext('Incoming'), [Cell(row.incoming, str(row.incoming)) for row in rows]),
-        Series(gettext('Completed'), [
-            Cell(None, not_recorded) if row.completed is None
-            else Cell(row.completed, str(row.completed)) for row in rows])]
     note = _recorded_note(started) if any(row.completed is None for row in rows) else ''
     desc = gettext('Reports in the last 12 months: %(incoming)d received, %(completed)d '
                    'completed.') % {'incoming': sum(row.incoming for row in rows),
                                     'completed': sum(row.completed or 0 for row in rows)}
-    return {'chart': column_chart([date_format(row.month, 'M') for row in rows], series),
+    return {'chart': chart_data.month_columns(rows),
             'title': gettext('Incoming and completed per month, last 12 months'),
             'desc': f'{desc} {note}'.strip(), 'note': note,
             'label_header': gettext('Month')}
@@ -125,7 +118,6 @@ def _where(incidents, today):
     desc = gettext('Reports per area in the last 12 months; most: %(area)s with %(count)d of '
                    '%(total)d.') % {'area': most.label, 'count': most.count,
                                     'total': sum(bucket.count for bucket in buckets)}
-    return {'chart': bar_chart([Bar(bucket.label, bucket.count, str(bucket.count))
-                                for bucket in buckets]),
+    return {'chart': chart_data.bucket_bars(buckets),
             'title': gettext('Reports per area, last 12 months'), 'desc': desc,
             'label_header': gettext('Where')}

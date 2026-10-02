@@ -1,6 +1,21 @@
 LabCIRS changelog
 =================
 
+8.1.0a2 (2026-10-02)
+--------------------
+
+The evaluations of the QM area are on the screen. Their print view and CSV export follow in a later release.
+
+QM area
+
+* Evaluations (``/qm/auswertungen/``): the figures of a period of whole months and, if wished, of one area (a group covers its units). Incoming, completed and open reports, published cases, reaction time and processing time (median and number), the months as columns, and the distributions by area, category, preventability, risk, frequency and hazard. The measures of the published cases and the definition of every figure are on the page. The period is set with month and year for both ends or with a quick selection (last quarter, this year, last year). A request that is not in order gets a summary of the errors and no figures.
+* Reaction time counts from the report to the first change away from "new", processing time from the report to the last completion. Both come from the status history, so they cover the changes made since 8.1.0a1.
+* Like the rest of the area the page shows the departments of the reviewer only, is not cached by the browser and works without JavaScript. The charts are SVG with the numbers in a table below each chart.
+
+Reporting
+
+* The page of the published cases shows visitors who are not logged in a button "Report incident" at the top, with the note that reporting is voluntary and free of sanctions. The button that stood below the list is gone.
+
 8.1.0a1 (2026-10-02)
 --------------------
 
