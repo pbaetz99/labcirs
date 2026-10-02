@@ -146,3 +146,115 @@ html { scroll-padding-top: calc(var(--ui-topbar-h) + var(--ui-s2)); }
 
 /* The warning in the hint of the reporter e-mail field: giving an address costs anonymity. */
 .labcirs-warnung { color: var(--ui-danger); font-weight: 700; }
+
+/* --- Charts of the QM pages (cirs/qm/charts.py, templates cirs/qm/_bars.html and _columns.html) ---
+   No library and no style attribute: lengths and positions are attributes, colour and type are
+   the classes below, so a strict CSP lets them through. core.css draws every svg as a line icon
+   (fill none, stroke in the text colour, 2 wide), so each part sets fill and stroke itself.
+   Colours come from the tokens (the pages are always light) and are named only where the system
+   takes over: forced colours and print.
+   Bars: a grid of three parts for each bar. The label is a line of its own and wraps. The area
+   of the bar is an SVG that is nothing but the bar: it stretches over the column, the longest
+   bar fills it, and the zero line is its border. The value is text. The column of the values is
+   as wide as the widest value of all rows, so the areas, and with them the bars, stay
+   comparable.
+   Columns: one SVG of 288 units, which is what a phone leaves: at 320 px the box is 288 px (254
+   px in a card), so the scale is 1 to 0.88 and the 13 units of type are at least 11 px. 22rem is
+   the widest it grows (scale 1.22, type 16 px), because a chart of a whole page width would blow
+   up the labels, not the data. The width and height attributes are in the markup, so that
+   core.css does not shrink the svg to icon size.
+   The second series is told from the first by a hollow body with an outline, not by colour
+   alone (warning is a second hue). Text and axes use the muted text token (4.5:1 on page and
+   card); --ui-border-interactive is 2.8:1 on the page background and too weak for the axes. */
+.ui-diagramm { margin-block: var(--ui-s3); }
+.ui-diagramm__bild { display: block; width: 100%; max-width: 22rem; height: auto; }
+.ui-diagramm__bild--balken {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center;
+  column-gap: var(--ui-s3); max-width: 30rem;
+  position: relative; /* anchors the visually hidden name and description */
+}
+.ui-diagramm__zeilenname { grid-column: 1 / -1; margin-top: var(--ui-s2); font-size: var(--ui-fs-sm); overflow-wrap: anywhere; }
+.ui-diagramm__balken { width: 100%; height: var(--ui-s4); border-inline-start: 1px solid var(--ui-text-muted); }
+.ui-diagramm__zahl { font-size: var(--ui-fs-sm); font-weight: 600; font-variant-numeric: tabular-nums; text-align: end; }
+.ui-diagramm__beschriftung, .ui-diagramm__wert, .ui-diagramm__marke {
+  fill: var(--ui-text); stroke: none;
+  font-family: var(--ui-font); font-size: var(--ui-fs-xs);
+}
+.ui-diagramm__marke { fill: var(--ui-text-muted); }
+.ui-diagramm__wert { font-weight: 600; font-variant-numeric: tabular-nums; }
+.ui-diagramm__achse { fill: none; stroke: var(--ui-text-muted); stroke-width: 1; stroke-linecap: butt; }
+.ui-diagramm__reihe-1 { fill: var(--ui-marke); stroke: none; }
+.ui-diagramm__reihe-2 { fill: var(--ui-warning-bg); stroke: var(--ui-warning); stroke-width: 1.5; }
+/* No number (suppressed or not recorded): a dashed line on the zero line in the colour of the
+   series, wider than the axis. A column of 0 has nothing there. */
+.ui-diagramm__fehlt { fill: none; stroke-width: 3; stroke-dasharray: 3 2; stroke-linecap: butt; }
+.ui-diagramm__fehlt-1 { stroke: var(--ui-marke); }
+.ui-diagramm__fehlt-2 { stroke: var(--ui-warning); }
+/* The numbers under the chart: a row heading is not a column heading, so it loses the small
+   upper-case look of .ui-table th and the sticky position. The summary is a target of its own.
+   Cells get 8 px instead of 12 px at the sides, the cells the small type and the column headings
+   no upper case: with the heading "ABGESCHLOSSEN" the table of the column chart was 300 px wide
+   in a 286 px box at 320 px, and 265 px in the 252 px box inside a card (measured), and would
+   scroll. */
+.ui-diagramm__tabelle > summary { cursor: pointer; padding-block: var(--ui-s2); }
+.ui-diagramm__tabelle th, .ui-diagramm__tabelle td { padding-inline: var(--ui-s2); }
+.ui-diagramm__tabelle td { font-size: var(--ui-fs-sm); }
+.ui-diagramm__tabelle thead th { letter-spacing: 0; text-transform: none; }
+.ui-diagramm__tabelle tbody th {
+  position: static; background: none; color: var(--ui-text);
+  font-size: var(--ui-fs-sm); font-weight: 400; letter-spacing: 0; text-transform: none;
+}
+/* High contrast (forced colours) replaces fills and strokes by one colour; naming the system
+   colours keeps series 1 solid and series 2 hollow with an outline. */
+@media (forced-colors: active) {
+  .ui-diagramm__beschriftung, .ui-diagramm__wert, .ui-diagramm__marke, .ui-diagramm__reihe-1 { fill: CanvasText; }
+  .ui-diagramm__achse, .ui-diagramm__reihe-2, .ui-diagramm__fehlt { stroke: CanvasText; }
+  .ui-diagramm__reihe-2 { fill: Canvas; }
+}
+/* A black-and-white printer turns the series into greys that are hard to tell apart, so ink and
+   white paper by name: series 1 solid, series 2 white with an outline. */
+@media print {
+  .ui-diagramm { break-inside: avoid; }
+  .ui-diagramm__beschriftung, .ui-diagramm__wert, .ui-diagramm__marke { fill: black; }
+  .ui-diagramm__achse, .ui-diagramm__fehlt { stroke: black; }
+  .ui-diagramm__reihe-1 { fill: black; }
+  .ui-diagramm__reihe-2 { fill: white; stroke: black; }
+  .ui-diagramm__balken { border-inline-start-color: black; }
+}
+
+/* --- QM overview (cirs/templates/cirs/qm/overview.html) ---
+   Five tiles in a grid: two to a row from 48rem on (where core.css changes its layout too), one
+   below the other under that. The tile with the two lists takes a whole row. (ui-grid--2 would
+   not do: it fits as many columns of 18rem as the width allows, and the tile that spans them
+   all makes the others narrow.) A key figure is its label with the number at the other end of
+   the line, in the size of a sub-heading, so the numbers are what the eye finds first; tabular
+   figures keep them in a column. A label that does not fit next to its number wraps, the number
+   stays at the end of the line.
+   The lists are tables whose cells are as tight as those of the table under a chart: three
+   columns have to fit into a card at 320 px (254 px inside) although the place of an incident
+   can be a long name. A table that is still wider than the card scrolls inside its wrapper
+   (ui-tablewrap), not the page.
+   Below 48rem the one column is named too: the implicit column of a grid is `auto` and does not
+   shrink under the width of what is in it, so a wide table stretched the tiles past the screen. */
+.ui-kacheln { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--ui-s4); }
+@media (min-width: 48rem) { .ui-kacheln { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.ui-kachel--breit { grid-column: 1 / -1; }
+.ui-kennzahlen { display: grid; gap: var(--ui-s2); margin: 0; }
+.ui-kennzahlen > div { display: flex; align-items: baseline; justify-content: space-between; gap: var(--ui-s3); }
+.ui-kennzahlen dt { min-width: 0; }
+.ui-kennzahlen dd { margin: 0; font-size: var(--ui-fs-xl); font-weight: 600; font-variant-numeric: tabular-nums; }
+.ui-kachel__liste th, .ui-kachel__liste td { padding-inline: var(--ui-s2); font-size: var(--ui-fs-sm); }
+.ui-kachel__liste thead th { letter-spacing: 0; text-transform: none; }
+
+/* --- QM incident list (cirs/templates/cirs/qm/worklist.html) ---
+   The table has up to ten columns, so its cells are as tight as those of the lists of the
+   overview. Where it is wider than the screen it scrolls inside its wrapper (ui-tablewrap): the
+   page itself does not scroll sideways, not even at 320 px. The table head keeps the case of its
+   words (the headings that sort are links). The notes of a row are badges side by side and
+   below each other where the cell is narrow. */
+.ui-meldungen th, .ui-meldungen td { padding-inline: var(--ui-s2); font-size: var(--ui-fs-sm); }
+.ui-meldungen thead th { letter-spacing: 0; text-transform: none; }
+.ui-hinweise { display: flex; flex-wrap: wrap; gap: var(--ui-s1); }
+
+/* --- QM evaluations and print view (cirs/templates/cirs/qm/reports.html, reports_print.html) ---
+   The rules of the key figures, the period form and the paper layout of the print view. */

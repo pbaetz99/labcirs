@@ -234,11 +234,13 @@ class ReportAndFeedbackFlowTest(FunctionalTest):
         self.click_button('End access')
         self.wait_for_text('.ui-alert', 'Access to this report has ended.')
 
-        # The QM logs in (reviewers do) ...
+        # The QM logs in (reviewers do) and lands on the overview ...
         self.browser.get(self.live_server_url + reverse('login'))
         self.login_user(self.REVIEWER, self.REVIEWER_PASSWORD)
+        self.assertCurrentUrlIs(reverse('qm_overview'))
+        # ... opens the admin and changes the status of the report there ...
+        self.click_link_with_text('Admin')
         self.wait.until(EC.presence_of_element_located((By.ID, 'site-name')))
-        # ... changes the status of the report in the admin ...
         self.click_link_with_text('Critical incidents')
         self.click_link_with_text(incident.incident)
         self.open_review_panel()

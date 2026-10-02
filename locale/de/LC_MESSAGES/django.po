@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LabCIRS\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-01 10:02+0000\n"
+"POT-Creation-Date: 2026-10-01 14:09+0000\n"
 "PO-Revision-Date: 2019-05-22 15:00+0200\n"
 "Last-Translator: Sebastian Major <sebastian.major@charite.de>\n"
 "Language-Team: \n"
@@ -71,52 +71,52 @@ msgstr "Zum Inhalt springen"
 msgid "Main navigation"
 msgstr "Hauptnavigation"
 
-#: templates/base.html:48
+#: templates/base.html:50
 msgid "Report incident"
 msgstr "Ereignis melden"
 
-#: templates/base.html:50
+#: templates/base.html:52
 msgid "My report"
 msgstr "Meine Meldung"
 
-#: templates/base.html:53
+#: templates/base.html:55
 msgid "Published cases"
 msgstr "Veröffentlichte Fälle"
 
-#: templates/base.html:56
+#: templates/base.html:58
 msgid "Admin"
 msgstr "Verwaltung"
 
-#: templates/base.html:68
+#: templates/base.html:70
 msgid "Log out"
 msgstr "Abmelden"
 
-#: templates/base.html:72
+#: templates/base.html:74
 msgid "Log in"
 msgstr "Anmelden"
 
-#: templates/base.html:76
+#: templates/base.html:78
 msgid "Language"
 msgstr "Sprache"
 
-#: templates/base.html:110
+#: templates/base.html:112
 #, python-format
 msgid "Version %(version)s"
 msgstr "Version %(version)s"
 
-#: templates/base.html:113
+#: templates/base.html:115
 msgid "Legal"
 msgstr "Rechtliches"
 
-#: templates/base.html:114
+#: templates/base.html:116
 msgid "Imprint"
 msgstr "Impressum"
 
-#: templates/base.html:115
+#: templates/base.html:117
 msgid "Privacy"
 msgstr "Datenschutz"
 
-#: templates/base.html:117
+#: templates/base.html:119
 msgid "based on LabCIRS (AGPL)"
 msgstr "basiert auf LabCIRS (AGPL)"
 

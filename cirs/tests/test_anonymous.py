@@ -247,7 +247,10 @@ class AnonymousAccessTest(TestCase):
         for target, expected in (('https://evil.example/', reverse('labcirs_home')),
                                  ('//evil.example/', reverse('labcirs_home')),
                                  ('/\\evil.example/', reverse('labcirs_home')),
-                                 (reverse('admin:index'), reverse('admin:index'))):
+                                 (reverse('admin:index'), reverse('admin:index')),
+                                 # A bare word is no host and no name of a view: it stays a
+                                 # relative address, which the browser resolves, not an error.
+                                 ('foo', reverse('login') + 'foo')):
             response = self.client.post(reverse('login') + '?next=' + target,
                                         {'username': 'admin', 'password': 'admin'})
             self.assertRedirects(response, expected, fetch_redirect_response=False)

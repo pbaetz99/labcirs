@@ -23,7 +23,7 @@ from django.contrib.auth import (REDIRECT_FIELD_NAME, authenticate, login,
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Q
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template import loader
 from django.urls import get_script_prefix, resolve, reverse
@@ -321,7 +321,11 @@ def login_user(request, redirect_field_name=REDIRECT_FIELD_NAME):
     redirect_url = request.GET.get(redirect_field_name, '')
     if not url_has_allowed_host_and_scheme(redirect_url, allowed_hosts={request.get_host()},
                                            require_https=request.is_secure()):
-        redirect_url = reverse('labcirs_home')
+        redirect_url = ''  # none, or one that leads to another host
+    # A valid next comes first. Without one the reviewer starts at the QM overview and the
+    # superuser at the start page, which sends on to the admin. The redirect is an
+    # HttpResponseRedirect: redirect() would take a bare word such as "foo" for the name of a view.
+    default_url = reverse('labcirs_home')
 
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -335,10 +339,10 @@ def login_user(request, redirect_field_name=REDIRECT_FIELD_NAME):
             if user.is_active:
                 login(request, user)
                 if user.is_superuser:
-                    return redirect(redirect_url)#'admin:index')
+                    return HttpResponseRedirect(redirect_url or default_url)
                 elif hasattr(user, 'reviewer'):
                     if user.reviewer.departments.count() > 0:
-                        return redirect('admin:index')
+                        return HttpResponseRedirect(redirect_url or reverse('qm_overview'))
                     else:
                         message = MISSING_DEPARTMENT_MSG
                         logout(request)
@@ -354,7 +358,7 @@ def login_user(request, redirect_field_name=REDIRECT_FIELD_NAME):
     context = {'message': message,
                'message_class': message_class,
                'username': username,
-               redirect_field_name: redirect_url,
+               redirect_field_name: redirect_url or default_url,
                }
     
     try:

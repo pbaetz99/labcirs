@@ -1,0 +1,12 @@
+{% load i18n %}
+{% comment %}
+  The pages of the QM, for a reviewer on every page: the entries of the top bar that come before
+  the others. Included by base.html. The current page is marked with aria-current, as the other
+  entries are.
+{% endcomment %}
+{% url 'qm_overview' as url %}
+<a class="ui-nav__link" href="{{ url }}"{% if request.path == url %} aria-current="page"{% endif %}>{% translate "Overview" %}</a>
+{% url 'qm_incidents' as url %}
+<a class="ui-nav__link" href="{{ url }}"{% if request.path == url %} aria-current="page"{% endif %}>{% translate "Incidents" %}</a>
+{% url 'qm_reports' as url %}
+<a class="ui-nav__link" href="{{ url }}"{% if request.path == url %} aria-current="page"{% endif %}>{% translate "Evaluations" %}</a>

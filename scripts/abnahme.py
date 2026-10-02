@@ -673,7 +673,7 @@ def f4_unknown_department(browser):
 # --- R: reviewer (QM) -------------------------------------------------------------------------
 
 def r1_login(browser):
-    section('R1 Login führt in den Admin')
+    section('R1 Login führt in den Überblick des QM, von dort in den Admin')
     context = new_context(browser)
     page = context.new_page()
     page.goto(BASE + '/login/')
@@ -683,9 +683,18 @@ def r1_login(browser):
           'Benutzername oder Passwort stimmen nicht' in main_text(page) and '/login/' in page.url)
     shot(page, 'R1-login-failed')
     login(page, QM_USER, QM_PASSWORD)
-    check('R1', 'Der Login des QM führt in den Admin', page.url == BASE + '/admin/', page.url)
-    check('R1', 'Der Admin zeigt "LabCIRS-Verwaltung" mit dem Konto des QM',
-          'LabCIRS-Verwaltung' in page.inner_text('#content') or 'LabCIRS-Verwaltung' in page.inner_text('body'))
+    check('R1', 'Der Login des QM führt in den Überblick des QM-Bereichs', page.url == BASE + '/qm/', page.url)
+    check('R1', 'Der Überblick hat eine Überschrift und im Kopf die drei Seiten des QM und den Link "Verwaltung"',
+          page.locator('h1').count() == 1 and page.locator('h1').inner_text() == 'Überblick'
+          and all(page.locator('nav.ui-nav').get_by_role('link', name=name, exact=True).count() == 1
+                  for name in ('Überblick', 'Meldungen', 'Auswertungen', 'Verwaltung')))
+    shot(page, 'R1-qm-overview')
+    page.locator('nav.ui-nav').get_by_role('link', name='Verwaltung', exact=True).click()
+    page.wait_for_load_state()
+    check('R1', 'Der Link "Verwaltung" führt in den Admin, der "LabCIRS-Verwaltung" mit dem Konto des QM zeigt',
+          page.url == BASE + '/admin/'
+          and ('LabCIRS-Verwaltung' in page.inner_text('#content') or 'LabCIRS-Verwaltung' in page.inner_text('body')),
+          page.url)
     shot(page, 'R1-admin-index')
     STATE['qm_context'] = context
     STATE['qm'] = page

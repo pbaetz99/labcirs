@@ -90,6 +90,9 @@ gunicorn writes no access log.
 | `LABCIRS_SITE_NAME` | `LabCIRS` | Name of the system in page titles, the top bar (next to the logo), the admin and the footer. |
 | `LABCIRS_SITE_URL` | empty | Address of the site, for example `https://cirs.example.org`. It appears as plain text (never as a link) at the end of mails to reporters, so that the reader knows where to go. |
 | `LABCIRS_ASK_PUBLICATION_CONSENT` | `true` | `true`: the report form asks whether the report may be published after editing. `false`: the form does not ask and every report counts as consented. The QM still decides what is published. |
+| `LABCIRS_QM_OVERDUE_DAYS` | `14` | Days after which a report that is still `new` counts as "without processing" in the QM area. A whole number, at least 1. |
+| `LABCIRS_REPORT_MIN_CELL` | `3` | Smallest number that the print view and the CSV of the evaluations will show; they come in a later release and nothing uses the value yet. A number above 0 and below it will appear as `< 3` (with the default), so that the numbers of very small units cannot be read off. A whole number, at least 1. The screen pages show every number: the QM sees the reports one by one anyway. |
+| `LABCIRS_BACKUP_STATUS_DIR` | empty | Folder with the status note of the last backup. The admin start page shows from it when the last backup was made. Empty: the page says that no backup status is set up. |
 | `LABCIRS_LOGO_URL` | empty | Logo in the top bar and the admin. Empty: the organization name as text. Must be on the same host, for example `/branding/logo.svg`. |
 | `LABCIRS_THEME_CSS_URL` | empty | Extra stylesheet that overrides the colour tokens, for example `/branding/theme.css`. Same host only. |
 | `LABCIRS_IMPRINT_URL`, `LABCIRS_PRIVACY_URL` | empty | Footer links "Imprint" and "Privacy". Shown only when set. |

@@ -32,6 +32,7 @@ from cirs.models import Comment, OrgUnit, PublishableIncident, ReporterContact
 from cirs.tests.helpers import create_user, csp_violations
 
 ADMIN_LINK = re.compile(r'href="(/admin/[^"?#]*)')
+QM_LINK = re.compile(r'href="(/qm/[^"?#]*)')
 CHANGELIST = re.compile(r'^/admin/[^/]+/[^/]+/$')
 OBJECT_PAGE = re.compile(r'^/admin/[^/]+/[^/]+/\d+/(change|history|delete)/$')
 ADMIN_STATUSES = (200, 302, 403)
@@ -166,6 +167,22 @@ class PageCrawlTest(TestCase):
                               args=[self.publishable.pk]), visited['QM'])
         self.assertIn(reverse('admin:cirs_orgunit_change', args=[self.org_unit.pk]),
                       visited['superuser'])
+
+    def test_qm_pages_never_error(self):
+        names = ('qm_overview', 'qm_incidents', 'qm_reports', 'qm_reports_print', 'qm_reports_csv')
+        urls = [reverse(name) for name in names]
+        qm = self.client_for(self.reviewer.user)
+        # the overview leads to the pages of the navigation: follow what it links to
+        overview = self.fetch(qm, 'QM', urls[0])
+        linked = dict.fromkeys(QM_LINK.findall(overview.content.decode()))
+        self.assertTrue({urls[0], urls[1], urls[2]} <= set(linked), linked)
+        for url in dict.fromkeys(urls + list(linked)):
+            self.fetch(qm, 'QM', url)
+        for url in urls:
+            self.fetch(Client(), 'anonymous', url, allowed=(302,))
+            self.fetch(self.client_for(self.superuser), 'superuser', url, allowed=(403,))
+            self.fetch(self.client_for(self.dept.reporter.user), 'reporter', url, allowed=(403,))
+        self.assertNoFailures()
 
     def test_config_add_page_is_forbidden(self):
         client = Client(raise_request_exception=False)

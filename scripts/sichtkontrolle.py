@@ -16,7 +16,7 @@
 # along with LabCIRS.
 # If not, see <https://www.gnu.org/licenses/>.
 
-"""Visual check of all public pages and the admin index at three widths (320, 768, 1440 px).
+"""Visual check of all public pages, the QM pages and the admin index at three widths (320, 768, 1440 px).
 
 Runs with Playwright in the container mcr.microsoft.com/playwright/python (see the service
 "playwright" in compose.dev.yaml and scripts/acceptance.sh):
@@ -28,7 +28,13 @@ For every page and width it
   - measures horizontal scrolling (scrollWidth > clientWidth of the page),
   - lists the console messages that mention the Content Security Policy (and the violation events
     the browser raises, which are the same thing seen from the page),
-  - lists every request to another origin than the site.
+  - lists every request to another origin than the site,
+  - measures the size of every text inside an SVG as it is drawn (font size times the scale of
+    the view box, getScreenCTM): below MIN_SVG_FONT_PX the type of a chart is too small to read.
+
+The pages of the QM (overview, incident list, evaluations, print view) are opened after a login as
+the reviewer of the demo data (qm-demo, its password from DEMO_QM_PASSWORD). The CSV file is a
+download and has no page to look at.
 
 At the end it prints a table and exits with status 1 if anything was found. Pages that create data
 (the report form, the success page) send invented text only.
@@ -44,6 +50,7 @@ from playwright.sync_api import sync_playwright
 
 WIDTHS = (320, 768, 1440)
 HEIGHT = 900
+MIN_SVG_FONT_PX = 11
 
 # Collects the violation events of the Content Security Policy as the page sees them. The init
 # script is injected by the browser, so the policy of the site does not block it.
@@ -53,10 +60,18 @@ document.addEventListener('securitypolicyviolation', (event) => {
     window.__cspViolations.push(event.violatedDirective + ' ' + event.blockedURI);
 });
 """
-MEASURE = """() => ({
+# The argument is the smallest type size in px. An SVG text that is not drawn (display none) has
+# no screen matrix and is left out.
+MEASURE = """(minFontPx) => ({
     scroll: document.documentElement.scrollWidth,
     client: document.documentElement.clientWidth,
     csp: window.__cspViolations || [],
+    smallText: Array.from(document.querySelectorAll('svg text')).flatMap((element) => {
+        const matrix = element.getScreenCTM();
+        if (!matrix) return [];
+        const px = parseFloat(getComputedStyle(element).fontSize) * Math.hypot(matrix.a, matrix.b);
+        return px < minFontPx ? [element.textContent.trim().slice(0, 24) + ' (' + px.toFixed(1) + ' px)'] : [];
+    }),
 })"""
 
 
@@ -129,7 +144,18 @@ def step_failed_login(run, page):
 
 def step_admin_index(run, page):
     login(run, page)
-    page.wait_for_url('**/admin/')
+    page.wait_for_url('**/qm/')  # the reviewer lands on the QM overview
+    page.goto(run.url('/admin/'))
+
+
+def qm_step(path):
+    """A step that logs in as the reviewer and opens the QM page at path."""
+    def step(run, page):
+        login(run, page)
+        page.wait_for_url('**/qm/')
+        if path != '/qm/':
+            page.goto(run.url(path))
+    return step
 
 
 def step_selftest(run, page):
@@ -145,6 +171,9 @@ def step_selftest(run, page):
         // horizontal scrolling: a table (width attribute, no style) wider than every viewport
         document.body.insertAdjacentHTML('beforeend',
             '<table width="3000"><tr><td>wide</td></tr></table>');
+        // a chart whose type is far too small once the view box is scaled to the page
+        document.body.insertAdjacentHTML('beforeend',
+            '<svg width="120" height="20" viewBox="0 0 120 20"><text x="0" y="14" font-size="6">small</text></svg>');
     }""")
     page.wait_for_timeout(1000)
 
@@ -167,6 +196,10 @@ def pages(run):
         ('login-failed', None, step_failed_login, 200),
         ('password-reset', '/accounts/password_reset/', None, 200),
         ('not-found', '/incidents/gibtsnicht/', None, 404),
+        ('qm-overview', None, qm_step('/qm/'), 200),
+        ('qm-incidents', None, qm_step('/qm/meldungen/'), 200),
+        ('qm-reports', None, qm_step('/qm/auswertungen/'), 200),
+        ('qm-reports-print', None, qm_step('/qm/auswertungen/druck/'), 200),
         ('admin-index', None, step_admin_index, 200),
     ]
 
@@ -200,7 +233,7 @@ def check_page(browser, run, name, path, step, expected, width, number):
     else:
         step(run, page)
     page.wait_for_load_state('networkidle')
-    measured = page.evaluate(MEASURE)
+    measured = page.evaluate(MEASURE, MIN_SVG_FONT_PX)
     shot = os.path.join(run.out, '%02d-%s-%d.png' % (number, name, width))
     page.screenshot(path=shot, full_page=True)
     context.close()
@@ -210,17 +243,18 @@ def check_page(browser, run, name, path, step, expected, width, number):
         'overflow': measured['scroll'] > measured['client'],
         'scroll': measured['scroll'], 'client': measured['client'],
         'csp': console + measured['csp'], 'foreign': sorted(set(foreign)),
+        'small_text': measured['smallText'],
         'status': status, 'status_ok': status == expected,
     }
 
 
 def print_table(results):
-    header = ('page', 'width', 'status', 'h-scroll', 'CSP', 'foreign origins')
+    header = ('page', 'width', 'status', 'h-scroll', 'CSP', 'foreign origins', 'small SVG text')
     rows = [header]
     for r in results:
         rows.append((r['page'], str(r['width']), str(r['status']),
                      'YES %d>%d' % (r['scroll'], r['client']) if r['overflow'] else 'no',
-                     str(len(r['csp'])), str(len(r['foreign']))))
+                     str(len(r['csp'])), str(len(r['foreign'])), str(len(r['small_text']))))
     widths = [max(len(row[i]) for row in rows) for i in range(len(header))]
     for index, row in enumerate(rows):
         print('  '.join(cell.ljust(widths[i]) for i, cell in enumerate(row)))
@@ -234,11 +268,12 @@ def selftest(run):
         result = check_page(browser, run, 'selftest', None, step_selftest, 200, 320, 99)
         browser.close()
     found = {'h-scroll': result['overflow'], 'CSP message': bool(result['csp']),
-             'request to another origin': bool(result['foreign'])}
+             'request to another origin': bool(result['foreign']),
+             'SVG text under %d px' % MIN_SVG_FONT_PX: bool(result['small_text'])}
     for kind, hit in found.items():
         print('%-28s %s' % (kind, 'found' if hit else 'NOT FOUND'))
     if all(found.values()):
-        print('SELFTEST OK: the check sees all three kinds of finding')
+        print('SELFTEST OK: the check sees all four kinds of finding')
         return 0
     print('SELFTEST FAILED: the check misses a kind of finding')
     return 1
@@ -252,14 +287,14 @@ def main():
     parser.add_argument('--code', default='ab#d$f-9',
                         help='code of a demo report for the report page (the old code of '
                              'seed_demo_data)')
-    parser.add_argument('--qm-user', default='qm-demo', help='reviewer for the admin index')
+    parser.add_argument('--qm-user', default='qm-demo', help='reviewer for the QM pages and the admin index')
     parser.add_argument('--qm-password', default=os.environ.get('DEMO_QM_PASSWORD', ''),
                         help='password of the reviewer (env DEMO_QM_PASSWORD)')
     parser.add_argument('--out', default='artifacts/sicht', help='directory of the screenshots')
     parser.add_argument('--selftest', action='store_true',
                         help='proves that the check can fail: checks one page with a style attribute, '
-                             'a request to another origin and a wide table put in by hand, and '
-                             'exits with 0 only if all three are found')
+                             'a request to another origin, a wide table and a small SVG text put in '
+                             'by hand, and exits with 0 only if all four are found')
     args = parser.parse_args()
     run = Run(args)
     os.makedirs(run.out, exist_ok=True)
@@ -284,6 +319,8 @@ def main():
             findings.append('%s: CSP: %s' % (where, message))
         for url in r['foreign']:
             findings.append('%s: request to another origin: %s' % (where, url))
+        for text in r['small_text']:
+            findings.append('%s: SVG text under %d px: %s' % (where, MIN_SVG_FONT_PX, text))
         if not r['status_ok']:
             findings.append('%s: unexpected status %s' % (where, r['status']))
     print()
@@ -293,7 +330,8 @@ def main():
         for finding in findings:
             print('  ' + finding)
         return 1
-    print('NO FINDINGS: no horizontal scrolling, no CSP messages, no requests to other origins')
+    print('NO FINDINGS: no horizontal scrolling, no CSP messages, no requests to other origins, '
+          'no SVG text under %d px' % MIN_SVG_FONT_PX)
     return 0
 
 

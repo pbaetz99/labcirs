@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% comment %}
+  The frame of the pages of the QM: the wide layout, the one h1 and the departments whose
+  incidents the page covers. A QM with two departments sees both in every number, so every page
+  says so; a reviewer without a department sees why the page is empty.
+  Blocks: title (as everywhere), heading (the h1), qm_content (what the page shows, an empty state
+  until the page has more).
+{% endcomment %}
+
+{% block layout %}wide{% endblock %}
+
+{% block content %}
+<h1>{% block heading %}{% endblock %}</h1>
+{% if departments %}
+  <p class="ui-secondary ui-mt-2">{% blocktranslate count counter=departments|length with names=department_names %}Department: {{ names }}{% plural %}Departments: {{ names }}{% endblocktranslate %}</p>
+{% else %}
+  <div class="ui-alert ui-alert--warning ui-mt-4" role="status">
+    <div class="ui-alert__body">{% translate "Your account has no associated department! Please contact the administrator!" %}</div>
+  </div>
+{% endif %}
+{% block qm_content %}
+<div class="ui-card ui-mt-4">
+  <div class="ui-state">
+    <p class="ui-state__title">{% translate "There is nothing to show here yet." %}</p>
+  </div>
+</div>
+{% endblock %}
+{% endblock %}

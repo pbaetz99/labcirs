@@ -1,6 +1,31 @@
 LabCIRS changelog
 =================
 
+8.1.0a1 (2026-10-02)
+--------------------
+
+A working area for the quality management. This is a first step: the evaluations, their print view and CSV export and the system overview for administrators follow in later releases.
+
+QM area
+
+* After the login a reviewer lands on the overview instead of the admin. The top bar offers Overview, Reports and Evaluations. Only reviewers get in; a superuser is no reviewer and gets a 403. Every number comes from the reports of the reviewer's own departments, and the pages are not cached by the browser.
+* Overview (``/qm/``): new reports of the last 7 days and of this month, open reports by status, the reports without processing (still ``new`` after ``QM_OVERDUE_DAYS`` days) and the reports that wait for the QM (the reporter wrote last), a column chart of the last 12 months with incoming and completed reports, and the places the reports come from. The charts are drawn on the server as SVG, with the numbers in a table below each chart and without JavaScript. Months before the status history started show "not recorded" instead of 0.
+* Reports (``/qm/meldungen/``): all reports of the reviewer's departments with filters for status, place, category, risk, period, "waits for the QM", "without processing" and a text search. Sortable by number, date of the report and last activity, 25 per page. A filter that cannot be applied is named instead of dropped silently. A reviewer of several departments gets a column with the department.
+* The numbers of the overview link to the matching filter of the report list.
+
+Status history
+
+* Every change of the status of a report is logged with its time (migrations ``0026`` and ``0027``). The history starts with this release; reports from before it have no entries, and completed reports count in the charts from their first entry on. The log is shown read-only on the report in the admin.
+
+Settings
+
+* ``QM_OVERDUE_DAYS`` (default 14) and ``REPORT_MIN_CELL`` (default 3, kept for the print view and CSV of the evaluations). Both must be whole numbers of at least 1. See ``docs/configuration.md``.
+
+Fixes
+
+* A login with a bare word as ``next`` no longer ends in an error page.
+* The published cases stay in the top bar on the pages of the QM area.
+
 8.0.0a1 (2026-10-01)
 --------------------
 

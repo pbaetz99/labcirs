@@ -584,7 +584,7 @@ class ReporterAddressHiddenFromQmTest(ReporterMailBase):
         self.client.force_login(self.reviewer.user)
         data = {'status': 'in process', 'review_date': '', 'org_unit': '', 'risk': '',
                 'frequency': '', 'hazard': '', 'responsibilty': '', 'action': ''}
-        for prefix in ('publishableincident', 'comments'):
+        for prefix in ('publishableincident', 'comments', 'status_changes'):
             data.update({prefix + '-TOTAL_FORMS': '0', prefix + '-INITIAL_FORMS': '0',
                          prefix + '-MIN_NUM_FORMS': '0', prefix + '-MAX_NUM_FORMS': '1000'})
         with self.captureOnCommitCallbacks(execute=True):  # the admin saves in a transaction
@@ -602,7 +602,7 @@ class ReporterAddressHiddenFromQmTest(ReporterMailBase):
         self.client.force_login(self.reviewer.user)
         data = {'status': 'in process', 'review_date': '', 'org_unit': '', 'risk': '',
                 'frequency': '', 'hazard': '', 'responsibilty': '', 'action': ''}
-        for prefix in ('publishableincident', 'comments'):
+        for prefix in ('publishableincident', 'comments', 'status_changes'):
             data.update({prefix + '-TOTAL_FORMS': '0', prefix + '-INITIAL_FORMS': '0',
                          prefix + '-MIN_NUM_FORMS': '0', prefix + '-MAX_NUM_FORMS': '1000'})
         with mock.patch('smtplib.SMTP'), self.assertLogs('cirs', level='ERROR'):

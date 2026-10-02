@@ -216,11 +216,19 @@ class SecurityFrontendTest(FunctionalTest):
         self.assertEqual(error_alert.text, str(MISSING_DEPARTMENT_MSG))
         self.assert_logged_out()
 
-    def test_reviewer_with_department_is_redirected_to_admin(self):
+    def test_reviewer_with_department_lands_on_the_qm_overview(self):
+        reviewer = create_role(Reviewer, 'rev')
+        self.dept.reviewers.add(reviewer)
+        self.browser.get(self.live_server_url + reverse('login'))
+        self.login_user(reviewer.user.username, reviewer.user.username)
+        self.assertCurrentUrlIs(reverse('qm_overview'))
+        self.assertEqual(self.find(By.TAG_NAME, 'h1').text, 'Overview')
+
+    def test_login_for_a_page_leads_back_to_that_page(self):
         reviewer = create_role(Reviewer, 'rev')
         self.dept.reviewers.add(reviewer)
         self.login_to_department(reviewer.user)
-        self.assertCurrentUrlIs(reverse('admin:index'))
+        self.assertCurrentUrlIs(self.dept.get_absolute_url())
 
 
 class SecurityFrontendDirectAccessTest(FunctionalTest):

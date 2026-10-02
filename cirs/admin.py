@@ -25,8 +25,8 @@ from django.forms import Textarea, TextInput
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin, TranslatableTabularInline
 
-from cirs.models import (Comment, CriticalIncident, Department, LabCIRSConfig,
-                         OrgUnit, PublishableIncident, Reporter, Reviewer)
+from cirs.models import (Comment, CriticalIncident, Department, IncidentStatusChange,
+                         LabCIRSConfig, OrgUnit, PublishableIncident, Reporter, Reviewer)
 
 
 class LabCIRSAdminSite(admin.AdminSite):
@@ -112,6 +112,27 @@ class CommentInline(admin.TabularInline):
         # TODO: write tests. Reviewer should not add comments in the admin inline view
         return False
 
+class StatusChangeInline(admin.TabularInline):
+    """The status log of an incident: shown, never edited."""
+    model = IncidentStatusChange
+    fields = readonly_fields = ('status', 'changed_at')
+    extra = 0
+    can_delete = False
+
+    def has_view_permission(self, request, obj=None):
+        # Whoever may edit the incident may read its log, no permission of its own to hand out.
+        return request.user.has_perm('cirs.change_criticalincident')
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 class CriticalIncidentAdmin(admin.ModelAdmin):
     readonly_fields = ('date', 'incident', 'reason', 'immediate_action',
                        'public', 'reported', 'preventability', 'photo_tag')
@@ -132,7 +153,7 @@ class CriticalIncidentAdmin(admin.ModelAdmin):
             'classes': ['collapse',]
         })
     )
-    inlines = [PublishableIncidentInline, CommentInline]
+    inlines = [PublishableIncidentInline, CommentInline, StatusChangeInline]
 
     def get_queryset(self, request):
         qs = super(CriticalIncidentAdmin, self).get_queryset(request)

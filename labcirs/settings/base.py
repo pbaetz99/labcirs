@@ -82,6 +82,21 @@ def get_bool_setting(setting_item, default, config_file=local_config_file):
             f'true, false, yes, no, on, off, 1, 0 (any case), not {value!r}') from None
 
 
+def get_positive_int_setting(setting_item, default, config_file=local_config_file):
+    """Like get_local_setting, but only accepts a whole number of at least 1.
+
+    A limit in days or a smallest cell of 0 would switch the rule off without a sign, and JSON
+    lets true, 14.0 and "14" pass as values (true is a number in Python). Anything but a whole
+    number from 1 on raises ImproperlyConfigured.
+    """
+    value = get_local_setting(setting_item, default, config_file)
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        raise ImproperlyConfigured(
+            f'{ENV_PREFIX}{setting_item} (or {setting_item} in {config_file}) must be a whole '
+            f'number of at least 1, not {value!r}')
+    return value
+
+
 def default_language_code(languages):
     """Returns the first configured language code, or 'en' if there is none."""
     return next(iter(languages), 'en')
@@ -224,6 +239,17 @@ SITE_URL = get_local_setting('SITE_URL', '')
 # False: the reporting form does not ask for the consent to publish, incidents count as consented
 # (public=True). Publishing is still up to the QM (PublishableIncident).
 ASK_PUBLICATION_CONSENT = get_bool_setting('ASK_PUBLICATION_CONSENT', True)
+
+# QM area. Days after which a report that is still new counts as "without processing".
+QM_OVERDUE_DAYS = get_positive_int_setting('QM_OVERDUE_DAYS', 14)
+# The smallest number that print view and CSV of the evaluations show: a number above 0 but below
+# this is replaced by "< n". Raising it protects small units more.
+REPORT_MIN_CELL = get_positive_int_setting('REPORT_MIN_CELL', 3)
+# Folder with the status note of the last backup (admin start page). Empty: not set up.
+BACKUP_STATUS_DIR = get_local_setting('BACKUP_STATUS_DIR', '')
+if not isinstance(BACKUP_STATUS_DIR, str):
+    raise ImproperlyConfigured(
+        f'{ENV_PREFIX}BACKUP_STATUS_DIR must be a path as text, not {BACKUP_STATUS_DIR!r}')
 
 # Email settings
 EMAIL_HOST = get_local_setting('EMAIL_HOST', 'localhost')

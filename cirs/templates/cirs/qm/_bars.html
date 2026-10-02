@@ -1,0 +1,44 @@
+{% load i18n l10n %}
+{% comment %}
+  Horizontal bars with the numbers as a table below (geometry and variables: cirs.qm.charts).
+  Label and value are text, so they wrap and follow the type size of the reader; the SVG next to
+  a label draws only the area of its bar and is decoration. The image, as far as a screen
+  reader is concerned, is the whole block with its name and description. Everything shown comes
+  from the label and the text of the bar, never from a number.
+  localize off: the German locale would write the lengths with a comma.
+{% endcomment %}
+{% if chart.bars %}{% localize off %}
+<div class="ui-diagramm">
+  <div class="ui-diagramm__bild ui-diagramm__bild--balken" role="img" aria-labelledby="{{ chart_id }}-title {{ chart_id }}-desc">
+    <span class="ui-visually-hidden" id="{{ chart_id }}-title">{{ title }}</span>
+    <span class="ui-visually-hidden" id="{{ chart_id }}-desc">{{ desc }}</span>
+    {% for bar in chart.bars %}
+    <div class="ui-diagramm__zeilenname">{{ bar.label }}</div>
+    <svg class="ui-diagramm__balken" width="{{ chart.width }}" height="{{ chart.height }}" viewBox="0 0 {{ chart.width }} {{ chart.height }}" preserveAspectRatio="none" aria-hidden="true" focusable="false">{% if bar.length %}<rect class="ui-diagramm__reihe-1" width="{{ bar.length }}" height="{{ chart.height }}"/>{% endif %}</svg>
+    <div class="ui-diagramm__zahl">{{ bar.text }}</div>
+    {% endfor %}
+  </div>
+  <details class="ui-diagramm__tabelle"{% if table_open %} open{% endif %}>
+    <summary>{% translate "Numbers as a table" %}</summary>
+    <div class="ui-tablewrap">
+      <table class="ui-table">
+        <caption class="ui-visually-hidden">{{ title }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ label_header }}</th>
+            <th scope="col">{{ value_header|default:_("Number") }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for bar in chart.bars %}
+          <tr>
+            <th scope="row">{{ bar.label }}</th>
+            <td class="ui-num">{{ bar.text }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </details>
+</div>
+{% endlocalize %}{% endif %}

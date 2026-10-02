@@ -1,0 +1,83 @@
+{% extends "cirs/qm/base.html" %}
+{% load i18n %}
+{% comment %}
+  The overview of the QM: five tiles, each the answer to a question of the daily work. The numbers
+  are the real ones. The addresses into the work list are made by cirs.qm.params.worklist_url
+  (open_states, overdue_url, awaiting_url), the two charts by cirs.qm.charts, each with an id of
+  its own. A tile without data says so in a line of its own, so that none is left empty.
+{% endcomment %}
+
+{% block title %}{% translate "Overview" %}{% endblock %}
+{% block heading %}{% translate "Overview" %}{% endblock %}
+
+{% block qm_content %}
+<div class="ui-kacheln ui-mt-4">
+
+  <section class="ui-card" aria-labelledby="kachel-neu">
+    <h2 class="ui-card__title" id="kachel-neu">{% translate "What is new?" %}</h2>
+    <p class="ui-secondary">{% translate "Reports received" %}</p>
+    <dl class="ui-kennzahlen">
+      <div><dt>{% translate "Last 7 days" %}</dt><dd>{{ new_week }}</dd></div>
+      <div><dt>{% translate "Current month" %}</dt><dd>{{ new_month }}</dd></div>
+    </dl>
+  </section>
+
+  <section class="ui-card" aria-labelledby="kachel-offen">
+    <h2 class="ui-card__title" id="kachel-offen">{% translate "What is open?" %}</h2>
+    <p class="ui-secondary">{% translate "Reports that are not completed yet" %}</p>
+    <dl class="ui-kennzahlen">
+      {% for state in open_states %}
+      <div><dt><a href="{{ state.url }}">{{ state.label|capfirst }}</a></dt><dd>{{ state.count }}</dd></div>
+      {% endfor %}
+    </dl>
+  </section>
+
+  <section class="ui-card ui-kachel--breit" aria-labelledby="kachel-wartet">
+    <h2 class="ui-card__title" id="kachel-wartet">{% translate "What is waiting for us?" %}</h2>
+    <div class="ui-grid ui-grid--2">
+      <div>
+        <h3 class="ui-mt-0">{% translate "Without processing" %}</h3>
+        <p class="ui-secondary">{% blocktranslate count days=overdue_days %}New and older than {{ days }} day.{% plural %}New and older than {{ days }} days.{% endblocktranslate %}</p>
+        {% if overdue_rows %}
+          {% translate "Reports without processing" as caption %}
+          {% include "cirs/qm/_incident_rows.html" with rows=overdue_rows caption=caption %}
+          <p class="ui-mt-3"><a href="{{ overdue_url }}">{% translate "Show all" context "overview list" %}<span class="ui-visually-hidden">: {% translate "Without processing" %}</span></a></p>
+        {% else %}
+          <p class="ui-muted">{% translate "Nothing open." %}</p>
+        {% endif %}
+      </div>
+      <div>
+        <h3 class="ui-mt-0">{% translate "Waiting for the QM" %}</h3>
+        <p class="ui-secondary">{% translate "The last reply is from the reporting person." %}</p>
+        {% if awaiting_rows %}
+          {% translate "Reports waiting for the QM" as caption %}
+          {% include "cirs/qm/_incident_rows.html" with rows=awaiting_rows caption=caption %}
+          <p class="ui-mt-3"><a href="{{ awaiting_url }}">{% translate "Show all" context "overview list" %}<span class="ui-visually-hidden">: {% translate "Waiting for the QM" %}</span></a></p>
+        {% else %}
+          <p class="ui-muted">{% translate "No replies open." %}</p>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <section class="ui-card" aria-labelledby="kachel-verlauf">
+    <h2 class="ui-card__title" id="kachel-verlauf">{% translate "How is it developing?" %}</h2>
+    {% if development %}
+      {% include "cirs/qm/_columns.html" with chart=development.chart chart_id="chart-verlauf" title=development.title desc=development.desc label_header=development.label_header %}
+      <p class="ui-secondary">{% translate "The last month is not over yet." %}{% if development.note %} {{ development.note }}{% endif %}</p>
+    {% else %}
+      <p class="ui-muted">{% translate "No reports in the last 12 months." %}</p>
+    {% endif %}
+  </section>
+
+  <section class="ui-card" aria-labelledby="kachel-wo">
+    <h2 class="ui-card__title" id="kachel-wo">{% translate "Where does it happen?" %}</h2>
+    {% if where %}
+      {% include "cirs/qm/_bars.html" with chart=where.chart chart_id="chart-wo" title=where.title desc=where.desc label_header=where.label_header %}
+    {% else %}
+      <p class="ui-muted">{% translate "No reports in the last 12 months." %}</p>
+    {% endif %}
+  </section>
+
+</div>
+{% endblock %}

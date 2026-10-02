@@ -31,7 +31,7 @@ from parameterized import parameterized
 
 from labcirs.settings import base
 from labcirs.settings.base import (default_language_code, get_bool_setting,
-                                   get_local_setting)
+                                   get_local_setting, get_positive_int_setting)
 
 
 class LocalSettingTest(SimpleTestCase):
@@ -144,6 +144,65 @@ class BooleanSettingTest(SimpleTestCase):
                 self.assertIs(get_bool_setting('MISSING', True, config_file=path), True)
                 with self.assertRaises(ImproperlyConfigured):
                     get_bool_setting('C', False, config_file=path)
+
+
+class PositiveIntSettingTest(SimpleTestCase):
+    """A day limit or a smallest cell must be a whole number of at least 1. JSON would let
+    true, 14.0 and "14" pass as a value, and the number 0 would silently turn the limit off."""
+
+    @parameterized.expand([('14', 14), ('1', 1), ('365', 365), (' 7 ', 7)])
+    def test_whole_numbers_from_1_are_accepted(self, value, expected):
+        self.assertEqual(load_settings(QM_OVERDUE_DAYS=value)['QM_OVERDUE_DAYS'], expected)
+
+    @parameterized.expand([('0',), ('-3',), ('true',), ('false',), ('14.0',), ('2.5',),
+                           ('abc',), ('"14"',), ('[14]',), ('null',), ('{}',)])
+    def test_everything_else_is_rejected(self, value):
+        with self.assertRaisesRegex(ImproperlyConfigured, 'LABCIRS_QM_OVERDUE_DAYS.*whole number'):
+            load_settings(QM_OVERDUE_DAYS=value)
+
+    def test_empty_value_means_the_default(self):
+        self.assertEqual(load_settings(QM_OVERDUE_DAYS='')['QM_OVERDUE_DAYS'], 14)
+        self.assertEqual(load_settings(REPORT_MIN_CELL='')['REPORT_MIN_CELL'], 3)
+
+    def test_the_running_settings_have_the_defaults(self):
+        self.assertEqual((settings.QM_OVERDUE_DAYS, settings.REPORT_MIN_CELL), (14, 3))
+
+    def test_both_settings_are_strict(self):
+        for name in ('QM_OVERDUE_DAYS', 'REPORT_MIN_CELL'):
+            with self.subTest(name):
+                self.assertEqual(load_settings(**{name: '5'})[name], 5)
+                with self.assertRaises(ImproperlyConfigured):
+                    load_settings(**{name: '0'})
+
+    def test_config_file_values(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, 'local_config.json')
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump({'A': 5, 'B': '5', 'C': True, 'D': 2.5, 'E': 0, 'F': -1, 'G': ''}, f)
+            with mock.patch.dict(os.environ, {}, clear=True):
+                self.assertEqual(get_positive_int_setting('A', 14, config_file=path), 5)
+                self.assertEqual(get_positive_int_setting('G', 14, config_file=path), 14)
+                self.assertEqual(get_positive_int_setting('MISSING', 14, config_file=path), 14)
+                for name in 'BCDEF':
+                    with self.subTest(name), self.assertRaises(ImproperlyConfigured):
+                        get_positive_int_setting(name, 14, config_file=path)
+
+
+class BackupStatusDirSettingTest(SimpleTestCase):
+    """The folder is text, and empty means that no backup status is set up."""
+
+    def test_default_is_empty(self):
+        self.assertEqual(load_settings(BACKUP_STATUS_DIR='')['BACKUP_STATUS_DIR'], '')
+        self.assertEqual(settings.BACKUP_STATUS_DIR, '')
+
+    def test_path_is_kept_as_text(self):
+        self.assertEqual(load_settings(BACKUP_STATUS_DIR='/backup-status')['BACKUP_STATUS_DIR'],
+                         '/backup-status')
+
+    @parameterized.expand([('12',), ('true',), ('[]',)])
+    def test_a_value_that_is_not_text_is_rejected(self, value):
+        with self.assertRaisesRegex(ImproperlyConfigured, 'LABCIRS_BACKUP_STATUS_DIR'):
+            load_settings(BACKUP_STATUS_DIR=value)
 
 
 class EmailTimeoutTest(SimpleTestCase):

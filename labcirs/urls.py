@@ -9,6 +9,7 @@ from cirs.views import DepartmentList, login_user, logout_user
 urlpatterns = [
     re_path(r'^$', DepartmentList.as_view(), name='labcirs_home'),
     re_path(r'^incidents/', include('cirs.urls')),
+    path('qm/', include('cirs.qm.urls')),
     re_path(r'^admin/logout/$', logout_user, name='logout_admin'),
     re_path(r'^admin/', admin_site.urls),
     re_path(r'^login/$',  login_user, name='login'),

@@ -1,0 +1,171 @@
+{% extends "cirs/qm/base.html" %}
+{% load i18n %}
+{% comment %}
+  The work list of the QM: all incidents of its departments. The filters are a GET form, so that
+  the address can be shared and the overview can link here (cirs.qm.params makes and reads the
+  addresses). The active filters and the parameters that were left out are named, with a way out.
+  The table has caption and scope, its three sorting headings are links, paging says "Page n of
+  m", and the empty state leads on. The column of the department is only there for a QM of
+  several departments.
+{% endcomment %}
+
+{% block title %}{% translate "Incidents" %}{% endblock %}
+{% block heading %}{% translate "Incidents" %}{% endblock %}
+
+{% block qm_content %}
+{% if filters_active or ignored or paginator.count %}
+<form method="get" class="ui-card ui-mt-4" role="search" aria-label="{% translate 'Filter the incidents' %}">
+  <div class="ui-grid ui-grid--3">
+    <div class="ui-field">
+      <label class="ui-field__label" for="filter-stand">{% translate "Status" context "incident list" %}</label>
+      <select class="ui-select" id="filter-stand" name="stand" aria-describedby="filter-stand-hinweis">
+        <option value="">{% translate "All" %}</option>
+        {% for value, label in statuses %}<option value="{{ value }}"{% if value == selected.stand %} selected{% endif %}>{{ label|capfirst }}</option>{% endfor %}
+      </select>
+      <span class="ui-field__hint" id="filter-stand-hinweis">{% translate "The state of the work on the incident." %}</span>
+    </div>
+    <div class="ui-field">
+      <label class="ui-field__label" for="filter-wo">{% translate "Where" %}</label>
+      <select class="ui-select" id="filter-wo" name="wo" aria-describedby="filter-wo-hinweis">
+        <option value="">{% translate "All" %}</option>
+        {% for place, name in places %}<option value="{{ place }}"{% if place == selected.wo %} selected{% endif %}>{{ name }}</option>{% endfor %}
+        <option value="{{ no_place }}"{% if selected.wo == no_place %} selected{% endif %}>{% translate "Not specified" %}</option>
+      </select>
+      <span class="ui-field__hint" id="filter-wo-hinweis">{% translate "A group includes its units." %}</span>
+    </div>
+    <div class="ui-field">
+      <label class="ui-field__label" for="filter-kategorie">{% translate "Category" %}</label>
+      <select class="ui-select" id="filter-kategorie" name="kategorie" aria-describedby="filter-kategorie-hinweis">
+        <option value="">{% translate "All" %}</option>
+        {% for value, label in categories %}<option value="{{ value }}"{% if value == selected.kategorie %} selected{% endif %}>{{ label|capfirst }}</option>{% endfor %}
+      </select>
+      <span class="ui-field__hint" id="filter-kategorie-hinweis">{% translate "An incident can have several categories." %}</span>
+    </div>
+    <div class="ui-field">
+      <label class="ui-field__label" for="filter-risiko">{% translate "Risk" %}</label>
+      <select class="ui-select" id="filter-risiko" name="risiko" aria-describedby="filter-risiko-hinweis">
+        <option value="">{% translate "All" %}</option>
+        {% for value, label in risks %}<option value="{{ value }}"{% if value == selected.risiko %} selected{% endif %}>{{ label|capfirst }}</option>{% endfor %}
+      </select>
+      <span class="ui-field__hint" id="filter-risiko-hinweis">{% translate "The classification by the QM." %}</span>
+    </div>
+    <div class="ui-field">
+      <label class="ui-field__label" for="filter-von">{% translate "Reported from" %}</label>
+      <input class="ui-input" type="date" id="filter-von" name="von" value="{{ selected.von|date:'Y-m-d' }}" aria-describedby="filter-von-hinweis">
+      <span class="ui-field__hint" id="filter-von-hinweis">{% translate "Format: YYYY-MM-DD, for example 2026-01-31." %}</span>
+    </div>
+    <div class="ui-field">
+      <label class="ui-field__label" for="filter-bis">{% translate "Reported until" %}</label>
+      <input class="ui-input" type="date" id="filter-bis" name="bis" value="{{ selected.bis|date:'Y-m-d' }}" aria-describedby="filter-bis-hinweis">
+      <span class="ui-field__hint" id="filter-bis-hinweis">{% translate "Format: YYYY-MM-DD, for example 2026-01-31." %}</span>
+    </div>
+  </div>
+  <div class="ui-field ui-prose">
+    <label class="ui-field__label" for="filter-q">{% translate "Search term" %}</label>
+    <input class="ui-input" type="search" id="filter-q" name="q" value="{{ selected.q }}" maxlength="{{ max_search }}" aria-describedby="filter-q-hinweis">
+    <span class="ui-field__hint" id="filter-q-hinweis">{% translate "The search looks in the text of the incident." %}</span>
+  </div>
+  <fieldset class="ui-fieldset">
+    <legend>{% translate "Show only" %}</legend>
+    <div class="ui-field">
+      <label class="ui-check" for="filter-wartet">
+        <input type="checkbox" id="filter-wartet" name="wartet" value="1"{% if selected.wartet %} checked{% endif %} aria-describedby="filter-wartet-hinweis">
+        <span>{% translate "Waiting for the QM" %}</span>
+      </label>
+      <span class="ui-field__hint" id="filter-wartet-hinweis">{% translate "The last reply is from the reporting person." %}</span>
+    </div>
+    <div class="ui-field ui-mb-0">
+      <label class="ui-check" for="filter-ohne-bearbeitung">
+        <input type="checkbox" id="filter-ohne-bearbeitung" name="ohne_bearbeitung" value="1"{% if selected.ohne_bearbeitung %} checked{% endif %} aria-describedby="filter-ohne-bearbeitung-hinweis">
+        <span>{% translate "Without processing" %}</span>
+      </label>
+      <span class="ui-field__hint" id="filter-ohne-bearbeitung-hinweis">{% blocktranslate count days=overdue_days %}New and older than {{ days }} day.{% plural %}New and older than {{ days }} days.{% endblocktranslate %}</span>
+    </div>
+  </fieldset>
+  {% if selected.sort %}<input type="hidden" name="sort" value="{{ selected.sort }}">{% endif %}
+  <div class="ui-row">
+    <button type="submit" class="ui-btn ui-btn--primary">{% translate "Apply filter" %}</button>
+  </div>
+</form>
+{% endif %}
+
+{% if filters_active or ignored %}
+<div class="ui-filterstand ui-mt-4">
+  {% if filters_active %}
+  <p class="ui-filterstand__text" role="status">
+    {# A span, because __text is a flex container: text around bare inline elements would break apart. #}
+    <span>{% blocktranslate count counter=paginator.count %}{{ counter }} incident matches your filters.{% plural %}{{ counter }} incidents match your filters.{% endblocktranslate %}</span>
+  </p>
+  {% endif %}
+  {% if selected.q %}<p class="ui-filterstand__hinweis">{% blocktranslate with term=selected.q %}Search for “{{ term }}” in the text of the incidents.{% endblocktranslate %}</p>{% endif %}
+  {% for note in ignored %}<p class="ui-filterstand__hinweis">{{ note }}</p>{% endfor %}
+  {% if paginator.count %}<a class="ui-btn ui-btn--quiet" href="{{ clear_url }}">{% translate "Clear filter" %}</a>{% endif %}
+</div>
+{% endif %}
+
+{% if paginator.count %}
+  {% if is_paginated %}{% blocktranslate with number=page_obj.number pages=paginator.num_pages asvar page_text %}Page {{ number }} of {{ pages }}{% endblocktranslate %}{% endif %}
+  <div class="ui-card ui-card--flush ui-mt-4">
+    <div class="ui-tablewrap ui-tablewrap--eingebettet">
+      <table class="ui-table ui-meldungen">
+        <caption class="ui-visually-hidden">{% translate "Incidents" %}{% if is_paginated %} &middot; {{ page_text }}{% endif %}</caption>
+        <thead>
+          <tr>
+            <th scope="col"{% if sorts.nr.aria_sort %} aria-sort="{{ sorts.nr.aria_sort }}"{% endif %}><a href="{{ sorts.nr.url }}">{% translate "No." %}<span class="ui-visually-hidden">: {{ sorts.nr.action }}</span>{% if sorts.nr.arrow %} <span aria-hidden="true">{{ sorts.nr.arrow }}</span>{% endif %}</a></th>
+            <th scope="col"{% if sorts.gemeldet.aria_sort %} aria-sort="{{ sorts.gemeldet.aria_sort }}"{% endif %}><a href="{{ sorts.gemeldet.url }}">{% translate "Reported" %}<span class="ui-visually-hidden">: {{ sorts.gemeldet.action }}</span>{% if sorts.gemeldet.arrow %} <span aria-hidden="true">{{ sorts.gemeldet.arrow }}</span>{% endif %}</a></th>
+            <th scope="col">{% translate "Status" context "incident list" %}</th>
+            {% if departments|length > 1 %}<th scope="col">{% translate "Department" %}</th>{% endif %}
+            <th scope="col">{% translate "Where" %}</th>
+            <th scope="col">{% translate "Category" %}</th>
+            <th scope="col">{% translate "Risk" %}</th>
+            <th scope="col"{% if sorts.aktivitaet.aria_sort %} aria-sort="{{ sorts.aktivitaet.aria_sort }}"{% endif %}><a href="{{ sorts.aktivitaet.url }}">{% translate "Last activity" %}<span class="ui-visually-hidden">: {{ sorts.aktivitaet.action }}</span>{% if sorts.aktivitaet.arrow %} <span aria-hidden="true">{{ sorts.aktivitaet.arrow }}</span>{% endif %}</a></th>
+            <th scope="col">{% translate "Notes" %}</th>
+            <th scope="col">{% translate "Edit" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for incident in page_obj %}
+          <tr>
+            <td class="ui-strong"><a href="{{ incident.get_absolute_url }}">{{ incident.pk }}</a></td>
+            <td class="ui-nowrap"><time datetime="{{ incident.reported|date:'Y-m-d' }}">{{ incident.reported|date:"SHORT_DATE_FORMAT" }}</time></td>
+            <td><span class="ui-badge ui-badge--{% if incident.status == 'completed' %}success{% else %}info{% endif %}">{{ incident.get_status_display|capfirst }}</span></td>
+            {% if departments|length > 1 %}<td>{{ incident.department.name }}</td>{% endif %}
+            <td>{% if incident.org_unit %}{{ incident.org_unit }}{% else %}{% translate "Not specified" %}{% endif %}</td>
+            <td>{% if incident.category %}{{ incident.get_category_display }}{% else %}{% translate "Not specified" %}{% endif %}</td>
+            <td>{% if incident.risk %}{{ incident.get_risk_display|capfirst }}{% else %}{% translate "Not specified" %}{% endif %}</td>
+            <td class="ui-nowrap"><time datetime="{{ incident.last_activity|date:'Y-m-d' }}">{{ incident.last_activity|date:"SHORT_DATE_FORMAT" }}</time></td>
+            <td>{% if incident.is_awaiting_qm or incident.is_overdue %}<div class="ui-hinweise">
+              {% if incident.is_awaiting_qm %}<span class="ui-badge ui-badge--warning">{% translate "Waiting for the QM" %}</span>{% endif %}
+              {% if incident.is_overdue %}<span class="ui-badge ui-badge--warning">{% translate "Without processing" %}</span>{% endif %}
+            </div>{% endif %}</td>
+            <td><a href="{% url 'admin:cirs_criticalincident_change' incident.pk %}">{% translate "Edit in the admin" %}<span class="ui-visually-hidden">: {% blocktranslate with number=incident.pk %}incident {{ number }}{% endblocktranslate %}</span></a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if is_paginated %}
+  {# "Back" only from page 2 on, "Next" only before the last page: the condition decides whether a button appears. #}
+  <nav class="ui-row ui-row--between ui-mt-4" aria-label="{% translate 'Pages of the incident list' %}">
+    {% if previous_url %}<a class="ui-btn ui-btn--secondary" href="{{ previous_url }}" rel="prev">{% translate "Previous page" %}</a>{% endif %}
+    <span class="ui-muted">{{ page_text }}</span>
+    {% if next_url %}<a class="ui-btn ui-btn--secondary" href="{{ next_url }}" rel="next">{% translate "Next page" %}</a>{% endif %}
+  </nav>
+  {% endif %}
+{% elif filters_active %}
+  <div class="ui-card ui-state ui-mt-4">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <p class="ui-state__title">{% translate "No incident matches your filters." %}</p>
+    <p class="ui-muted">{% translate "Please check the filters or clear them." %}</p>
+    <p class="ui-muted"><a href="{{ clear_url }}">{% translate "Clear filter" %}</a></p>
+  </div>
+{% else %}
+  <div class="ui-card ui-state ui-mt-4">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
+    <p class="ui-state__title">{% translate "There are no incidents yet." %}</p>
+    <p class="ui-muted">{% translate "As soon as a report comes in, it appears here." %}</p>
+  </div>
+{% endif %}
+{% endblock %}

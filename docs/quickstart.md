@@ -71,7 +71,7 @@ The app migrates the database before it starts gunicorn. Wait until `docker comp
 docker compose run --rm app python manage.py createsuperuser
 ```
 
-Open `https://cirs.example.org/login/` and log in. The login is only for the QM (reviewers) and admins. Reporters never log in.
+Open `https://cirs.example.org/login/` and log in. The login is only for the QM (reviewers) and admins. Reporters never log in. An admin lands in the admin, the QM on its overview (`/qm/`), where the button "Admin" in the top bar opens the admin.
 
 In the admin (button "Admin" in the top bar):
 

@@ -36,7 +36,7 @@ To see the lines of one point: `grep -E '^(PASS|FAIL) +A3 ' artifacts/accept/abn
 
 ## Visual check
 
-`sh scripts/acceptance.sh dc run --rm -T playwright python scripts/sichtkontrolle.py` opens every public page and the admin index at 320, 768 and 1440 px. For each page and width it saves a screenshot, measures horizontal scrolling (`scrollWidth > clientWidth`), lists console messages that name the Content Security Policy (plus the violation events of the page) and lists every request to another origin.
+`sh scripts/acceptance.sh dc run --rm -T playwright python scripts/sichtkontrolle.py` opens every public page, the four pages of the QM area (overview, incident list, evaluations, print view, after a login as `qm-demo`) and the admin index at 320, 768 and 1440 px. For each page and width it saves a screenshot, measures horizontal scrolling (`scrollWidth > clientWidth`), lists console messages that name the Content Security Policy (plus the violation events of the page), lists every request to another origin and measures the size of every text inside an SVG as it is drawn (font size times the scale of the view box, at least 11 px). The CSV download has no page to look at.
 
 | Pages (15) | Start, case list, search, page 2, report form, form with errors, success page with code, "My report", wrong code, report with code, login, failed login, password reset, 404 page, admin index (QM) |
 |---|---|
@@ -45,7 +45,7 @@ To see the lines of one point: `grep -E '^(PASS|FAIL) +A3 ' artifacts/accept/abn
 | Requests to other origins | 0 |
 | Result | `NO FINDINGS`, exit status 0 |
 
-`--selftest` puts a style attribute, a request to another origin and a table wider than the page into a page by hand and exits with 0 only if the check finds all three (`SELFTEST OK`). The same CSP and origin watch runs through all flows of `abnahme.py` (check in section SEC: 0 messages, 0 foreign requests, in the public pages and the admin).
+The QM pages and the check of the SVG type size were added after the run recorded in the table. `--selftest` puts a style attribute, a request to another origin, a table wider than the page and an SVG text of 6 px into a page by hand and exits with 0 only if the check finds all four (`SELFTEST OK`). The same CSP and origin watch runs through all flows of `abnahme.py` (check in section SEC: 0 messages, 0 foreign requests, in the public pages and the admin).
 
 ## Function list
 
@@ -66,7 +66,7 @@ Results are the number of checks that passed out of the checks that ran. Screens
 
 | Point | Function | Result | Evidence |
 |---|---|---|---|
-| R1 | The login leads to the admin | 4/4 | `R1-login-form.png`, `R1-login-failed.png`, `R1-admin-index.png`. The technical reporter account cannot log in. |
+| R1 | The login leads to the QM overview, the admin opens from there | 5/5, run again alone after the change (the login used to lead to the admin) | `R1-login-form.png`, `R1-login-failed.png`, `R1-qm-overview.png`, `R1-admin-index.png`. The overview has one heading and the three QM pages and the link "Verwaltung" in the top bar. The technical reporter account cannot log in. |
 | R2 | List with all filters, incl. organisational unit | 14/14 | `R2-list-all.png`, `R2-filter-*.png`. Status, both dates, consent, risk, organisational unit and "has publishable incident" each show the count the database gives, two filters work together. The department filter shows as soon as the QM has two departments (`R2-filter-department.png`; Django hides a filter with one choice). |
 | R3 | The report part is read-only and shows the photo; the review block is complete | 8/8 | `R3-incident-change-review-open.png`, `R3-incident-saved.png`. No input exists for the report part, a forged field is ignored, the thumbnail loads, all nine review fields are there and save. |
 | R4 | Publish by inline and by list, with the mandatory languages | 12/12 | `R4-inline-mandatory-languages-error.png`, `R4-inline-english-tab.png`, `R4-inline-published.png`, `R4-inline-no-consent.png`, `R4-list-mandatory-languages-error.png`, `R4-list-published.png`, `R4-public-list-new-case.png`. German only is refused, German and English publish, a report without consent cannot be published, the public list shows the result. |

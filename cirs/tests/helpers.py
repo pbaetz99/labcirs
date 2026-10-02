@@ -20,8 +20,9 @@ import re
 from urllib.parse import urlsplit
 
 from django.contrib.auth.models import Permission, User
+from model_bakery import baker
 
-from cirs.models import Reporter, Reviewer, group_code
+from cirs.models import Comment, IncidentStatusChange, Reporter, Reviewer, group_code
 
 
 def create_user(name=None, superuser=False):
@@ -44,6 +45,41 @@ def create_role(role_cls, name):
                         'existing user. But you provided {} which is '
                         '{}!'.format(name, type(name)))
     return role
+
+
+def make_incident(department, reported=None, history=(), comments=(), legacy=False, **fields):
+    """
+    An incident of the department with a status log of known times. The log is written by save()
+    as in production, then every entry gets its time with update(): changed_at is set when an
+    entry is created and cannot be given to create().
+
+    history: (status, aware datetime) for each entry in order. The first is the initial status
+        and the others are the changes, so the status does not repeat from one entry to the next.
+        Without it the incident has the one entry of its creation, with the time of now.
+    comments: (author, day) for each comment, author being a user.
+    legacy: the incident is from before the log, so the entry of its creation is dropped. Without
+        a history it has no entry at all; the entries of later changes stay.
+    fields: any other field of the incident, such as status, incident or category.
+    """
+    if reported is not None:
+        fields['reported'] = reported
+    if history:
+        if 'status' in fields:
+            raise TypeError('The initial status is the first entry of the history')
+        fields['status'] = history[0][0]
+    incident = baker.make_recipe('cirs.public_ci', department=department, **fields)
+    for status, _ in history[1:]:
+        incident.status = status
+        incident.save()
+    entries = list(incident.status_changes.order_by('pk'))
+    if history:
+        for entry, (_, changed_at) in zip(entries, history, strict=True):
+            IncidentStatusChange.objects.filter(pk=entry.pk).update(changed_at=changed_at)
+    if legacy:
+        entries[0].delete()
+    for author, day in comments:
+        baker.make(Comment, critical_incident=incident, author=author, created=day)
+    return incident
 
 
 def code_markup(code):

@@ -268,9 +268,20 @@ class CriticalIncident(models.Model):
             random_string = get_random_string(COMMENT_CODE_LENGTH, COMMENT_CODE_CHARS)
             if CriticalIncident.objects.filter(comment_code=random_string).count() == 0:
                 self.comment_code = random_string
-        super(CriticalIncident, self).save(*agrs, **kwargs)
-        changed = self._saved_status not in (None, self.status)
-        self._saved_status = self.status
+        adding = self._state.adding
+        # A save that leaves the status out (update_fields without it, or a status that was not
+        # loaded) stores no status change: nothing to log, nothing to tell the reporter.
+        update_fields = kwargs.get('update_fields')
+        stores_status = 'status' in self.__dict__ and (update_fields is None
+                                                       or 'status' in update_fields)
+        # The entry of the status log is stored in the same transaction as the incident.
+        with transaction.atomic():
+            super(CriticalIncident, self).save(*agrs, **kwargs)
+            changed = stores_status and self._saved_status not in (None, self.status)
+            if adding or changed:
+                IncidentStatusChange.objects.create(incident=self, status=self.status)
+        if stores_status:
+            self._saved_status = self.status
         if changed:
             # After the commit: the admin saves in a transaction, and a rolled-back save must
             # not tell the reporter a status that was not stored.
@@ -282,6 +293,27 @@ class CriticalIncident(models.Model):
         if self.status == 'completed':
             # The address is kept only as long as the report is open.
             ReporterContact.objects.filter(incident=self).delete()
+
+
+class IncidentStatusChange(models.Model):
+    """
+    One entry per status an incident took: the initial status when it was created, then every
+    change. Written by CriticalIncident.save, shown read-only in the admin. Incidents from before
+    the log was introduced have no entries.
+    """
+    incident = models.ForeignKey(CriticalIncident, on_delete=models.CASCADE,
+                                 related_name='status_changes',
+                                 verbose_name=_("Critical incident"))
+    status = models.CharField(_("Status"), max_length=255, choices=STATUS_CHOICES)
+    changed_at = models.DateTimeField(_("Changed at"), auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = _("Status change")
+        verbose_name_plural = _("Status changes")
+        ordering = ['changed_at', 'id']
+
+    def __str__(self):
+        return str(self.get_status_display())
 
 
 class ReporterContact(models.Model):

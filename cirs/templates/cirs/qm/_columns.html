@@ -1,0 +1,59 @@
+{% load i18n l10n %}
+{% comment %}
+  Grouped columns with two series as inline SVG and the numbers as a table below (geometry and
+  variables: cirs.qm.charts). The second series is not told from the first by colour alone: its
+  columns and its legend swatch are hollow with an outline. The texts over the columns come
+  from the cells, never from a number; when they do not fit they are left out and the table has
+  them. Axis labels that do not fit side by side are left out of the drawing as well. A cell
+  without a number gets a dashed line on the zero line instead of a column, also when its text is
+  not drawn, so that it is not taken for 0 (which has nothing there).
+  localize off: the German locale would write the coordinates with a comma.
+{% endcomment %}
+{% if chart.groups %}{% localize off %}
+<div class="ui-diagramm">
+  <svg class="ui-diagramm__bild" width="{{ chart.width }}" height="{{ chart.height }}" viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img" aria-labelledby="{{ chart_id }}-title {{ chart_id }}-desc">
+    <title id="{{ chart_id }}-title">{{ title }}</title>
+    <desc id="{{ chart_id }}-desc">{{ desc }}</desc>
+    {% for entry in chart.legend %}
+    <rect class="ui-diagramm__reihe-{{ forloop.counter }}" x="{{ entry.x }}" y="{{ chart.legend_y }}" width="{{ chart.swatch }}" height="{{ chart.swatch }}"/>
+    <text class="ui-diagramm__beschriftung" x="{{ entry.text_x }}" y="{{ chart.legend_text_y }}" dy=".35em">{{ entry.name }}</text>
+    {% endfor %}
+    <line class="ui-diagramm__achse" x1="{{ chart.left }}" y1="{{ chart.top }}" x2="{{ chart.left }}" y2="{{ chart.base }}"/>
+    <line class="ui-diagramm__achse" x1="{{ chart.left }}" y1="{{ chart.base }}" x2="{{ chart.right }}" y2="{{ chart.base }}"/>
+    {% for tick in chart.ticks %}
+    <line class="ui-diagramm__achse" x1="{{ chart.tick_start }}" y1="{{ tick.pos }}" x2="{{ chart.left }}" y2="{{ tick.pos }}"/>
+    <text class="ui-diagramm__marke" x="{{ chart.tick_label_x }}" y="{{ tick.pos }}" dy=".35em" text-anchor="end">{{ tick.value }}</text>
+    {% endfor %}
+    {% for group in chart.groups %}
+    {% if group.show_label %}<text class="ui-diagramm__marke" x="{{ group.label_x }}" y="{{ chart.label_y }}" text-anchor="middle">{{ group.label }}</text>{% endif %}
+    {% for column in group.columns %}
+    {% if column.height %}<rect class="ui-diagramm__reihe-{{ forloop.counter }}" x="{{ column.x }}" y="{{ column.y }}" width="{{ chart.col_width }}" height="{{ column.height }}"/>{% endif %}
+    {% if column.missing %}<path class="ui-diagramm__fehlt ui-diagramm__fehlt-{{ forloop.counter }}" d="M{{ column.x }} {{ chart.base }}h{{ chart.col_width }}"/>{% endif %}
+    {% if chart.show_values %}<text class="ui-diagramm__wert" x="{{ column.label_x }}" y="{{ column.label_y }}"{% if chart.vertical %} dy=".35em" transform="rotate(-90 {{ column.label_x }} {{ column.label_y }})"{% else %} text-anchor="middle"{% endif %}>{{ column.text }}</text>{% endif %}
+    {% endfor %}
+    {% endfor %}
+  </svg>
+  <details class="ui-diagramm__tabelle"{% if table_open %} open{% endif %}>
+    <summary>{% translate "Numbers as a table" %}</summary>
+    <div class="ui-tablewrap">
+      <table class="ui-table">
+        <caption class="ui-visually-hidden">{{ title }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ label_header }}</th>
+            {% for name in chart.names %}<th scope="col">{{ name }}</th>{% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for group in chart.groups %}
+          <tr>
+            <th scope="row">{{ group.label }}</th>
+            {% for column in group.columns %}<td class="ui-num">{{ column.text }}</td>{% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </details>
+</div>
+{% endlocalize %}{% endif %}

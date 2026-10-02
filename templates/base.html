@@ -1,4 +1,4 @@
-{% load i18n static %}<!DOCTYPE html>
+{% load i18n static qm_access %}<!DOCTYPE html>
 {% comment %}
   Page frame in the design system of core.css:
   white top bar with logo and navigation, blue footer. Not the workspace shell with side bar:
@@ -39,6 +39,8 @@
       <div class="ui-spacer"></div>
       {% block nav %}
       <nav class="ui-nav" aria-label="{% translate 'Main navigation' %}">
+        {# The pages of the quality management come first for those who get into them. #}
+        {% if user|is_qm %}{% include "cirs/qm/_nav.html" %}{% endif %}
         {# firstof ignores a missing view (login page); the routes need a department. #}
         {% firstof department view.kwargs.dept as dept %}
         {% if dept %}
