@@ -1,6 +1,33 @@
 LabCIRS changelog
 =================
 
+8.1.0a3 (2026-10-06)
+--------------------
+
+The QM works on a report on its own page, the evaluations can be printed and exported, administrators get a status view, and a review of the QM area led to a round of fixes.
+
+QM area
+
+* A reviewer of the department of a report works on it on the page of the report, at the same address as before (reporters see their page unchanged). The page shows the report, the assessment form (status, place, risk, frequency, hazard, categories, measure, responsible person, review date), the dialogue with the reporting person with the reply form, the publication in every language of the installation and the history of the status. Every form is a POST of its own and answers with a message; the permissions are the ones of the admin. The numbers of the overview and the work list lead to this page and keep the list with its filters; the column "Edit in admin" of the list is gone. The admin works as before.
+* Evaluations: print view (``/qm/auswertungen/druck/``, A4) and CSV file (``/qm/auswertungen/csv/``) of the same period and area, linked from the evaluations page. Both hold back small numbers: a number above 0 and below ``REPORT_MIN_CELL`` shows as "< 3", a hidden number that could be calculated from the others costs one more, published cases show month and year only. The footnote says what the rule does not cover. Printing the evaluations page itself shows only a note that points to the print view.
+* Evaluations: completions and times show "not recorded" for periods before the status history began (they showed 0). "Open at the end of the period" is now "Open (as of today)", and "Not yet processed" is a new figure. The definitions say what is counted: a reopened report counts again when it is completed again, and the reaction time covers only reports received since the history began.
+* The status history shows the day, not the time, of the entry that the submission of a report makes, in the admin and on the page of the report.
+
+Administrators
+
+* The start page of the admin shows the system status to superusers: version, last backup, departments without a QM, mail set-up, accounts per role and accounts without a login for more than 180 days. The last backup is read from a status file in ``BACKUP_STATUS_DIR`` that the backup script writes, see ``docs/configuration.md``. Reviewers see a link to the QM area instead.
+
+Security and privacy
+
+* A new password needs at least 12 characters and must be neither a common password nor only digits. Passwords that exist stay valid.
+* The proxy log no longer holds the query string, so a search term does not reach it, and search fields do not offer earlier searches. After the update the proxy container has to be created again (``docker compose up -d --force-recreate proxy``) to use the new log format.
+* The admin offers only the reports of the own departments when a publication is added (with several departments it listed the beginning of the title of every report and accepted a number of another department). A publication without a report no longer ends in an error page.
+* Whoever may not see a report gets the same answer whether its number exists or not.
+
+Accessibility
+
+* The top bar sticks only from a screen width of 80rem, so that it does not cover the focused element in the QM area. The hint of the date fields no longer names a format the field does not show. Chart text keeps its size when the font size of the browser changes. Every table of numbers has its own name and the work list names the number of its reports in the table caption.
+
 8.1.0a2 (2026-10-02)
 --------------------
 

@@ -1,0 +1,26 @@
+{% extends "cirs/qm/base.html" %}
+{% load i18n %}
+{% comment %}
+  The page of an incident for the QM of its department (cirs.qm.incident_work), at the address that the
+  reporter uses too. From top to bottom: the head with the status and the way back to the list, the
+  report to read, the review, the dialogue with the reporting person, the published case and the
+  history. Each form is a POST of its own with the hidden field "aktion", so that the text typed in
+  one is not lost to the other. The address and the code of the reporting person are not on this
+  page, nor anywhere in what it is made of.
+{% endcomment %}
+
+{% block title %}{% blocktranslate with number=incident.pk %}Report {{ number }}{% endblocktranslate %}{% endblock %}
+{% block heading %}{% blocktranslate with number=incident.pk %}Report {{ number }}{% endblocktranslate %}{% endblock %}
+{# the department stands in the head, and only for a QM of several #}
+{% block scope %}{% endblock %}
+
+{% block qm_content %}
+{% include "cirs/qm/incident/_head.html" %}
+<div class="ui-stack-lg ui-mt-4">
+  {% include "cirs/qm/incident/_report.html" %}
+  {% include "cirs/qm/incident/_review.html" %}
+  {% include "cirs/qm/incident/_dialogue.html" %}
+  {% include "cirs/qm/incident/_publication.html" %}
+  {% include "cirs/qm/incident/_history.html" %}
+</div>
+{% endblock %}

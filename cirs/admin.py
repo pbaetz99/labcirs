@@ -22,11 +22,15 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from django.db import models
 from django.forms import Textarea, TextInput
+from django.utils import timezone
+from django.utils.formats import date_format
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin, TranslatableTabularInline
 
 from cirs.models import (Comment, CriticalIncident, Department, IncidentStatusChange,
                          LabCIRSConfig, OrgUnit, PublishableIncident, Reporter, Reviewer)
+from cirs.status_log import shows_time, with_first_entry
+from cirs.system_status import system_status
 
 
 class LabCIRSAdminSite(admin.AdminSite):
@@ -42,6 +46,14 @@ class LabCIRSAdminSite(admin.AdminSite):
     def index_title(self):
         # Translators: %(site)s is the display name (setting SITE_NAME)
         return _('%(site)s administration') % {'site': settings.SITE_NAME}
+
+    def index(self, request, extra_context=None):
+        # The system status is for those who run the system. A QM gets the way to the QM area from
+        # the template instead; neither of them gets a number of any incident.
+        context = dict(extra_context or {})
+        if request.user.is_superuser:
+            context['system_status'] = system_status()
+        return super().index(request, context)
 
 
 admin_site = LabCIRSAdminSite()
@@ -113,11 +125,23 @@ class CommentInline(admin.TabularInline):
         return False
 
 class StatusChangeInline(admin.TabularInline):
-    """The status log of an incident: shown, never edited."""
+    """The status log of an incident: shown, never edited. The entry of the report has its day
+    only, see cirs.status_log."""
     model = IncidentStatusChange
-    fields = readonly_fields = ('status', 'changed_at')
+    fields = readonly_fields = ('status', 'moment')
     extra = 0
     can_delete = False
+
+    def get_queryset(self, request):
+        return with_first_entry(super().get_queryset(request))
+
+    @admin.display(description=IncidentStatusChange._meta.get_field('changed_at').verbose_name)
+    def moment(self, obj):
+        # as the admin writes a date and time: the time zone of the installation, the format of
+        # the language
+        moment = timezone.localtime(obj.changed_at)
+        with_time = shows_time(obj.status, obj.pk, obj.first_entry_id)
+        return date_format(moment, 'DATETIME_FORMAT' if with_time else 'DATE_FORMAT')
 
     def has_view_permission(self, request, obj=None):
         # Whoever may edit the incident may read its log, no permission of its own to hand out.
@@ -172,7 +196,15 @@ class PublishableIncidentAdmin(TranslatableAdmin):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "critical_incident":
-            kwargs["queryset"] = CriticalIncident.objects.filter(public=True).filter(publishableincident=None).exclude(status='new')
+            incidents = (CriticalIncident.objects.filter(public=True)
+                         .filter(publishableincident=None).exclude(status='new'))
+            # Only the incidents of the own departments: the list shows the beginning of every title,
+            # and a posted number would otherwise attach a publication to a foreign incident.
+            try:
+                incidents = incidents.filter(department__in=request.user.reviewer.departments.all())
+            except Reviewer.DoesNotExist:
+                incidents = incidents.none()
+            kwargs["queryset"] = incidents
         return super(PublishableIncidentAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_readonly_fields(self, request, obj=None):

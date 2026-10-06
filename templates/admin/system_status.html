@@ -1,0 +1,136 @@
+{% load i18n %}
+{% comment %}
+  The system status of the start page of the admin, for superusers. The context is system_status,
+  a cirs.system_status.SystemStatus. It tells how the system is run and never what is reported in
+  it: no number and no text of an incident is on it.
+  A state is a word as well as a symbol and a tint ("Warning:", "Note:", the check mark at a good
+  date), so the colour is never the only sign. Of the backup only the date, the size and the name
+  from the status file are shown, never the folder, and all of it is escaped like any other text.
+  The headings go h2 (the section) and h3 (each topic) under the h1 of the page; each table has a
+  caption and scope, the caption of the ones under a heading is for those who do not see it.
+{% endcomment %}
+<section class="module labcirs-system" id="system-status" aria-labelledby="system-status-title">
+  <h2 id="system-status-title">{% translate "System status" %}</h2>
+  <p>{% blocktranslate with version=system_status.version %}Version {{ version }}{% endblocktranslate %}</p>
+
+  <h3>{% translate "Last backup" %}</h3>
+  {% with backup=system_status.backup %}
+  {% if backup.state == 'not_set_up' %}
+    <p>{% translate "Not set up." %}</p>
+    <p class="quiet">{% translate "The backup status appears as soon as the setting LABCIRS_BACKUP_STATUS_DIR names a folder with the status file of the backup script." %}</p>
+  {% elif backup.state == 'no_folder' %}
+    <p class="labcirs-state labcirs-state--notice"><strong>{% translate "Note:" context "system status" %}</strong> {% translate "The folder for the backup status does not exist." %}</p>
+  {% elif backup.state == 'no_status_file' %}
+    <p class="labcirs-state labcirs-state--notice"><strong>{% translate "Note:" context "system status" %}</strong> {% translate "No backup has been reported yet." %}</p>
+  {% elif backup.state == 'unreadable' %}
+    <p class="labcirs-state labcirs-state--notice"><strong>{% translate "Note:" context "system status" %}</strong> {% translate "The status file of the last backup could not be read." %}</p>
+  {% else %}
+    {% if backup.state == 'stale' %}
+      <p class="labcirs-state labcirs-state--warning"><strong>{% translate "Warning:" context "system status" %}</strong> {% blocktranslate with hours=system_status.backup_stale_hours %}The last backup is older than {{ hours }} hours.{% endblocktranslate %}</p>
+    {% elif backup.state == 'future' %}
+      <p class="labcirs-state labcirs-state--notice"><strong>{% translate "Note:" context "system status" %}</strong> {% translate "The time of the last backup lies in the future. Please check the clock of the server." %}</p>
+    {% endif %}
+    <p{% if backup.state == 'fresh' %} class="labcirs-state labcirs-state--ok"{% endif %}><strong>{{ backup.made_at|date:"SHORT_DATETIME_FORMAT" }}</strong>{% if backup.state != 'future' %} ({% blocktranslate with age=backup.made_at|timesince %}Age: {{ age }}{% endblocktranslate %}){% endif %}</p>
+    {% if backup.file_name and backup.size is not None %}
+      <p class="quiet">{% blocktranslate with name=backup.file_name size=backup.size|filesizeformat %}File: {{ name }} ({{ size }}){% endblocktranslate %}</p>
+    {% elif backup.file_name %}
+      <p class="quiet">{% blocktranslate with name=backup.file_name %}File: {{ name }}{% endblocktranslate %}</p>
+    {% elif backup.size is not None %}
+      <p class="quiet">{% blocktranslate with size=backup.size|filesizeformat %}Size: {{ size }}{% endblocktranslate %}</p>
+    {% endif %}
+  {% endif %}
+  {% endwith %}
+
+  <h3>{% translate "Departments without QM" %}</h3>
+  {% with missing=system_status.departments_without_qm %}
+  {% if missing %}
+    <p class="labcirs-state labcirs-state--warning"><strong>{% translate "Warning:" context "system status" %}</strong> {% translate "These departments have no QM. Nobody can handle their reports." %}</p>
+    <ul>
+      {% for department in missing %}
+        <li><a href="{% url 'admin:cirs_department_change' department.pk %}">{{ department.name }}</a>{% if not department.active %} {% translate "(inactive)" %}{% endif %}</li>
+      {% endfor %}
+    </ul>
+  {% elif system_status.departments %}
+    <p class="labcirs-state labcirs-state--ok">{% translate "All departments have a QM." %}</p>
+  {% else %}
+    <p>{% translate "There are no departments yet." %}</p>
+  {% endif %}
+  {% endwith %}
+
+  <h3>{% translate "Mail delivery" %}</h3>
+  <p>{% translate "Mail delivery set up" %}: <strong>{% if system_status.mail_configured %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}</strong></p>
+  {% if not system_status.mail_configured %}
+    <p class="quiet">{% translate "It needs a mail server other than localhost and a sender address (LABCIRS_EMAIL_HOST and LABCIRS_DEFAULT_FROM_EMAIL). Until then nobody is notified by mail." %}</p>
+  {% endif %}
+  {% if system_status.departments %}
+  <table>
+    <caption class="visually-hidden">{% translate "Notification of the QM by department" %}</caption>
+    <thead>
+      <tr>
+        <th scope="col">{% translate "Department" %}</th>
+        <th scope="col">{% translate "Notification of the QM" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for department in system_status.departments %}
+      <tr>
+        <th scope="row">{{ department.name }}</th>
+        <td>{% if department.notifies %}{% translate "On" context "system status" %}{% else %}{% translate "Off" context "system status" %}{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <h3>{% translate "Accounts" context "system status" %}</h3>
+  <table>
+    <caption class="visually-hidden">{% translate "Accounts by role" %}</caption>
+    <thead>
+      <tr>
+        <th scope="col">{% translate "Role" context "system status" %}</th>
+        <th scope="col">{% translate "Accounts" context "system status" %}</th>
+        <th scope="col">{% translate "Of these inactive" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for role in system_status.roles %}
+      <tr>
+        <th scope="row">{{ role.label }}</th>
+        <td>{{ role.accounts }}</td>
+        <td>{{ role.inactive }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="quiet">{% translate "Reporter accounts are the technical accounts of the departments. They never log in." %}</p>
+
+  <h3>{% blocktranslate with days=system_status.stale_account_days %}Accounts without login for over {{ days }} days{% endblocktranslate %}</h3>
+  {% with stale=system_status.stale %}
+  {% if stale.rows %}
+  <table>
+    <caption class="visually-hidden">{% blocktranslate with days=system_status.stale_account_days %}Accounts without login for over {{ days }} days{% endblocktranslate %}</caption>
+    <thead>
+      <tr>
+        <th scope="col">{% translate "Account" context "system status" %}</th>
+        <th scope="col">{% translate "Role" context "system status" %}</th>
+        <th scope="col">{% translate "No login since" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for account in stale.rows %}
+      <tr>
+        <th scope="row"><a href="{% url 'admin:auth_user_change' account.pk %}">{{ account.username }}</a></th>
+        <td>{{ account.label }}</td>
+        <td>{{ account.since|date:"SHORT_DATE_FORMAT" }}{% if account.never_logged_in %} {% translate "(created, never logged in)" %}{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if stale.hidden %}
+    <p class="quiet">{% blocktranslate count counter=stale.hidden %}One more account is not shown.{% plural %}{{ counter }} more accounts are not shown.{% endblocktranslate %} <a href="{% url 'admin:auth_user_changelist' %}">{% translate "Show all users" %}</a></p>
+  {% endif %}
+  {% else %}
+    <p>{% translate "None." %}</p>
+  {% endif %}
+  {% endwith %}
+</section>

@@ -69,3 +69,26 @@ body .calendar td a:active, body .timelist a:active { background: #003d6b; } /* 
    the navigation at 1440 px, and the page scrolled sideways. */
 .inline-group .tabular td input[type=text],
 .inline-group .tabular td textarea { width: 100%; box-sizing: border-box; }
+
+/* --- System status on the start page of the admin (templates/admin/system_status.html) ---
+   Only what Django's admin lacks, and only its variables.
+   dashboard.css, which Django loads on this page after this file, gives the first column of every
+   table of a module the whole width and keeps all other cells on one line. That suits the list of
+   models. The status has words in its cells and links in the first column that are no blocks, so
+   its cells wrap again; the selectors are as specific as they have to be, because the order of
+   the files does not help.
+   A state is a word as well as a symbol and a tint ("Warning:", "Note:", a check mark at a good
+   date), never the colour alone. The symbols are those of the admin, the ones Django puts in front
+   of its own messages (check, triangle, question mark), and the tint of a warning is the one of its
+   warning messages; a note has the neutral grey of the darkened background. The text stays in the
+   colour of the page, so it needs no contrast of its own. `.module p` sets 10px of padding at both
+   sides, so the rule has to be as specific; the left padding is the width of a symbol. */
+/* A file name or an account name has no space to break at; at 320 px it would push the page wide. */
+.module.labcirs-system { overflow-wrap: anywhere; }
+.dashboard .module.labcirs-system table th { width: auto; }
+.dashboard .module.labcirs-system table td { white-space: normal; }
+.dashboard .module.labcirs-system table td a { display: inline; padding-right: 0; }
+.module .labcirs-state { padding: 8px 10px 8px 34px; background: no-repeat 10px 10px / 14px auto; }
+.module .labcirs-state--ok { background-image: url(../admin/img/icon-yes.svg); }
+.module .labcirs-state--warning { background-color: var(--message-warning-bg); background-image: url(../admin/img/icon-alert.svg); }
+.module .labcirs-state--notice { background-color: var(--darkened-bg); background-image: url(../admin/img/icon-unknown.svg); }

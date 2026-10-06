@@ -29,6 +29,12 @@ from django.utils.translation import gettext
 from .charts import Bar, Cell, Series, bar_chart, column_chart
 
 
+def _length(count):
+    """What sets the length of a column or a bar: the count, or nothing for a count that is a text
+    (hidden or withheld in a redacted report): it has no length, so none can give it away."""
+    return count if isinstance(count, int) else None
+
+
 def month_columns(rows, label_format='M'):
     """The columns of the months in `rows` (MonthRow): Incoming and Completed for each. A month
     before the status log began has no number of completions (None): its cell says "not recorded"
@@ -36,13 +42,15 @@ def month_columns(rows, label_format='M'):
     by `label_format`, a date format of Django."""
     not_recorded = gettext('not recorded')
     series = [
-        Series(gettext('Incoming'), [Cell(row.incoming, str(row.incoming)) for row in rows]),
+        Series(gettext('Incoming'), [Cell(_length(row.incoming), str(row.incoming))
+                                     for row in rows]),
         Series(gettext('Completed'), [
             Cell(None, not_recorded) if row.completed is None
-            else Cell(row.completed, str(row.completed)) for row in rows])]
+            else Cell(_length(row.completed), str(row.completed)) for row in rows])]
     return column_chart([date_format(row.month, label_format) for row in rows], series)
 
 
 def bucket_bars(buckets):
     """The bars of a distribution: one for each Bucket, in its order."""
-    return bar_chart([Bar(bucket.label, bucket.count, str(bucket.count)) for bucket in buckets])
+    return bar_chart([Bar(bucket.label, _length(bucket.count), str(bucket.count))
+                      for bucket in buckets])

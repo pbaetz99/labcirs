@@ -203,8 +203,10 @@ class RedirectKnownUsers(FunctionalTest):
         self.quick_login(self.admin, ci.get_absolute_url())
         self.assertCurrentUrlIs(reverse('admin:index'))
 
-    def test_report_is_not_found_under_the_label_of_another_department(self):
-        # The reporter entered the code of a report, the address names another department.
+    def test_report_is_not_shown_under_the_label_of_another_department(self):
+        # The reporter entered the code of a report, the address names another department. No
+        # report is there for that label: the reporter is sent to the code page of that
+        # department, as for any report that may not be seen.
         ci = baker.make_recipe('cirs.public_ci', department=self.dept)
         other = baker.make_recipe('cirs.department')
         self.browser.get(self.live_server_url
@@ -212,7 +214,7 @@ class RedirectKnownUsers(FunctionalTest):
         self.enter_code(ci.comment_code)
         self.browser.get(self.live_server_url + reverse(
             'incident_detail', kwargs={'dept': other.label, 'pk': ci.pk}))
-        self.assertEqual(self.find(By.TAG_NAME, 'h1').text, 'Page not found')
+        self.assertCurrentUrlIs(reverse('incident_search', kwargs={'dept': other.label}))
 
     def test_redirect_superuser_from_department_list(self):
         self.quick_login(self.admin, reverse('departments_list'))

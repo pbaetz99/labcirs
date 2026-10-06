@@ -25,7 +25,8 @@ from django.test import SimpleTestCase
 from django.urls import reverse
 
 from cirs.models import CATEGORY_CHOICES, RISK_CHOICES, STATUS_CHOICES
-from cirs.qm.params import FILTERS, NO_PLACE, PARAMS, SORTS, parse_params, worklist_url
+from cirs.qm.params import (FILTERS, LIST_PARAM, NO_PLACE, PARAMS, SORTS, incident_query,
+                            list_params, parse_params, worklist_url)
 
 
 class NoPlaceTest(SimpleTestCase):
@@ -138,3 +139,81 @@ class ParseParamsTest(SimpleTestCase):
                   'ohne_bearbeitung': True, 'q': 'Ä & Ö = ?', 'sort': '-nr', 'page': 4}
         query = worklist_url(**params).split('?', 1)[1]
         self.assertEqual(self.parse(query), (params, []))
+
+
+class IncidentQueryTest(SimpleTestCase):
+    """The address of an incident remembers the list it was opened from, in one parameter."""
+
+    def test_the_parameter_is_called_liste(self):
+        self.assertEqual(LIST_PARAM, 'liste')
+
+    def test_the_plain_list_leaves_the_address_as_it_is(self):
+        self.assertEqual(incident_query(), '')
+        self.assertEqual(incident_query(stand=None, wartet=False, q=''), '')
+
+    def test_the_parameter_holds_the_query_of_the_list_encoded_once_more(self):
+        self.assertEqual(incident_query(wartet=1), '?liste=wartet%3D1')
+        # the plus of the inner query, which stands for a space, is a plus sign as a value
+        self.assertEqual(incident_query(stand='in process', page=2),
+                         '?liste=stand%3Din%2Bprocess%26page%3D2')
+        # no character that would end the parameter or need escaping in an attribute
+        query = incident_query(stand='in process', q='a&b=c d', sort='-nr')
+        self.assertNotIn('&', query)
+        self.assertEqual(query.count('?'), 1)
+
+    def test_what_is_not_a_parameter_of_the_list_is_a_programming_error(self):
+        for params in ({'colour': 'red'}, {'stand': 'done'}, {'page': 0}, {'wo': 'x'}):
+            with self.assertRaises(ValueError, msg=params):
+                incident_query(**params)
+
+    def test_what_is_written_is_read_back_typed(self):
+        params = {'stand': 'under supervision', 'wo': 12, 'kategorie': 'other', 'risiko': 'high',
+                  'von': date(2026, 1, 1), 'bis': date(2026, 12, 31), 'wartet': True,
+                  'ohne_bearbeitung': True, 'q': 'Ä & Ö = ? %', 'sort': '-aktivitaet', 'page': 4}
+        address = reverse('qm_incidents') + incident_query(**params)  # any path will do
+        query = QueryDict(address.split('?', 1)[1])
+        self.assertEqual(list_params(query), params)
+        self.assertEqual(list_params(query.dict()), params)
+
+    def test_without_the_parameter_or_with_an_empty_one_there_is_no_list(self):
+        for query in ({}, {'liste': ''}, {'liste': '   '}, {'other': 'stand=new'}):
+            self.assertEqual(list_params(query), {}, query)
+
+    def test_a_value_out_of_range_is_left_out_like_in_the_list_itself(self):
+        values = list_params({'liste': 'stand=done&risiko=high&page=abc&von=31.01.2026&wo=0'})
+        self.assertEqual(values, {'risiko': 'high'})
+
+    def test_unknown_parameters_in_it_are_no_business_of_the_list(self):
+        self.assertEqual(list_params({'liste': 'utm_source=x&stand=new&liste=stand%3Dcompleted'}),
+                         {'stand': 'new'})
+
+    def test_the_last_value_of_a_repeated_parameter_counts(self):
+        self.assertEqual(list_params({'liste': 'stand=new&stand=completed'}),
+                         {'stand': 'completed'})
+        self.assertEqual(list_params({'liste': 'stand=new&stand=bogus'}), {})
+
+    def test_the_way_back_is_never_anything_but_the_list(self):
+        # whatever is written into the parameter, the address that the page builds from it is made
+        # by worklist_url: a path of the list and parameters of the list, never another place
+        attacks = ('https://evil.example/', '//evil.example/', '/\\evil.example/',
+                   'javascript:alert(1)', 'http://evil.example/?stand=new',
+                   '/qm/meldungen/?stand=new', '?stand=new', '<script>alert(1)</script>',
+                   'stand=new%0d%0aSet-Cookie:x=y', 'q=%00', '%00', 'x' * 5000,
+                   'stand=new&' + '&'.join('a%d=1' % number for number in range(500)),
+                   'liste=liste%3Dstand%253Dnew', 'q=' + 'x' * 201, '\x00', 'stand=new\x00')
+        for attack in attacks:
+            with self.subTest(attack=attack[:40]):
+                url = worklist_url(**list_params({'liste': attack}))
+                self.assertTrue(url.startswith(reverse('qm_incidents')), url)
+                self.assertNotIn('evil', url)
+                self.assertNotIn('\x00', url)
+                self.assertNotIn('%00', url)
+                self.assertNotIn('<', url)
+                # nothing but parameters the list knows
+                names = {pair.split('=')[0] for pair in url.partition('?')[2].split('&') if pair}
+                self.assertLessEqual(names, set(PARAMS))
+
+    def test_too_many_fields_are_no_list(self):
+        many = '&'.join('stand=new' for _ in range(len(PARAMS) * 2 + 1))
+        self.assertEqual(list_params({'liste': many}), {})
+

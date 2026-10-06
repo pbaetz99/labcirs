@@ -1,0 +1,20 @@
+{% load i18n %}
+{% comment %}
+  The review: the fields of the "Review" block of the admin in groups, with a button of its own. A
+  status that is new goes with the status log and a mail to the reporting person that names the
+  status and nothing else. Without the permission the form is not offered.
+{% endcomment %}
+<section class="ui-card" aria-labelledby="bewertung-titel">
+  <h2 class="ui-card__title" id="bewertung-titel">{% translate "Assessment" %}</h2>
+  {% if can_review %}
+  <form method="post" data-einmal-absenden>
+    {% csrf_token %}
+    <input type="hidden" name="aktion" value="bewertung">
+    {{ review_form }}
+    {% translate "Saving …" as busy_text %}
+    <button class="ui-btn ui-btn--primary" type="submit" data-busy-text="{{ busy_text }}">{% translate "Save assessment" %}</button>
+  </form>
+  {% else %}
+  <p class="ui-muted ui-mb-0">{% translate "Your account is not allowed to change the assessment." %}</p>
+  {% endif %}
+</section>

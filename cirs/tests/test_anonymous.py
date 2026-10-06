@@ -160,12 +160,18 @@ class AnonymousAccessTest(TestCase):
         response = self.client.get(self.ci.get_absolute_url())
         self.assertRedirects(response, self.search_url, fetch_redirect_response=False)
 
-    def test_detail_under_wrong_department_label_is_404(self):
+    def test_detail_under_wrong_department_label_is_like_a_report_that_is_not_there(self):
+        # no report exists for this label and number: the answer is the one for a report that the
+        # visitor may not see, so that it does not tell whether the number exists (see also
+        # test_incident_access)
         other_dept = baker.make_recipe('cirs.department')
         self.grant_access(self.ci.pk)
         url = reverse('incident_detail', kwargs={'dept': other_dept.label, 'pk': self.ci.pk})
-        self.assertEqual(self.client.get(url).status_code, 404)
-        self.assertEqual(self.client.post(url, {'text': 'x'}).status_code, 404)
+        search = reverse('incident_search', kwargs={'dept': other_dept.label})
+        for response in (self.client.get(url), self.client.post(url, {'text': 'x'})):
+            self.assertRedirects(response, search, fetch_redirect_response=False)
+        self.assertEqual(Comment.objects.count(), 0)
+        self.assertEqual(self.client.session['accessible_incident'], self.ci.pk)
 
     def test_comment_post_without_access_is_rejected(self):
         before = Comment.objects.count()

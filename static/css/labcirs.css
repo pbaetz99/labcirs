@@ -1,4 +1,4 @@
-/* =============================================================================
+/* ======================================================================
    LabCIRS -- additions to the design system (core.css)
    =============================================================================
    Only what core.css lacks. Tokens only (var(--ui-...)), no hex values, except the
@@ -54,10 +54,12 @@ html { scroll-padding-top: calc(var(--ui-topbar-h) + var(--ui-s2)); }
    (WCAG 2.4.11, scroll-padding covers one row) and much of a landscape phone.
    One row needs (measured in German, anonymous, list page): word mark "LabCIRS" with both
    language buttons 811 px; a 270 x 32 px logo with "Example-CIRS" and German only 948 px.
-   62rem (992 px) leaves room for other font metrics. At 320 px the bar has four rows.
-   Known limit: a logo together with the language buttons needs about 69rem -- raise the
-   limit if a deployment shows both. */
-@media (max-width: 62rem) { .ui-topbar { position: static; } }
+   The QM area adds overview, reports, evaluations, administration, the account and log out,
+   about 260 px more, so one row needs about 1210 px there. 80rem (1280 px) leaves room for
+   other font metrics; below it the bar scrolls away with the page. At 320 px the bar has four
+   rows. Known limit: a logo together with the language buttons needs more -- raise the limit
+   if a deployment shows both. */
+@media (max-width: 80rem) { .ui-topbar { position: static; } }
 
 /* --- A table inside a flush card needs no second frame ---
    The card (ui-card--flush) has the frame and the radius, ui-tablewrap brings its own: a
@@ -176,9 +178,11 @@ html { scroll-padding-top: calc(var(--ui-topbar-h) + var(--ui-s2)); }
 .ui-diagramm__zeilenname { grid-column: 1 / -1; margin-top: var(--ui-s2); font-size: var(--ui-fs-sm); overflow-wrap: anywhere; }
 .ui-diagramm__balken { width: 100%; height: var(--ui-s4); border-inline-start: 1px solid var(--ui-text-muted); }
 .ui-diagramm__zahl { font-size: var(--ui-fs-sm); font-weight: 600; font-variant-numeric: tabular-nums; text-align: end; }
+/* In px, not rem: the geometry of the chart is fixed, a text that grows with the font size of
+   the browser would run into the columns and the axis. The table below has every number. */
 .ui-diagramm__beschriftung, .ui-diagramm__wert, .ui-diagramm__marke {
   fill: var(--ui-text); stroke: none;
-  font-family: var(--ui-font); font-size: var(--ui-fs-xs);
+  font-family: var(--ui-font); font-size: 13px;
 }
 .ui-diagramm__marke { fill: var(--ui-text-muted); }
 .ui-diagramm__wert { font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -268,9 +272,67 @@ html { scroll-padding-top: calc(var(--ui-topbar-h) + var(--ui-s2)); }
 .ui-zeitraum > .ui-field { flex: 1 1 5rem; min-width: 0; margin-bottom: 0; }
 .ui-zeitraum > .ui-field:first-child { flex: 2 1 8rem; }
 .ui-kennzahlen dd.ui-kennzahlen__text { font-size: var(--ui-fs-base); text-align: end; }
+/* From when a figure of the status log counts, small next to the number: the number is what the eye
+   should find, and the day is a qualification of it, not a second figure. */
+.ui-kennzahlen__zusatz { font-size: var(--ui-fs-sm); font-weight: 400; color: var(--ui-text-secondary); white-space: nowrap; }
 .ui-massnahmen { display: grid; gap: var(--ui-s4); margin: 0; padding: 0; list-style: none; }
 .ui-massnahmen > li { padding-top: var(--ui-s3); border-top: 1px solid var(--ui-border); }
 .ui-massnahmen__kopf { margin-bottom: var(--ui-s1); font-size: var(--ui-fs-sm); }
 .ui-begriffe dt { font-weight: 600; }
 .ui-begriffe dd { margin: 0 0 var(--ui-s3); }
 .ui-begriffe dd:last-child { margin-bottom: 0; }
+
+/* --- QM incident page (cirs/templates/cirs/qm/incident.html) ---
+   The page is long: the report, the review, the dialogue, the publication and the history. The links
+   to its parts are a row that wraps and has no bullets, so that nothing scrolls sideways at 320 px;
+   each link is as high as a control, a target of its own. The forms and the cards are the ones of
+   the design system. Where a link jumps to, core.css keeps clear of the top bar (scroll-margin-top).
+   The summary of the errors gets the focus on load, and the browser scrolls it into view the same way. */
+.ui-seitenweg { display: flex; flex-wrap: wrap; gap: var(--ui-s1) var(--ui-s4); margin: 0; padding: 0; list-style: none; }
+.ui-seitenweg a { display: inline-flex; align-items: center; min-height: var(--ui-control-h); }
+=======
+/* --- The evaluations page on paper (cirs/templates/cirs/qm/reports.html) ---
+   The page shows every number, small ones too. What is printed from it must not, so on paper the
+   results are left out and a short note says where to print instead: the print view, which is
+   made of the redacted numbers. The note is for paper only. */
+.ui-druckhinweis { display: none; }
+@media print {
+  .ui-ergebnis { display: none; }
+  .ui-druckhinweis { display: block; margin-top: var(--ui-s4); padding: var(--ui-s3) var(--ui-s4); border: 1px solid var(--ui-text); }
+}
+
+/* --- Print view of the evaluations (cirs/templates/cirs/qm/reports_print.html) ---
+   A page of its own: no top bar and no footer, so that what is printed is the report. On screen it
+   is a sheet of white paper on the grey of the page, 52rem wide, with the buttons above it; on paper
+   the buttons and the hint go and the sheet takes the page: A4 in portrait with margins, type of 10
+   pt. A chart, the figures and a case of the measures are not cut by a page break, a heading never
+   ends a page, and a table repeats its head on the next page. Two columns of distributions fit the
+   width of the sheet (680 px). Black and white: the second series of the charts is told by its outline
+   (see the charts), not by its colour, and the text is the ink colour. */
+@page { size: A4; margin: 14mm 14mm 16mm; }
+.ui-druckseite { background: var(--ui-bg); }
+.ui-druck { max-width: 52rem; margin: var(--ui-s4) auto; padding: var(--ui-s6) var(--ui-s6) var(--ui-s8); background: var(--ui-surface); border: 1px solid var(--ui-border); }
+.ui-druck__aktionen { margin-bottom: var(--ui-s2); }
+.ui-druck__hinweis { margin-bottom: var(--ui-s4); }
+.ui-druck__traeger { margin: 0 0 var(--ui-s2); }
+.ui-druck__organisation { font-weight: 600; }
+.ui-druck__kopf { margin-bottom: var(--ui-s4); padding-bottom: var(--ui-s3); border-bottom: 2px solid var(--ui-text); }
+.ui-druck__kopf p { margin-bottom: var(--ui-s1); }
+.ui-druck__block { margin-top: var(--ui-s5); }
+.ui-druck h2 { margin: 0 0 var(--ui-s2); font-size: var(--ui-fs-lg); }
+.ui-druck__hinweise { margin: 0; padding-left: var(--ui-s5); }
+.ui-druck__hinweise li + li { margin-top: var(--ui-s2); }
+@media print {
+  .ui-druckseite { background: none; }
+  .ui-druck { max-width: none; margin: 0; padding: 0; border: 0; font-size: 10pt; line-height: 1.4; }
+  .ui-druck__aktionen, .ui-druck__hinweis { display: none; }
+  .ui-druck h1, .ui-druck h2 { color: var(--ui-text); }
+  .ui-druck h2 { break-after: avoid; }
+  .ui-druck__kopf, .ui-kennzahlen, .ui-druck__verteilung, .ui-massnahmen > li { break-inside: avoid; }
+  /* the chart stays whole, its table may go on the next page: both together need more than the rest of a page */
+  .ui-druck .ui-diagramm { break-inside: auto; }
+  .ui-druck .ui-diagramm__bild { break-inside: avoid; }
+  .ui-druck .ui-table thead { display: table-header-group; }
+  .ui-druck .ui-table tr { break-inside: avoid; }
+  .ui-druck .ui-table th { position: static; }
+}

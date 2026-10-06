@@ -479,11 +479,18 @@ class ReporterContactRemoveTest(ReporterMailBase):
         self.assertTrue(ReporterContact.objects.filter(incident=ci).exists())
         self.assertTrue(ReporterContact.objects.filter(incident=other).exists())
 
-    def test_remove_email_of_unknown_incident_is_404(self):
-        response = self.client.post(reverse('remove_reporter_email',
-                                            kwargs={'dept': self.dept.label, 'pk': 999999}),
-                                    {'confirm': 'on'})
-        self.assertEqual(response.status_code, 404)
+    def test_remove_email_of_unknown_incident_is_answered_like_one_without_access(self):
+        # whoever may not touch a report gets the same answer whether it exists or not
+        ci = self.incident()
+        answers = []
+        for pk in (ci.pk, 999999):
+            response = self.client.post(reverse('remove_reporter_email',
+                                                kwargs={'dept': self.dept.label, 'pk': pk}),
+                                        {'confirm': 'on'})
+            answers.append((response.status_code, response.get('Location')))
+        self.assertEqual(answers[0], answers[1])
+        self.assertEqual(answers[0][0], 302)
+        self.assertTrue(ReporterContact.objects.filter(incident=ci).exists())
 
     def test_remove_url_answers_get_with_405(self):
         ci = self.incident()

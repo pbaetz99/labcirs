@@ -716,7 +716,7 @@ class AllFourPagesTest(PageBase):
         self.assertRegex(titles['success'], r'^Vielen Dank · ')
         self.assertRegex(titles['search'], r'^Meine Meldung · ')
         self.assertRegex(titles['detail'], r'^Ihre Meldung · ')
-        self.assertRegex(titles['detail for the QM'], r'^Meldung · ')
+        self.assertRegex(titles['detail for the QM'], r'^Meldung \d+ · ')
         # the tab shows the start of the title, so two pages must differ there
         self.assertEqual(len({titles[n] for n in ('form', 'success', 'search', 'detail')}), 4)
 

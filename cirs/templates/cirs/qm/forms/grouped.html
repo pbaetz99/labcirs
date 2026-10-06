@@ -1,0 +1,42 @@
+{% load i18n %}
+{% comment %}
+  A form of the QM in groups (cirs.qm.forms.GroupedFormMixin): the summary of the errors on top, then
+  the groups of fields, each with a legend if it has one and in two columns if it wants them. A group of
+  choices (status, categories) is a fieldset with a legend of its own, a single box is a label around
+  the box. Errors and hints are tied to the field as in ui_form.html: aria-invalid and
+  aria-describedby are set by Django from the ids used here (<auto_id>_helptext and <auto_id>_error).
+{% endcomment %}
+{% include "cirs/forms/ui_error_summary.html" %}
+{% for hidden in hidden_fields %}{{ hidden }}{% endfor %}
+{% for group in form.field_groups %}
+{% if group.legend %}<fieldset class="ui-fieldset">
+  <legend>{{ group.legend }}</legend>{% endif %}
+{% if group.columns %}<div class="ui-grid ui-grid--2">{% endif %}
+{% for field in group.fields %}
+{% if field.use_fieldset %}
+<fieldset class="ui-fieldset" id="{{ field.auto_id }}"{% if field.aria_describedby %} aria-describedby="{{ field.aria_describedby }}"{% endif %}>
+  <legend>{{ field.label }}</legend>
+  {% for choice in field %}
+  <label class="ui-check" for="{{ choice.id_for_label }}">{{ choice.tag }} <span>{{ choice.choice_label }}</span></label>
+  {% endfor %}
+  {% if field.errors %}<div class="ui-field__error" id="{{ field.auto_id }}_error">{% for error in field.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</div>{% endif %}
+  {% if field.help_text %}<p class="ui-field__hint" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}
+</fieldset>
+{% elif field.widget_type == "checkbox" %}
+<div class="ui-field">
+  <label class="ui-check" for="{{ field.id_for_label }}">{{ field }} <span>{{ field.label }}</span></label>
+  {% if field.errors %}<div class="ui-field__error" id="{{ field.auto_id }}_error">{% for error in field.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</div>{% endif %}
+  {% if field.help_text %}<p class="ui-field__hint" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}
+</div>
+{% else %}
+<div class="ui-field">
+  {{ field.label_tag }}
+  {{ field }}
+  {% if field.errors %}<div class="ui-field__error" id="{{ field.auto_id }}_error">{% for error in field.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</div>{% endif %}
+  {% if field.help_text %}<p class="ui-field__hint" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}
+</div>
+{% endif %}
+{% endfor %}
+{% if group.columns %}</div>{% endif %}
+{% if group.legend %}</fieldset>{% endif %}
+{% endfor %}

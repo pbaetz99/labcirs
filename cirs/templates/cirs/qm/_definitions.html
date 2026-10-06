@@ -1,0 +1,34 @@
+{% load i18n %}
+{% comment %}
+  The terms of an evaluation, in the words that the page, the print view and the manual share.
+  One sentence for each term. The status "Completed" is named in the sentence of the key figure
+  "Completed", because the two are not the same word in every language. The wording of the
+  classifications follows the model: risk, frequency, hazard and category are set by the QM (in the
+  review block of an incident), preventability is the answer of the reporting person.
+{% endcomment %}
+<dl class="ui-begriffe ui-prose">
+  <dt>{% translate "Incoming" %}</dt>
+  <dd>{% translate "Reports whose date of report falls in the period." %}</dd>
+  <dt>{% translate "Completed" %}</dt>
+  <dd>{% translate "Reports that are in the status “Completed” now and reached it, for the last time, in the period; a reopened report counts only once it is completed again, and then in the period of that last completion, so figures of past periods can change." %}</dd>
+  <dt>{% translate "Open (as of today)" %}</dt>
+  <dd>{% translate "All reports that are open now, including older ones; for a period that ended in the past it is not recorded." %}</dd>
+  <dt>{% translate "Published" %}</dt>
+  <dd>{% translate "Published cases of the reports received in the period; a case has no date of its own." %}</dd>
+  <dt>{% translate "Reaction time" %}</dt>
+  <dd>{% translate "Days from the report to the first change away from “new”, counted in the period of that change; only reports received since the log began are included, because only there is that change recorded, reports that are still new do not count, and the count is the number of reports the median is taken from." %}</dd>
+  <dt>{% translate "Processing time" %}</dt>
+  <dd>{% translate "Days from the report to the last completion of a report that is completed now, counted in the period of that completion; reports that are still open or were reopened do not count, and the count is the number of reports the median is taken from." %}</dd>
+  <dt>{% translate "Still without processing" %}</dt>
+  <dd>{% translate "Reports of the period that are still in the status “New”." %}</dd>
+  <dt>{% translate "Preventability" %}</dt>
+  <dd>{% translate "The assessment of the reporting person whether the incident could have been avoided." %}</dd>
+  <dt>{% translate "Risk" %}</dt>
+  <dd>{% translate "The classification of the risk of a report by the QM, in three steps from low to high." %}</dd>
+  <dt>{% translate "Frequency" %}</dt>
+  <dd>{% translate "An estimate of the QM of how often such an incident happens, not a number of cases." %}</dd>
+  <dt>{% translate "Hazard" %}</dt>
+  <dd>{% translate "The assessment of the QM of the hazard for employees or for science, in five steps from very low to very high." %}</dd>
+  <dt>{% translate "Not specified" %}</dt>
+  <dd>{% translate "For risk, frequency, hazard and category: not yet classified; for the area, without a place given." %}</dd>
+</dl>

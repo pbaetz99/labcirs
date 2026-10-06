@@ -39,9 +39,10 @@ ADDRESSES = (('qm_overview', '/qm/'), ('qm_incidents', '/qm/meldungen/'),
              ('qm_reports', '/qm/auswertungen/'), ('qm_reports_print', '/qm/auswertungen/druck/'),
              ('qm_reports_csv', '/qm/auswertungen/csv/'))
 URLS = [reverse(name) for name, _ in ADDRESSES]
-# the pages that are HTML, with their German title
+# the pages that are HTML and have the frame of the QM pages, with their German title (the print
+# view has a frame of its own, and its tests are in test_qm_print)
 PAGES = (('qm_overview', 'Überblick'), ('qm_incidents', 'Meldungen'),
-         ('qm_reports', 'Auswertungen'), ('qm_reports_print', 'Auswertung (Druckansicht)'))
+         ('qm_reports', 'Auswertungen'))
 NO_DEPARTMENT_DE = 'Ihr Zugang gehört keiner Abteilung an.'
 
 
@@ -98,7 +99,11 @@ class AccessTest(QMTestCase):
         for name, _ in PAGES:
             response = self.client.get(reverse(name), **DE)
             self.assertContains(response, NO_DEPARTMENT_DE, msg_prefix=name)
-        self.assertEqual(self.client.get(reverse('qm_reports_csv')).status_code, 200)
+        # the print view and the file have nothing to say for them: the page says why
+        for name in ('qm_reports_print', 'qm_reports_csv'):
+            response = self.client.get(reverse(name), **DE)
+            self.assertEqual(response.status_code, 302, name)
+            self.assertTrue(response.url.startswith(reverse('qm_reports')), name)
 
     def test_only_get_and_head_are_allowed(self):
         self.login()
@@ -199,13 +204,6 @@ class PageFrameTest(QMTestCase):
     def test_the_departments_of_others_are_not_named(self):
         for name, _ in PAGES:
             self.assertNoCanary(self.html(name), name)
-
-    def test_the_page_stays_empty_until_it_has_something_to_show(self):
-        # the overview, the incident list and the evaluations have their content, and tests of
-        # their own
-        for name, _ in PAGES:
-            if name not in ('qm_overview', 'qm_incidents', 'qm_reports'):
-                self.assertIn('Hier gibt es noch nichts anzuzeigen.', self.html(name), name)
 
     def test_the_pages_are_wide_and_light(self):
         html = self.html('qm_overview')

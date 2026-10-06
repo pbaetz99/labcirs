@@ -5,8 +5,9 @@
   the address can be shared and the overview can link here (cirs.qm.params makes and reads the
   addresses). The active filters and the parameters that were left out are named, with a way out.
   The table has caption and scope, its three sorting headings are links, paging says "Page n of
-  m", and the empty state leads on. The column of the department is only there for a QM of
-  several departments.
+  m", and the empty state leads on. A number leads to the incident, where the QM does its work, and
+  remembers the list (list_query), so that the way back keeps the filters. The column of the
+  department is only there for a QM of several departments.
 {% endcomment %}
 
 {% block title %}{% translate "Incidents" %}{% endblock %}
@@ -52,17 +53,17 @@
     <div class="ui-field">
       <label class="ui-field__label" for="filter-von">{% translate "Reported from" %}</label>
       <input class="ui-input" type="date" id="filter-von" name="von" value="{{ selected.von|date:'Y-m-d' }}" aria-describedby="filter-von-hinweis">
-      <span class="ui-field__hint" id="filter-von-hinweis">{% translate "Format: YYYY-MM-DD, for example 2026-01-31." %}</span>
+      <span class="ui-field__hint" id="filter-von-hinweis">{% translate "Day, month and year; the order depends on your browser." %}</span>
     </div>
     <div class="ui-field">
       <label class="ui-field__label" for="filter-bis">{% translate "Reported until" %}</label>
       <input class="ui-input" type="date" id="filter-bis" name="bis" value="{{ selected.bis|date:'Y-m-d' }}" aria-describedby="filter-bis-hinweis">
-      <span class="ui-field__hint" id="filter-bis-hinweis">{% translate "Format: YYYY-MM-DD, for example 2026-01-31." %}</span>
+      <span class="ui-field__hint" id="filter-bis-hinweis">{% translate "Day, month and year; the order depends on your browser." %}</span>
     </div>
   </div>
   <div class="ui-field ui-prose">
     <label class="ui-field__label" for="filter-q">{% translate "Search term" %}</label>
-    <input class="ui-input" type="search" id="filter-q" name="q" value="{{ selected.q }}" maxlength="{{ max_search }}" aria-describedby="filter-q-hinweis">
+    <input class="ui-input" type="search" id="filter-q" name="q" value="{{ selected.q }}" maxlength="{{ max_search }}" autocomplete="off" aria-describedby="filter-q-hinweis">
     <span class="ui-field__hint" id="filter-q-hinweis">{% translate "The search looks in the text of the incident." %}</span>
   </div>
   <fieldset class="ui-fieldset">
@@ -108,7 +109,7 @@
   <div class="ui-card ui-card--flush ui-mt-4">
     <div class="ui-tablewrap ui-tablewrap--eingebettet">
       <table class="ui-table ui-meldungen">
-        <caption class="ui-visually-hidden">{% translate "Incidents" %}{% if is_paginated %} &middot; {{ page_text }}{% endif %}</caption>
+        <caption class="ui-visually-hidden">{% translate "Incidents" %}, {% blocktranslate with counter=paginator.count %}{{ counter }} in total{% endblocktranslate %}{% if is_paginated %} &middot; {{ page_text }}{% endif %}</caption>
         <thead>
           <tr>
             <th scope="col"{% if sorts.nr.aria_sort %} aria-sort="{{ sorts.nr.aria_sort }}"{% endif %}><a href="{{ sorts.nr.url }}">{% translate "No." %}<span class="ui-visually-hidden">: {{ sorts.nr.action }}</span>{% if sorts.nr.arrow %} <span aria-hidden="true">{{ sorts.nr.arrow }}</span>{% endif %}</a></th>
@@ -120,13 +121,12 @@
             <th scope="col">{% translate "Risk" %}</th>
             <th scope="col"{% if sorts.aktivitaet.aria_sort %} aria-sort="{{ sorts.aktivitaet.aria_sort }}"{% endif %}><a href="{{ sorts.aktivitaet.url }}">{% translate "Last activity" %}<span class="ui-visually-hidden">: {{ sorts.aktivitaet.action }}</span>{% if sorts.aktivitaet.arrow %} <span aria-hidden="true">{{ sorts.aktivitaet.arrow }}</span>{% endif %}</a></th>
             <th scope="col">{% translate "Notes" %}</th>
-            <th scope="col">{% translate "Edit" %}</th>
           </tr>
         </thead>
         <tbody>
           {% for incident in page_obj %}
           <tr>
-            <td class="ui-strong"><a href="{{ incident.get_absolute_url }}">{{ incident.pk }}</a></td>
+            <td class="ui-strong"><a href="{{ incident.get_absolute_url }}{{ list_query }}">{{ incident.pk }}</a></td>
             <td class="ui-nowrap"><time datetime="{{ incident.reported|date:'Y-m-d' }}">{{ incident.reported|date:"SHORT_DATE_FORMAT" }}</time></td>
             <td><span class="ui-badge ui-badge--{% if incident.status == 'completed' %}success{% else %}info{% endif %}">{{ incident.get_status_display|capfirst }}</span></td>
             {% if departments|length > 1 %}<td>{{ incident.department.name }}</td>{% endif %}
@@ -138,7 +138,6 @@
               {% if incident.is_awaiting_qm %}<span class="ui-badge ui-badge--warning">{% translate "Waiting for the QM" %}</span>{% endif %}
               {% if incident.is_overdue %}<span class="ui-badge ui-badge--warning">{% translate "Without processing" %}</span>{% endif %}
             </div>{% endif %}</td>
-            <td><a href="{% url 'admin:cirs_criticalincident_change' incident.pk %}">{% translate "Edit in the admin" %}<span class="ui-visually-hidden">: {% blocktranslate with number=incident.pk %}incident {{ number }}{% endblocktranslate %}</span></a></td>
           </tr>
           {% endfor %}
         </tbody>

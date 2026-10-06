@@ -29,7 +29,7 @@
 <form method="get" class="ui-prose ui-mb-4" role="search">
   <div class="ui-field">
     <label class="ui-field__label" for="suche-q">{% translate "Search term" %}</label>
-    <input class="ui-input" type="search" id="suche-q" name="q" value="{{ q }}" aria-describedby="suche-q-hinweis">
+    <input class="ui-input" type="search" id="suche-q" name="q" value="{{ q }}" autocomplete="off" aria-describedby="suche-q-hinweis">
     <span class="ui-field__hint" id="suche-q-hinweis">{% translate "The search covers the incident, the description and the measures and consequences." %}</span>
   </div>
   <div class="ui-row">

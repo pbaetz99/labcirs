@@ -1,10 +1,10 @@
 # nginx configuration of the proxy service. The nginx image renders this file with envsubst:
 # ${VARIABLES} come from the container environment (see compose.yaml), $nginx_variables stay.
 #
-# Logs: no client address and no user agent. The only use of an address is the key of the login
-# limit, which lives in memory and is never written.
+# Logs: no client address, no user agent and no query string (a search term can be a name). The
+# only use of an address is the key of the login limit, which lives in memory and is never written.
 
-log_format anon '$time_local "$request" $status $body_bytes_sent';
+log_format anon '$time_local "$request_method $uri" $status $body_bytes_sent';
 # nginx writes the client address to the error log on levels below crit (e.g. rate limits)
 error_log /dev/stderr crit;
 # No version in the Server header and in nginx's own error pages (port 80 and 443)

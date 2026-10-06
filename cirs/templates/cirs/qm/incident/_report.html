@@ -1,0 +1,40 @@
+{% load i18n %}
+{% comment %}
+  The report as the reporting person wrote it, to read and never to change. Neither the address nor
+  the code of the reporting person, and no sign of whether there is an address.
+{% endcomment %}
+<section class="ui-card" aria-labelledby="meldung-titel">
+  <h2 class="ui-card__title" id="meldung-titel">{% translate "Details of the report" %}</h2>
+  <dl class="ui-recht__daten">
+    <div>
+      <dt>{% translate "Date" %}</dt>
+      <dd><time datetime="{{ incident.date|date:'Y-m-d' }}">{{ incident.date|date:"SHORT_DATE_FORMAT" }}</time></dd>
+    </div>
+    <div>
+      <dt>{% translate "Reported" %}</dt>
+      <dd><time datetime="{{ incident.reported|date:'Y-m-d' }}">{{ incident.reported|date:"SHORT_DATE_FORMAT" }}</time></dd>
+    </div>
+    <div>
+      <dt>{% translate "Incident" %}</dt>
+      <dd>{{ incident.incident|linebreaksbr }}</dd>
+    </div>
+    <div>
+      <dt>{% translate "Cause" %}</dt>
+      <dd>{{ incident.reason|linebreaksbr }}</dd>
+    </div>
+    <div>
+      <dt>{% translate "Immediate action / suggestion" %}</dt>
+      <dd>{{ incident.immediate_action|linebreaksbr }}</dd>
+    </div>
+    <div>
+      <dt>{% translate "Preventability" %}</dt>
+      <dd>{{ incident.get_preventability_display }}</dd>
+    </div>
+    {% if incident.photo %}
+    <div>
+      <dt>{% translate "Photo" %}</dt>
+      <dd>{{ incident.photo_tag }}</dd>
+    </div>
+    {% endif %}
+  </dl>
+</section>

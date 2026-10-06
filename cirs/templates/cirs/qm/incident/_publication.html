@@ -1,0 +1,29 @@
+{% load i18n %}
+{% comment %}
+  The published case of the incident: a block of texts for every language of the installation and the
+  switch that publishes it, with the rules of the model (a report that the reporting person did not
+  approve for publication gets none, and all texts in all mandatory languages are needed before the
+  switch can be on). The link shows the page as the staff see it, if it is published.
+{% endcomment %}
+<section class="ui-card" aria-labelledby="veroeffentlichung-titel">
+  <h2 class="ui-card__title" id="veroeffentlichung-titel">{% translate "Publication" %}</h2>
+  {% if incident.public is False %}
+  <p class="ui-mb-0">{% translate "The reporting person did not agree to the publication of this report. It cannot be published." %}</p>
+  {% elif can_publish %}
+  <p class="ui-row">
+    {% if publication_form.published %}<span class="ui-badge ui-badge--success">{% translate "Published" %}</span>{% else %}<span class="ui-badge ui-badge--neutral">{% translate "Not published" %}</span>{% endif %}
+    {% if publication_form.complete %}<span class="ui-badge ui-badge--success">{% translate "Mandatory languages complete" %}</span>{% else %}<span class="ui-badge ui-badge--warning">{% translate "Mandatory languages incomplete" %}</span>{% endif %}
+  </p>
+  <p class="ui-secondary">{% blocktranslate with languages=mandatory_languages %}Mandatory languages: {{ languages }}. Title, description and measures and consequences have to be filled in every one of them before the case can be published.{% endblocktranslate %}</p>
+  {% if public_list_url %}<p><a href="{{ public_list_url }}">{% translate "This is how the staff see it" %}</a></p>{% endif %}
+  <form method="post" data-einmal-absenden>
+    {% csrf_token %}
+    <input type="hidden" name="aktion" value="veroeffentlichung">
+    {{ publication_form }}
+    {% translate "Saving …" as busy_text %}
+    <button class="ui-btn ui-btn--secondary" type="submit" data-busy-text="{{ busy_text }}">{% translate "Save publication" %}</button>
+  </form>
+  {% else %}
+  <p class="ui-muted ui-mb-0">{% translate "Your account is not allowed to publish cases." %}</p>
+  {% endif %}
+</section>

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LabCIRS\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 11:07+0000\n"
+"POT-Creation-Date: 2026-10-06 14:29+0000\n"
 "PO-Revision-Date: 2019-05-22 14:53+0200\n"
 "Last-Translator: Sebastian Major <sebastian.major@charite.de>\n"
 "Language-Team: \n"
@@ -20,48 +20,48 @@ msgstr ""
 "X-Poedit-SourceCharset: UTF-8\n"
 
 #. Translators: %(site)s is the display name (setting SITE_NAME)
-#: cirs/admin.py:44
+#: cirs/admin.py:48
 #, python-format
 msgid "%(site)s administration"
 msgstr "%(site)s-Verwaltung"
 
-#: cirs/admin.py:67
+#: cirs/admin.py:79
 msgid "Personal info"
 msgstr "Persönliche Informationen"
 
-#: cirs/admin.py:72
+#: cirs/admin.py:84
 msgid "has publishable incident"
 msgstr "mit publizierbaren Ereignissen"
 
-#: cirs/admin.py:77
+#: cirs/admin.py:89
 msgid "Yes"
 msgstr "Ja"
 
-#: cirs/admin.py:78
+#: cirs/admin.py:90
 msgid "No"
 msgstr "Nein"
 
-#: cirs/admin.py:106
+#: cirs/admin.py:118
 msgid "Comment"
 msgstr "Kommentar"
 
-#: cirs/admin.py:107
+#: cirs/admin.py:119
 msgid "Comments"
 msgstr "Kommentare"
 
-#: cirs/admin.py:144
+#: cirs/admin.py:168
 msgid "Reported incident"
 msgstr "Gemeldete Ereignisse"
 
-#: cirs/admin.py:149
+#: cirs/admin.py:173
 msgid "Review"
 msgstr "Bewertung"
 
-#: cirs/admin.py:218
+#: cirs/admin.py:250
 msgid "Languages"
 msgstr "Sprachen"
 
-#: cirs/admin.py:221
+#: cirs/admin.py:253
 msgid ""
 "Login infos - translate \"login info\" and \"link text\" if using multiple "
 "languages!"
@@ -69,7 +69,7 @@ msgstr ""
 "Anmeldeinformationen - \"Anmeldeinformationen\" und \"Linktekst\" müssen "
 "übersetzt werden, wenn mehrere Sprachen aktiviert sind!"
 
-#: cirs/admin.py:224
+#: cirs/admin.py:256
 msgid "Notification settings"
 msgstr "Benachrichtigungseinstellungen"
 
@@ -250,9 +250,10 @@ msgstr "Aktiv"
 msgid "Incidents can be created only if department is active."
 msgstr "Ereignisse können nur gemeldet werden, wenn die Abteilung aktiv ist."
 
-#: cirs/models.py:101 cirs/models.py:203 cirs/models.py:455
-#: cirs/templates/cirs/qm/_incident_rows.html:16
-#: cirs/templates/cirs/qm/worklist.html:117
+#: cirs/models.py:101 cirs/models.py:203 cirs/models.py:457
+#: cirs/qm/report_csv.py:88 cirs/templates/cirs/qm/_incident_rows.html:16
+#: cirs/templates/cirs/qm/incident/_head.html:13
+#: cirs/templates/cirs/qm/worklist.html:118
 msgid "Department"
 msgstr "Abteilung"
 
@@ -262,7 +263,7 @@ msgstr "Abteilungen"
 
 #: cirs/models.py:111
 msgid "singular case (for the first time)"
-msgstr "einzellfall (erstmalig)"
+msgstr "Einzelfall (erstmalig)"
 
 #: cirs/models.py:112
 msgid "seldom (once per year)"
@@ -336,7 +337,7 @@ msgstr "mittel"
 msgid "new"
 msgstr "neu"
 
-#: cirs/models.py:125 cirs/models.py:493
+#: cirs/models.py:125 cirs/models.py:495
 msgid "in process"
 msgstr "in Bearbeitung"
 
@@ -417,6 +418,7 @@ msgid "Cause of failure"
 msgstr "Fehlerursache / Verursacherbereich"
 
 #: cirs/models.py:185 cirs/templates/cirs/criticalincident_detail.html:59
+#: cirs/templates/cirs/qm/incident/_report.html:26
 msgid "Immediate action / suggestion"
 msgstr "Sofortmaßnahmen / Vorschläge"
 
@@ -426,8 +428,10 @@ msgstr ""
 "Nennen Sie, was sofort unternommen wurde und was Sie zur Vermeidung oder "
 "Behebung vorschlagen."
 
-#: cirs/models.py:190 cirs/qm/report.py:49
+#: cirs/models.py:190 cirs/qm/report.py:52
 #: cirs/templates/cirs/criticalincident_detail.html:63
+#: cirs/templates/cirs/qm/_definitions.html:24
+#: cirs/templates/cirs/qm/incident/_report.html:30
 msgid "Preventability"
 msgstr "Vermeidbarkeit"
 
@@ -437,11 +441,13 @@ msgstr "War das Ereignis Ihrer Meinung nach vermeidbar oder nicht vermeidbar?"
 
 #: cirs/models.py:193 cirs/models.py:234
 #: cirs/templates/cirs/criticalincident_detail.html:68
-#: cirs/templates/cirs/publishableincident_list.html:56
+#: cirs/templates/cirs/publishableincident_list.html:64
+#: cirs/templates/cirs/qm/incident/_report.html:35
 msgid "Photo"
 msgstr "Foto"
 
-#: cirs/models.py:195
+#: cirs/models.py:195 cirs/templates/cirs/qm/incident/_head.html:22
+#: cirs/templates/cirs/qm/incident/_publication.html:9
 msgid "Publication"
 msgstr "Veröffentlichung"
 
@@ -465,7 +471,7 @@ msgstr "Verantwortung"
 msgid "Review date"
 msgstr "Termin"
 
-#: cirs/models.py:211 cirs/models.py:307 cirs/models.py:506
+#: cirs/models.py:211 cirs/models.py:307 cirs/models.py:508
 msgid "Status"
 msgstr "Status"
 
@@ -473,11 +479,13 @@ msgstr "Status"
 msgid "Risk classification"
 msgstr "Risikoklasse"
 
-#: cirs/models.py:215 cirs/qm/report.py:50
+#: cirs/models.py:215 cirs/qm/report.py:53
+#: cirs/templates/cirs/qm/_definitions.html:28
 msgid "Frequency"
 msgstr "Häufigkeit"
 
-#: cirs/models.py:217 cirs/qm/report.py:50
+#: cirs/models.py:217 cirs/qm/report.py:53
+#: cirs/templates/cirs/qm/_definitions.html:30
 msgid "Hazard"
 msgstr "Gefährdung"
 
@@ -485,13 +493,13 @@ msgstr "Gefährdung"
 msgid "For emploees or science"
 msgstr "Für Mitarbeiter oder Forschungsprozess"
 
-#: cirs/models.py:220 cirs/qm/report.py:48
-#: cirs/templates/cirs/qm/worklist.html:37
-#: cirs/templates/cirs/qm/worklist.html:119
+#: cirs/models.py:220 cirs/qm/report.py:51
+#: cirs/templates/cirs/qm/worklist.html:38
+#: cirs/templates/cirs/qm/worklist.html:120
 msgid "Category"
 msgstr "Kategorie"
 
-#: cirs/models.py:223 cirs/models.py:306 cirs/models.py:370 cirs/models.py:498
+#: cirs/models.py:223 cirs/models.py:306 cirs/models.py:370 cirs/models.py:500
 msgid "Critical incident"
 msgstr "Kritisches Ereignis"
 
@@ -515,7 +523,7 @@ msgstr ""
 "Nach jeglicher Änderung im Review-Block muss der Status zumindest auf \"in "
 "Bearbeitung\" gesetzt werden."
 
-#: cirs/models.py:308
+#: cirs/models.py:308 cirs/templates/cirs/qm/incident/_history.html:16
 msgid "Changed at"
 msgstr "Geändert am"
 
@@ -552,23 +560,26 @@ msgid "Translation info"
 msgstr "Übersetzungsinformation"
 
 #: cirs/models.py:374 cirs/templates/cirs/criticalincident_detail.html:51
-#: cirs/templates/cirs/publishableincident_list.html:53
+#: cirs/templates/cirs/publishableincident_list.html:61
+#: cirs/templates/cirs/qm/incident/_report.html:18
 msgid "Incident"
 msgstr "Ereignis"
 
-#: cirs/models.py:375 cirs/templates/cirs/publishableincident_list.html:54
+#: cirs/models.py:375 cirs/qm/forms.py:124
+#: cirs/templates/cirs/publishableincident_list.html:62
 msgid "Description"
 msgstr "Beschreibung"
 
-#: cirs/models.py:376 cirs/templates/cirs/publishableincident_list.html:55
+#: cirs/models.py:376 cirs/qm/forms.py:125
+#: cirs/templates/cirs/publishableincident_list.html:63
 msgid "Measures and consequences"
 msgstr "Maßnahmen und Konsequenzen"
 
-#: cirs/models.py:378
+#: cirs/models.py:378 cirs/qm/forms.py:138
 msgid "Publish"
 msgstr "Veröffentlichen"
 
-#: cirs/models.py:383 cirs/models.py:419
+#: cirs/models.py:383 cirs/models.py:421
 msgid "Mandatory languages"
 msgstr "Verpflichtende Sprachen"
 
@@ -580,11 +591,11 @@ msgstr "Publizierbares Ereignis"
 msgid "Publishable incidents"
 msgstr "Publizierbare Ereignisse"
 
-#: cirs/models.py:394
+#: cirs/models.py:396
 msgid "The reporter did not agreed to publish this incident!"
 msgstr "Der Eintragende hat einer Veröffentlichung nicht zugestimmt!"
 
-#: cirs/models.py:399
+#: cirs/models.py:401
 #, python-format
 msgid ""
 "All text fields in mandatory languages (%s) has to be filled before "
@@ -593,7 +604,7 @@ msgstr ""
 "Alle Textfelder in den verpflichtenden Sprachen (%s) müssen ausgefüllt "
 "werden bevor 'publizieren' aktiviert werden darf!"
 
-#: cirs/models.py:409
+#: cirs/models.py:411
 msgid ""
 "If you want to send notifications, an existing email server distinct from "
 "localhost has to be set by the server administrator in the local server "
@@ -603,7 +614,7 @@ msgstr ""
 "einen existierenden Emailserver (unterschiedlich vom localhost) in der "
 "lokalen Konfigurationsdatei eingetragen hat."
 
-#: cirs/models.py:413
+#: cirs/models.py:415
 msgid ""
 "If you choose mandatory languages besides the default one, don't forget to "
 "translate fields below. Further fields in publishable incidents have to be "
@@ -614,23 +625,23 @@ msgstr ""
 "publizierbaren Ereignisse übersetzt werden bevor sie veröffentlicht werden "
 "können!"
 
-#: cirs/models.py:423
+#: cirs/models.py:425
 msgid "URL for login info"
 msgstr "URL für die Anmeldedaten"
 
-#: cirs/models.py:426
+#: cirs/models.py:428
 msgid "Login info"
 msgstr "Anmeldeinformationen"
 
-#: cirs/models.py:427
+#: cirs/models.py:429
 msgid "Translate if there are multiple mandatory languages"
 msgstr "Bitte übersetzen wenn mehrere Sprachen ausgewählt wurden"
 
-#: cirs/models.py:428
+#: cirs/models.py:430
 msgid "Link text"
 msgstr "Linktext"
 
-#: cirs/models.py:429
+#: cirs/models.py:431
 msgid ""
 "Translate if there are multiple mandatory languages and you store infos at "
 "given URL"
@@ -638,11 +649,11 @@ msgstr ""
 "Bitte übersetzen wenn mehrere Sprachen ausgewählt wurden und eine URL "
 "eingegeben worden ist."
 
-#: cirs/models.py:433
+#: cirs/models.py:435
 msgid "Send notification"
 msgstr "Benachrichtigungen senden"
 
-#: cirs/models.py:435
+#: cirs/models.py:437
 msgid ""
 "Check if you wish to be informed about new incidents per email.<br>\n"
 "            IMPORTANT: Sender email has to exist and at least one recipient "
@@ -661,27 +672,27 @@ msgstr ""
 "            Erst danach kann das Senden von Benachrichtigungen aktiviert "
 "werden."
 
-#: cirs/models.py:442
+#: cirs/models.py:444
 msgid "Notification sender email address"
 msgstr "Absenderadresse für Benachrichtigungen"
 
-#: cirs/models.py:443
+#: cirs/models.py:445
 msgid "Enter a valid email address you want to use as a sender"
 msgstr "Bitte eine existierende Emailadresse als Absender eintragen"
 
-#: cirs/models.py:446
+#: cirs/models.py:448
 msgid "Notification recipients"
 msgstr "Benachrichtigungsempfänger"
 
-#: cirs/models.py:447
+#: cirs/models.py:449
 msgid "Choose recipients of the notification email"
 msgstr "Bitte einen Benachrichtigugnsempfänger wählen"
 
-#: cirs/models.py:449
+#: cirs/models.py:451
 msgid "Notification text"
 msgstr "Benachrichtigungstext"
 
-#: cirs/models.py:450
+#: cirs/models.py:452
 msgid ""
 "Enter the message which will be send to the reviewer(s) when a new incident "
 "is reported"
@@ -689,44 +700,44 @@ msgstr ""
 "Geben Sie die Nachricht ein, die an die Reviewer gesendet wird, wenn ein "
 "neues Ereignis gemeldet wird."
 
-#: cirs/models.py:459 cirs/models.py:460
+#: cirs/models.py:461 cirs/models.py:462
 msgid "LabCIRS configuration"
 msgstr "LabCIRS-Einstellungen"
 
-#: cirs/models.py:468
+#: cirs/models.py:470
 msgid "You have to choose at least one notification recipient."
 msgstr "Sie müssen mindestens einen Benachrichtigungsempfänger auswählen."
 
-#: cirs/models.py:470
+#: cirs/models.py:472
 msgid "You have to enter valid sender email."
 msgstr "Sie müssen eine existierende Absendermailadresse eingeben."
 
-#: cirs/models.py:476
+#: cirs/models.py:478
 #, python-format
 msgid "You have to reactivate %s as it is default language."
 msgstr "Sie müssen %s reaktivieren, weil es die voreingestellte Sprache ist."
 
-#: cirs/models.py:493
+#: cirs/models.py:495
 msgid "open"
 msgstr "offen"
 
-#: cirs/models.py:494
+#: cirs/models.py:496
 msgid "closed"
 msgstr "abgeschlossen"
 
-#: cirs/models.py:501
+#: cirs/models.py:503
 msgid "Author"
 msgstr "Autor"
 
-#: cirs/models.py:503
+#: cirs/models.py:505
 msgid "Created at"
 msgstr "Erstellt am"
 
-#: cirs/models.py:504
+#: cirs/models.py:506
 msgid "Text"
 msgstr "Text"
 
-#: cirs/models.py:506
+#: cirs/models.py:508
 msgid "Status of the comment"
 msgstr "Status des Kommentars"
 
@@ -742,43 +753,360 @@ msgstr "Das Foto ist größer als 10 MB."
 msgid "The photo has more than 50 megapixels."
 msgstr "Das Foto hat mehr als 50 Megapixel."
 
-#: cirs/qm/chart_data.py:37 cirs/qm/views_reports.py:171
+#: cirs/qm/chart_data.py:43 cirs/qm/report_csv.py:66 cirs/qm/report_csv.py:72
+#: cirs/qm/report_csv.py:97 cirs/qm/report_csv.py:111 cirs/qm/report_page.py:76
+#: cirs/qm/report_page.py:88
 msgid "not recorded"
 msgstr "nicht erfasst"
 
-#: cirs/qm/chart_data.py:39 cirs/qm/views_reports.py:168
-#: cirs/templates/cirs/qm/reports.html:124
+#: cirs/qm/chart_data.py:45 cirs/qm/report_csv.py:98 cirs/qm/report_page.py:85
+#: cirs/templates/cirs/qm/_definitions.html:10
 msgid "Incoming"
 msgstr "Eingang"
 
-#: cirs/qm/chart_data.py:40 cirs/qm/views_reports.py:169
-#: cirs/templates/cirs/qm/reports.html:126
+#: cirs/qm/chart_data.py:47 cirs/qm/report_csv.py:99 cirs/qm/report_page.py:86
+#: cirs/templates/cirs/qm/_definitions.html:12
 msgid "Completed"
 msgstr "Abgeschlossen"
 
-#: cirs/qm/metrics.py:66
-msgid ""
-"Several answers are possible: a report counts in each of its categories."
-msgstr "Mehrfachnennung möglich: Eine Meldung zählt in jeder ihrer Kategorien."
+#
+#: cirs/qm/forms.py:67
+msgid "Classification"
+msgstr "Einordnung"
 
-#: cirs/qm/metrics.py:68 cirs/templates/cirs/qm/_incident_rows.html:26
-#: cirs/templates/cirs/qm/worklist.html:32
+#
+#: cirs/qm/forms.py:69
+msgid "Measure"
+msgstr "Maßnahme"
+
+#: cirs/qm/forms.py:76 cirs/templates/cirs/qm/incident/_history.html:15
+#: cirs/templates/cirs/qm/worklist.html:21
+#: cirs/templates/cirs/qm/worklist.html:117
+msgctxt "incident list"
+msgid "Status"
+msgstr "Stand"
+
+#: cirs/qm/forms.py:76 cirs/qm/views_overview.py:126
+#: cirs/templates/cirs/qm/_incident_rows.html:17
+#: cirs/templates/cirs/qm/worklist.html:29
+#: cirs/templates/cirs/qm/worklist.html:119
+msgid "Where"
+msgstr "Wo"
+
+#: cirs/qm/forms.py:77 cirs/qm/report.py:52
+#: cirs/templates/cirs/qm/_definitions.html:26
+#: cirs/templates/cirs/qm/worklist.html:46
+#: cirs/templates/cirs/qm/worklist.html:121
+msgid "Risk"
+msgstr "Risiko"
+
+#
+#: cirs/qm/forms.py:84
+msgid ""
+"A new status goes by e-mail to the reporting person if they have set up "
+"notifications. The e-mail names the status and nothing else."
+msgstr ""
+"Ein neuer Stand geht per E-Mail an die meldende Person, wenn sie "
+"Benachrichtigungen eingerichtet hat. Die E-Mail nennt nur den Stand."
+
+#: cirs/qm/forms.py:86
+msgid "You may choose several."
+msgstr "Sie können mehrere wählen."
+
+#: cirs/qm/forms.py:87
+msgid "The day on which the measure is to be checked."
+msgstr "Der Tag, an dem die Maßnahme überprüft werden soll."
+
+#: cirs/qm/forms.py:101 cirs/qm/metrics.py:68
+#: cirs/templates/cirs/qm/_definitions.html:32
+#: cirs/templates/cirs/qm/_incident_rows.html:26
+#: cirs/templates/cirs/qm/worklist.html:33
 #: cirs/templates/cirs/qm/worklist.html:133
 #: cirs/templates/cirs/qm/worklist.html:134
 #: cirs/templates/cirs/qm/worklist.html:135
 msgid "Not specified"
 msgstr "Keine Angabe"
 
-#: cirs/qm/report.py:48 cirs/qm/views_reports.py:73
+#: cirs/qm/forms.py:124
+msgid "Title"
+msgstr "Titel"
+
+#: cirs/qm/forms.py:139
+msgid ""
+"Published cases are visible to every visitor of the site, also without "
+"logging in. Make sure that the texts hold no names and no patient data."
+msgstr ""
+"Veröffentlichte Fälle sind für alle Besucher der Seite sichtbar, auch ohne "
+"Anmeldung. Achten Sie darauf, dass die Texte keine Namen und keine "
+"Patientendaten enthalten."
+
+#: cirs/qm/forms.py:168
+#, python-format
+msgid "%(language)s (mandatory language)"
+msgstr "%(language)s (Pflichtsprache)"
+
+#: cirs/qm/forms.py:169
+#, python-format
+msgid "%(language)s (optional language)"
+msgstr "%(language)s (freiwillig)"
+
+#: cirs/qm/forms.py:212
+msgid "Please fill in the texts of at least one language."
+msgstr "Bitte füllen Sie die Texte von mindestens einer Sprache aus."
+
+#
+#: cirs/qm/incident_work.py:59
+msgid "The assessment has been saved."
+msgstr "Die Bewertung wurde gespeichert."
+
+#
+#: cirs/qm/incident_work.py:60
+msgid "Your reply has been saved and is the last one in the dialogue."
+msgstr "Ihre Antwort wurde gespeichert und steht am Ende des Dialogs."
+
+#: cirs/qm/incident_work.py:61
+msgid "The publication has been saved. The case is now published."
+msgstr ""
+"Die Veröffentlichung wurde gespeichert. Der Fall ist jetzt veröffentlicht."
+
+#: cirs/qm/incident_work.py:62
+msgid "The publication has been saved. The case is not published."
+msgstr ""
+"Die Veröffentlichung wurde gespeichert. Der Fall ist nicht veröffentlicht."
+
+#: cirs/qm/metrics.py:66
+msgid ""
+"Several answers are possible: a report counts in each of its categories."
+msgstr "Mehrfachnennung möglich: Eine Meldung zählt in jeder ihrer Kategorien."
+
+#: cirs/qm/report.py:51 cirs/qm/report_csv.py:90 cirs/qm/views_reports.py:68
 msgid "Area"
 msgstr "Bereich"
 
-#: cirs/qm/report.py:49 cirs/templates/cirs/qm/worklist.html:45
-#: cirs/templates/cirs/qm/worklist.html:120
-msgid "Risk"
-msgstr "Risiko"
+#: cirs/qm/report_csv.py:76 cirs/qm/report_page.py:46
+msgid "not stated"
+msgstr "nicht angegeben"
 
-#: cirs/qm/views_overview.py:94
+#: cirs/qm/report_csv.py:79
+#, python-format
+msgid "%(label)s, median in days"
+msgstr "%(label)s, Median in Tagen"
+
+#: cirs/qm/report_csv.py:80
+#, python-format
+msgid "%(label)s, count"
+msgstr "%(label)s, Anzahl"
+
+#: cirs/qm/report_csv.py:86
+msgid "Organisation"
+msgstr "Organisation"
+
+#: cirs/qm/report_csv.py:86
+msgid "System"
+msgstr "System"
+
+#: cirs/qm/report_csv.py:87
+msgid "Period"
+msgstr "Zeitraum"
+
+#: cirs/qm/report_csv.py:91
+msgid "Created on"
+msgstr "Erstellt am"
+
+#: cirs/qm/report_csv.py:92 cirs/templates/cirs/criticalincident_detail.html:3
+#: cirs/templates/cirs/criticalincident_detail.html:6
+msgid "Report"
+msgstr "Bericht"
+
+#: cirs/qm/report_csv.py:100 cirs/qm/report_page.py:87
+#: cirs/templates/cirs/qm/_definitions.html:14
+msgid "Open (as of today)"
+msgstr "Offen (Stand heute)"
+
+#: cirs/qm/report_csv.py:100 cirs/qm/report_page.py:90
+#: cirs/templates/cirs/qm/_definitions.html:16
+#: cirs/templates/cirs/qm/incident/_publication.html:14
+msgid "Published"
+msgstr "Veröffentlicht"
+
+#: cirs/qm/report_csv.py:101 cirs/qm/report_page.py:96
+#: cirs/templates/cirs/qm/_definitions.html:22
+msgid "Still without processing"
+msgstr "Noch ohne Bearbeitung"
+
+#: cirs/qm/report_csv.py:102 cirs/qm/report_page.py:91
+#: cirs/templates/cirs/qm/_definitions.html:18
+msgid "Reaction time"
+msgstr "Reaktionszeit"
+
+#: cirs/qm/report_csv.py:103 cirs/qm/report_page.py:93
+#: cirs/templates/cirs/qm/_definitions.html:20
+msgid "Processing time"
+msgstr "Bearbeitungsdauer"
+
+#: cirs/qm/report_csv.py:104 cirs/templates/cirs/qm/reports.html:76
+#: cirs/templates/cirs/qm/reports_print.html:44
+msgid "Key figures"
+msgstr "Kennzahlen"
+
+#: cirs/qm/report_csv.py:108 cirs/templates/cirs/qm/reports.html:86
+#: cirs/templates/cirs/qm/reports_print.html:53
+msgid "Monthly trend"
+msgstr "Monatsverlauf"
+
+#: cirs/qm/report_csv.py:112
+#, python-format
+msgid "Incoming, %(month)s"
+msgstr "Eingang, %(month)s"
+
+#: cirs/qm/report_csv.py:113
+#, python-format
+msgid "Completed, %(month)s"
+msgstr "Abgeschlossen, %(month)s"
+
+#: cirs/qm/report_csv.py:118
+#, python-format
+msgid "Distribution: %(name)s"
+msgstr "Verteilung: %(name)s"
+
+#: cirs/qm/report_csv.py:128 cirs/templates/cirs/qm/reports_print.html:103
+#: cirs/templates/cirs/qm/worklist.html:123
+msgid "Notes"
+msgstr "Hinweise"
+
+#: cirs/qm/report_csv.py:129
+msgid "Section"
+msgstr "Bereich"
+
+#: cirs/qm/report_csv.py:129
+msgid "Characteristic"
+msgstr "Merkmal"
+
+#: cirs/qm/report_csv.py:129
+msgid "Value"
+msgstr "Wert"
+
+#: cirs/qm/report_page.py:41
+#, python-format
+msgid "%(first)s to %(last)s"
+msgstr "%(first)s bis %(last)s"
+
+#: cirs/qm/report_page.py:55
+#, python-format
+msgid "Median not stated, count %(count)s"
+msgstr "Median nicht angegeben, Anzahl %(count)s"
+
+#: cirs/qm/report_page.py:56
+#, python-format
+msgid "Median %(days)s day, count %(count)d"
+msgid_plural "Median %(days)s days, count %(count)d"
+msgstr[0] "Median %(days)s Tag, Anzahl %(count)d"
+msgstr[1] "Median %(days)s Tage, Anzahl %(count)d"
+
+#: cirs/qm/report_page.py:67
+#, python-format
+msgid "(since %(date)s)"
+msgstr "(ab %(date)s)"
+
+#: cirs/qm/report_page.py:105 cirs/qm/views_overview.py:109
+msgid "The log is not running yet."
+msgstr "Das Protokoll läuft noch nicht."
+
+#: cirs/qm/report_page.py:107
+#, python-format
+msgid "Completions and times have been recorded since %(date)s."
+msgstr "Abschlüsse und Zeiten werden seit %(date)s erfasst."
+
+#: cirs/qm/report_page.py:118
+msgid "Reaction times exist only for reports received since the log began."
+msgstr ""
+"Reaktionszeiten gibt es nur für Meldungen seit dem Beginn des Protokolls."
+
+#: cirs/qm/report_page.py:121
+msgid "So far no status change has been recorded."
+msgstr "Bisher ist kein Statuswechsel erfasst."
+
+#: cirs/qm/report_page.py:133
+#, python-format
+msgid "Reports in %(period)s: %(incoming)s received."
+msgstr "Meldungen im Zeitraum %(period)s: %(incoming)s eingegangen."
+
+#: cirs/qm/report_page.py:136
+#, python-format
+msgid "Reports in %(period)s: %(incoming)s received, %(completed)s completed."
+msgstr ""
+"Meldungen im Zeitraum %(period)s: %(incoming)s eingegangen, %(completed)s "
+"abgeschlossen."
+
+#: cirs/qm/report_page.py:142
+#, python-format
+msgid "Incoming and completed per month, %(period)s"
+msgstr "Eingang und Abgeschlossen pro Monat, %(period)s"
+
+#: cirs/qm/report_page.py:144 cirs/qm/views_overview.py:103
+msgid "Month"
+msgstr "Monat"
+
+#: cirs/qm/report_page.py:156
+#, python-format
+msgid "Most: %(label)s with %(count)d of %(total)d."
+msgstr "Am meisten: %(label)s mit %(count)d von %(total)d."
+
+#: cirs/qm/report_page.py:158
+#, python-format
+msgid "Most: %(label)s with %(count)d."
+msgstr "Am meisten: %(label)s mit %(count)d."
+
+#: cirs/qm/report_page.py:174
+msgid "Small numbers"
+msgstr "Kleine Zahlen"
+
+#: cirs/qm/report_page.py:175
+#, python-format
+msgid ""
+"Numbers above 0 and below %(min)d are shown as “< %(min)d”, so that single "
+"reports cannot be traced back. Where a hidden number could otherwise be "
+"worked out from the numbers shown, a star (“*”) stands in place of a further "
+"number."
+msgstr ""
+"Zahlen über 0 und unter %(min)d stehen als „< %(min)d“, damit sich einzelne "
+"Meldungen nicht zurückverfolgen lassen. Wo sich eine verborgene Zahl sonst "
+"aus den gezeigten Zahlen berechnen ließe, steht an der Stelle einer weiteren "
+"Zahl ein Stern („*“)."
+
+#: cirs/qm/report_page.py:179
+msgid "Times"
+msgstr "Zeiten"
+
+#: cirs/qm/report_page.py:180
+#, python-format
+msgid ""
+"Reaction time and processing time are medians in days. If fewer than %(min)d "
+"reports are behind them, neither the median nor the count is stated."
+msgstr ""
+"Reaktionszeit und Bearbeitungsdauer sind Mediane in Tagen. Liegen weniger "
+"als %(min)d Meldungen zugrunde, werden weder der Median noch die Anzahl "
+"angegeben."
+
+#: cirs/qm/report_page.py:185
+msgid "Status log"
+msgstr "Protokoll"
+
+#: cirs/qm/report_page.py:186
+msgid "Comparisons"
+msgstr "Vergleiche"
+
+#: cirs/qm/report_page.py:187
+msgid ""
+"Whoever compares evaluations for periods of their own choice, or for one "
+"area and for “All”, can work out small numbers from the differences. Such "
+"evaluations should not be passed on together."
+msgstr ""
+"Wer Auswertungen für frei gewählte Zeiträume oder für einen Bereich und für "
+"„Alle“ vergleicht, kann kleine Zahlen aus den Unterschieden berechnen. "
+"Solche Auswertungen sollten nicht gemeinsam weitergegeben werden."
+
+#: cirs/qm/views_overview.py:97
 #, python-format
 msgid ""
 "Reports in the last 12 months: %(incoming)d received, %(completed)d "
@@ -787,24 +1115,16 @@ msgstr ""
 "Meldungen in den letzten 12 Monaten: %(incoming)d eingegangen, %(completed)d "
 "abgeschlossen."
 
-#: cirs/qm/views_overview.py:98
+#: cirs/qm/views_overview.py:101
 msgid "Incoming and completed per month, last 12 months"
 msgstr "Eingang und Abgeschlossen pro Monat, letzte 12 Monate"
 
-#: cirs/qm/views_overview.py:100 cirs/qm/views_reports.py:206
-msgid "Month"
-msgstr "Monat"
-
-#: cirs/qm/views_overview.py:106
-msgid "Completions are not recorded yet."
-msgstr "Abschlüsse werden noch nicht erfasst."
-
-#: cirs/qm/views_overview.py:107
+#: cirs/qm/views_overview.py:110
 #, python-format
 msgid "Completions recorded since %(date)s."
 msgstr "Abschlüsse seit %(date)s erfasst."
 
-#: cirs/qm/views_overview.py:118
+#: cirs/qm/views_overview.py:121
 #, python-format
 msgid ""
 "Reports per area in the last 12 months; most: %(area)s with %(count)d of "
@@ -813,130 +1133,65 @@ msgstr ""
 "Meldungen je Bereich in den letzten 12 Monaten; am meisten: %(area)s mit "
 "%(count)d von %(total)d."
 
-#: cirs/qm/views_overview.py:122
+#: cirs/qm/views_overview.py:125
 msgid "Reports per area, last 12 months"
 msgstr "Meldungen je Bereich, letzte 12 Monate"
 
-#: cirs/qm/views_overview.py:123 cirs/templates/cirs/qm/_incident_rows.html:17
-#: cirs/templates/cirs/qm/worklist.html:28
-#: cirs/templates/cirs/qm/worklist.html:118
-msgid "Where"
-msgstr "Wo"
-
-#: cirs/qm/views_reports.py:51
+#: cirs/qm/views_reports.py:48
 msgctxt "report period"
 msgid "From"
 msgstr "Von"
 
-#: cirs/qm/views_reports.py:52
+#: cirs/qm/views_reports.py:49
 msgctxt "report period"
 msgid "Until"
 msgstr "Bis"
 
-#: cirs/qm/views_reports.py:54
+#: cirs/qm/views_reports.py:51
 msgid "Please choose an entry from the list."
 msgstr "Bitte wählen Sie einen Eintrag aus der Liste."
 
-#: cirs/qm/views_reports.py:69 cirs/qm/views_reports.py:71
+#: cirs/qm/views_reports.py:64 cirs/qm/views_reports.py:66
 msgctxt "report period"
 msgid "Month"
 msgstr "Monat"
 
-#: cirs/qm/views_reports.py:70 cirs/qm/views_reports.py:72
+#: cirs/qm/views_reports.py:65 cirs/qm/views_reports.py:67
 msgctxt "report period"
 msgid "Year"
 msgstr "Jahr"
 
-#: cirs/qm/views_reports.py:74 cirs/templates/cirs/qm/worklist.html:34
+#: cirs/qm/views_reports.py:69 cirs/templates/cirs/qm/worklist.html:35
 msgid "A group includes its units."
 msgstr "Eine Gruppe umfasst ihre Einheiten."
 
-#: cirs/qm/views_reports.py:85 cirs/templates/cirs/qm/worklist.html:22
-#: cirs/templates/cirs/qm/worklist.html:30
-#: cirs/templates/cirs/qm/worklist.html:39
-#: cirs/templates/cirs/qm/worklist.html:47
+#: cirs/qm/views_reports.py:80 cirs/templates/cirs/qm/worklist.html:23
+#: cirs/templates/cirs/qm/worklist.html:31
+#: cirs/templates/cirs/qm/worklist.html:40
+#: cirs/templates/cirs/qm/worklist.html:48
 msgid "All"
 msgstr "Alle"
 
-#: cirs/qm/views_reports.py:101
+#: cirs/qm/views_reports.py:96
 msgid "The period ends before it begins."
 msgstr "Der Zeitraum endet vor seinem Beginn."
 
-#: cirs/qm/views_reports.py:104
+#: cirs/qm/views_reports.py:99
 #, python-format
 msgid "The period may cover at most %(months)d months."
 msgstr "Der Zeitraum darf höchstens %(months)d Monate umfassen."
 
-#: cirs/qm/views_reports.py:121
+#: cirs/qm/views_reports.py:117
 msgid "Last quarter"
 msgstr "Letztes Quartal"
 
-#: cirs/qm/views_reports.py:121
+#: cirs/qm/views_reports.py:117
 msgid "Current year"
 msgstr "Laufendes Jahr"
 
-#: cirs/qm/views_reports.py:122
+#: cirs/qm/views_reports.py:118
 msgid "Last year"
 msgstr "Letztes Jahr"
-
-#: cirs/qm/views_reports.py:151
-#, python-format
-msgid "%(first)s to %(last)s"
-msgstr "%(first)s bis %(last)s"
-
-#: cirs/qm/views_reports.py:158
-#, python-format
-msgid "Median %(days)s day, count %(count)d"
-msgid_plural "Median %(days)s days, count %(count)d"
-msgstr[0] "Median %(days)s Tag, Anzahl %(count)d"
-msgstr[1] "Median %(days)s Tage, Anzahl %(count)d"
-
-#: cirs/qm/views_reports.py:170 cirs/templates/cirs/qm/reports.html:128
-msgid "Open at the end of the period"
-msgstr "Offen am Ende des Zeitraums"
-
-#: cirs/qm/views_reports.py:173 cirs/templates/cirs/qm/reports.html:130
-msgid "Published"
-msgstr "Veröffentlicht"
-
-#: cirs/qm/views_reports.py:174 cirs/templates/cirs/qm/reports.html:132
-msgid "Reaction time"
-msgstr "Reaktionszeit"
-
-#: cirs/qm/views_reports.py:175 cirs/templates/cirs/qm/reports.html:134
-msgid "Processing time"
-msgstr "Bearbeitungsdauer"
-
-#: cirs/qm/views_reports.py:185
-msgid "Completions and times are not recorded yet."
-msgstr "Abschlüsse und Zeiten werden noch nicht erfasst."
-
-#: cirs/qm/views_reports.py:187
-#, python-format
-msgid "Completions and times have been recorded since %(date)s."
-msgstr "Abschlüsse und Zeiten werden seit %(date)s erfasst."
-
-#: cirs/qm/views_reports.py:199
-#, python-format
-msgid "Reports in %(period)s: %(incoming)d received, %(completed)d completed."
-msgstr ""
-"Meldungen im Zeitraum %(period)s: %(incoming)d eingegangen, %(completed)d "
-"abgeschlossen."
-
-#: cirs/qm/views_reports.py:204
-#, python-format
-msgid "Incoming and completed per month, %(period)s"
-msgstr "Eingang und Abgeschlossen pro Monat, %(period)s"
-
-#: cirs/qm/views_reports.py:216
-#, python-format
-msgid "Most: %(label)s with %(count)d."
-msgstr "Am meisten: %(label)s mit %(count)d."
-
-#: cirs/qm/views_reports.py:218
-#, python-format
-msgid "Most: %(label)s with %(count)d of %(total)d."
-msgstr "Am meisten: %(label)s mit %(count)d von %(total)d."
 
 #: cirs/qm/views_worklist.py:46
 msgid "invalid date"
@@ -1027,10 +1282,22 @@ msgstr ""
 msgid "Address on the internal network: {url}"
 msgstr "Adresse im Hausnetz: {url}"
 
-#: cirs/templates/cirs/criticalincident_detail.html:3
-#: cirs/templates/cirs/criticalincident_detail.html:6
-msgid "Report"
-msgstr "Meldung"
+#: cirs/system_status.py:56
+msgid "Superuser"
+msgstr "Superuser"
+
+#: cirs/system_status.py:57
+msgid "QM"
+msgstr "QM"
+
+#
+#: cirs/system_status.py:59
+msgid "Reporter account"
+msgstr "Reporter-Konto"
+
+#: cirs/system_status.py:60
+msgid "No role"
+msgstr "Ohne Rolle"
 
 #: cirs/templates/cirs/criticalincident_detail.html:3
 #: cirs/templates/cirs/criticalincident_detail.html:6
@@ -1044,10 +1311,12 @@ msgstr ""
 "haben."
 
 #: cirs/templates/cirs/criticalincident_detail.html:14
+#: cirs/templates/cirs/qm/incident/_head.html:8
 msgid "Processing status"
 msgstr "Stand der Bearbeitung"
 
 #: cirs/templates/cirs/criticalincident_detail.html:15
+#: cirs/templates/cirs/qm/incident/_head.html:10
 msgid "Current status"
 msgstr "Stand"
 
@@ -1085,14 +1354,18 @@ msgid "The processing has ended."
 msgstr "Die Bearbeitung ist beendet."
 
 #: cirs/templates/cirs/criticalincident_detail.html:44
+#: cirs/templates/cirs/qm/incident/_head.html:19
+#: cirs/templates/cirs/qm/incident/_report.html:7
 msgid "Details of the report"
 msgstr "Angaben zur Meldung"
 
 #: cirs/templates/cirs/criticalincident_detail.html:47
+#: cirs/templates/cirs/qm/incident/_report.html:10
 msgid "Date"
 msgstr "Datum"
 
 #: cirs/templates/cirs/criticalincident_detail.html:55
+#: cirs/templates/cirs/qm/incident/_report.html:22
 msgid "Cause"
 msgstr "Grund"
 
@@ -1101,6 +1374,7 @@ msgid "Replies"
 msgstr "Rückmeldungen"
 
 #: cirs/templates/cirs/criticalincident_detail.html:80
+#: cirs/templates/cirs/qm/incident/_dialogue.html:11
 #, python-format
 msgid "%(counter)s reply"
 msgid_plural "%(counter)s replies, oldest first"
@@ -1108,22 +1382,27 @@ msgstr[0] "%(counter)s Rückmeldung"
 msgstr[1] "%(counter)s Rückmeldungen, die älteste zuerst"
 
 #: cirs/templates/cirs/criticalincident_detail.html:85
+#: cirs/templates/cirs/qm/incident/_dialogue.html:16
 msgid "Reporting person"
 msgstr "Meldende Person"
 
 #: cirs/templates/cirs/criticalincident_detail.html:85
+#: cirs/templates/cirs/qm/incident/_dialogue.html:16
 msgid "Quality management"
 msgstr "Qualitätsmanagement"
 
 #: cirs/templates/cirs/criticalincident_detail.html:92
+#: cirs/templates/cirs/qm/incident/_dialogue.html:23
 msgid "There are no replies yet."
 msgstr "Es gibt noch keine Rückmeldungen."
 
 #: cirs/templates/cirs/criticalincident_detail.html:97
+#: cirs/templates/cirs/qm/incident/_dialogue.html:26
 msgid "Reply"
 msgstr "Antworten"
 
 #: cirs/templates/cirs/criticalincident_detail.html:99
+#: cirs/templates/cirs/qm/incident/_dialogue.html:28
 msgid ""
 "Your reply is also sent by e-mail to the reporter if they have set up "
 "notifications. Do not write names or patient data."
@@ -1133,10 +1412,12 @@ msgstr ""
 "Patientendaten."
 
 #: cirs/templates/cirs/criticalincident_detail.html:104
+#: cirs/templates/cirs/qm/incident/_dialogue.html:33
 msgid "Sending …"
 msgstr "Wird gesendet …"
 
 #: cirs/templates/cirs/criticalincident_detail.html:105
+#: cirs/templates/cirs/qm/incident/_dialogue.html:34
 msgid "Send reply"
 msgstr "Antwort senden"
 
@@ -1194,6 +1475,7 @@ msgstr "Zugang beenden"
 
 #: cirs/templates/cirs/criticalincident_form.html:3
 #: cirs/templates/cirs/criticalincident_form.html:7
+#: cirs/templates/cirs/publishableincident_list.html:23
 msgid "Report incident"
 msgstr "Ereignis melden"
 
@@ -1230,6 +1512,7 @@ msgstr ""
 "Vorgesetzten. Diese Meldung ersetzt das nicht."
 
 #: cirs/templates/cirs/criticalincident_form.html:18
+#: cirs/templates/cirs/publishableincident_list.html:24
 msgid "Reporting is voluntary and free of sanctions."
 msgstr "Meldungen sind freiwillig und sanktionsfrei."
 
@@ -1263,7 +1546,7 @@ msgstr "Für Sie ist keine Abteilung aktiv."
 msgid "Please contact the administrator."
 msgstr "Bitte wenden Sie sich an die Administration."
 
-#: cirs/templates/cirs/forms/ui_form.html:15
+#: cirs/templates/cirs/forms/ui_error_summary.html:9
 #: cirs/templates/cirs/qm/reports.html:24
 msgid "Please check your entries."
 msgstr "Bitte prüfen Sie Ihre Eingaben."
@@ -1359,23 +1642,23 @@ msgstr ""
 "anonymisiert und zur Veröffentlichung freigegeben wurden. Sie sollen helfen, "
 "aus Fehlern und Beinahe-Fehlern zu lernen."
 
-#: cirs/templates/cirs/publishableincident_list.html:23
-#: cirs/templates/cirs/qm/worklist.html:64
+#: cirs/templates/cirs/publishableincident_list.html:31
+#: cirs/templates/cirs/qm/worklist.html:65
 msgid "Search term"
 msgstr "Suchbegriff"
 
-#: cirs/templates/cirs/publishableincident_list.html:25
+#: cirs/templates/cirs/publishableincident_list.html:33
 msgid ""
 "The search covers the incident, the description and the measures and "
 "consequences."
 msgstr ""
 "Gesucht wird in Ereignis, Beschreibung sowie Maßnahmen und Konsequenzen."
 
-#: cirs/templates/cirs/publishableincident_list.html:28
+#: cirs/templates/cirs/publishableincident_list.html:36
 msgid "Search"
 msgstr "Suchen"
 
-#: cirs/templates/cirs/publishableincident_list.html:38
+#: cirs/templates/cirs/publishableincident_list.html:46
 #, python-format
 msgid "%(counter)s published case matches your search for “%(term)s”."
 msgid_plural "%(counter)s published cases match your search for “%(term)s”."
@@ -1384,96 +1667,92 @@ msgstr[0] ""
 msgstr[1] ""
 "%(counter)s veröffentlichte Fälle passen zu Ihrer Suche nach „%(term)s“."
 
-#: cirs/templates/cirs/publishableincident_list.html:40
+#: cirs/templates/cirs/publishableincident_list.html:48
 msgid ""
 "The search looks at the text only. Month, year and photos are not searched."
 msgstr ""
 "Die Suche berücksichtigt nur den Text. Monat, Jahr und Fotos werden nicht "
 "durchsucht."
 
-#: cirs/templates/cirs/publishableincident_list.html:41
-#: cirs/templates/cirs/publishableincident_list.html:98
-#: cirs/templates/cirs/qm/worklist.html:102
-#: cirs/templates/cirs/qm/worklist.html:162
+#: cirs/templates/cirs/publishableincident_list.html:49
+#: cirs/templates/cirs/publishableincident_list.html:106
+#: cirs/templates/cirs/qm/worklist.html:103
+#: cirs/templates/cirs/qm/worklist.html:161
 msgid "Clear filter"
 msgstr "Filter aufheben"
 
-#: cirs/templates/cirs/publishableincident_list.html:45
-#: cirs/templates/cirs/qm/worklist.html:107
+#: cirs/templates/cirs/publishableincident_list.html:53
+#: cirs/templates/cirs/qm/worklist.html:108
 #, python-format
 msgid "Page %(number)s of %(pages)s"
 msgstr "Seite %(number)s von %(pages)s"
 
-#: cirs/templates/cirs/publishableincident_list.html:49
+#: cirs/templates/cirs/publishableincident_list.html:57
 msgid "Published cases, newest first"
 msgstr "Veröffentlichte Fälle, neueste zuerst"
 
-#: cirs/templates/cirs/publishableincident_list.html:52
+#: cirs/templates/cirs/publishableincident_list.html:60
 msgid "Month/year"
 msgstr "Monat/Jahr"
 
-#: cirs/templates/cirs/publishableincident_list.html:58
+#: cirs/templates/cirs/publishableincident_list.html:66
 msgid "No. of comments"
 msgstr "Zahl der Kommentare"
 
-#: cirs/templates/cirs/publishableincident_list.html:70
+#: cirs/templates/cirs/publishableincident_list.html:78
 msgid "View photo"
 msgstr "Foto ansehen"
 
-#: cirs/templates/cirs/publishableincident_list.html:70
+#: cirs/templates/cirs/publishableincident_list.html:78
 #, python-format
 msgid "of the case “%(title)s”"
 msgstr "zum Fall „%(title)s“"
 
-#: cirs/templates/cirs/publishableincident_list.html:72
+#: cirs/templates/cirs/publishableincident_list.html:80
 msgid "no photo"
 msgstr "kein Foto"
 
-#: cirs/templates/cirs/publishableincident_list.html:76
+#: cirs/templates/cirs/publishableincident_list.html:84
 #, python-format
 msgid "comments on the case “%(title)s”"
 msgstr "Kommentare zum Fall „%(title)s“"
 
-#: cirs/templates/cirs/publishableincident_list.html:87
+#: cirs/templates/cirs/publishableincident_list.html:95
 msgid "Pages of the case list"
 msgstr "Seiten der Fallliste"
 
-#: cirs/templates/cirs/publishableincident_list.html:88
-#: cirs/templates/cirs/qm/worklist.html:152
+#: cirs/templates/cirs/publishableincident_list.html:96
+#: cirs/templates/cirs/qm/worklist.html:151
 msgid "Previous page"
 msgstr "Vorherige Seite"
 
-#: cirs/templates/cirs/publishableincident_list.html:90
-#: cirs/templates/cirs/qm/worklist.html:154
+#: cirs/templates/cirs/publishableincident_list.html:98
+#: cirs/templates/cirs/qm/worklist.html:153
 msgid "Next page"
 msgstr "Nächste Seite"
 
-#: cirs/templates/cirs/publishableincident_list.html:96
+#: cirs/templates/cirs/publishableincident_list.html:104
 #, python-format
 msgid "No published case matches your search for “%(term)s”."
 msgstr "Kein veröffentlichter Fall passt zu Ihrer Suche nach „%(term)s“."
 
-#: cirs/templates/cirs/publishableincident_list.html:97
+#: cirs/templates/cirs/publishableincident_list.html:105
 msgid "Please check the spelling or try a shorter search term."
 msgstr ""
 "Bitte prüfen Sie die Schreibweise oder versuchen Sie einen kürzeren "
 "Suchbegriff."
 
-#: cirs/templates/cirs/publishableincident_list.html:103
+#: cirs/templates/cirs/publishableincident_list.html:111
 msgid "There are no published cases yet."
 msgstr "Es gibt noch keine veröffentlichten Fälle."
 
-#: cirs/templates/cirs/publishableincident_list.html:104
+#: cirs/templates/cirs/publishableincident_list.html:112
 msgid ""
 "As soon as the quality management approves a case for publication, it "
 "appears here."
 msgstr ""
 "Sobald das Qualitätsmanagement einen Fall zur Veröffentlichung freigibt, "
 "erscheint er hier."
-
-#: cirs/templates/cirs/publishableincident_list.html:110
-msgid "Add new incident"
-msgstr "Neues Ereignis hinzufügen"
 
 #: cirs/templates/cirs/qm/_bars.html:22 cirs/templates/cirs/qm/_columns.html:37
 msgid "Numbers as a table"
@@ -1483,14 +1762,118 @@ msgstr "Zahlen als Tabelle"
 msgid "Number"
 msgstr "Anzahl"
 
+#: cirs/templates/cirs/qm/_definitions.html:11
+msgid "Reports whose date of report falls in the period."
+msgstr "Meldungen, deren Meldedatum im Zeitraum liegt."
+
+#: cirs/templates/cirs/qm/_definitions.html:13
+msgid ""
+"Reports that are in the status “Completed” now and reached it, for the last "
+"time, in the period; a reopened report counts only once it is completed "
+"again, and then in the period of that last completion, so figures of past "
+"periods can change."
+msgstr ""
+"Meldungen, die jetzt im Stand „Erledigt“ sind und diesen Stand zuletzt im "
+"Zeitraum erreicht haben; eine wieder geöffnete Meldung zählt erst, wenn sie "
+"erneut abgeschlossen ist, und dann im Zeitraum dieses letzten Abschlusses, "
+"daher können sich Zahlen vergangener Zeiträume ändern."
+
+#: cirs/templates/cirs/qm/_definitions.html:15
+msgid ""
+"All reports that are open now, including older ones; for a period that ended "
+"in the past it is not recorded."
+msgstr ""
+"Alle derzeit offenen Meldungen, auch ältere; für einen Zeitraum, der in der "
+"Vergangenheit endet, nicht erfasst."
+
+#: cirs/templates/cirs/qm/_definitions.html:17
+msgid ""
+"Published cases of the reports received in the period; a case has no date of "
+"its own."
+msgstr ""
+"Veröffentlichte Fälle zu Meldungen aus dem Zeitraum; ein Fall hat kein "
+"eigenes Datum."
+
+#: cirs/templates/cirs/qm/_definitions.html:19
+msgid ""
+"Days from the report to the first change away from “new”, counted in the "
+"period of that change; only reports received since the log began are "
+"included, because only there is that change recorded, reports that are still "
+"new do not count, and the count is the number of reports the median is taken "
+"from."
+msgstr ""
+"Tage von der Meldung bis zum ersten Wechsel weg von „Neu“, gezählt im "
+"Zeitraum dieses Wechsels; es zählen nur Meldungen seit dem Beginn des "
+"Protokolls, weil nur dort dieser Wechsel erfasst ist, Meldungen, die noch "
+"neu sind, zählen nicht, und die Anzahl nennt die Meldungen, aus denen der "
+"Median berechnet ist."
+
+#: cirs/templates/cirs/qm/_definitions.html:21
+msgid ""
+"Days from the report to the last completion of a report that is completed "
+"now, counted in the period of that completion; reports that are still open "
+"or were reopened do not count, and the count is the number of reports the "
+"median is taken from."
+msgstr ""
+"Tage von der Meldung bis zum letzten Abschluss einer Meldung, die jetzt "
+"erledigt ist, gezählt im Zeitraum dieses Abschlusses; Meldungen, die noch "
+"offen sind oder wieder geöffnet wurden, zählen nicht, und die Anzahl nennt "
+"die Meldungen, aus denen der Median berechnet ist."
+
+#: cirs/templates/cirs/qm/_definitions.html:23
+msgid "Reports of the period that are still in the status “New”."
+msgstr "Meldungen des Zeitraums, die noch im Stand „Neu“ sind."
+
+#: cirs/templates/cirs/qm/_definitions.html:25
+msgid ""
+"The assessment of the reporting person whether the incident could have been "
+"avoided."
+msgstr ""
+"Die Einschätzung der meldenden Person, ob sich das Ereignis hätte vermeiden "
+"lassen."
+
+#: cirs/templates/cirs/qm/_definitions.html:27
+msgid ""
+"The classification of the risk of a report by the QM, in three steps from "
+"low to high."
+msgstr ""
+"Die Einstufung des Risikos einer Meldung durch das QM, in drei Stufen von "
+"niedrig bis hoch."
+
+#: cirs/templates/cirs/qm/_definitions.html:29
+msgid ""
+"An estimate of the QM of how often such an incident happens, not a number of "
+"cases."
+msgstr ""
+"Eine Schätzung des QM, wie oft ein solches Ereignis vorkommt; keine Zahl von "
+"Fällen."
+
+#: cirs/templates/cirs/qm/_definitions.html:31
+msgid ""
+"The assessment of the QM of the hazard for employees or for science, in five "
+"steps from very low to very high."
+msgstr ""
+"Die Einschätzung des QM zur Gefährdung für Mitarbeiter oder den "
+"Forschungsprozess, in fünf Stufen von sehr niedrig bis sehr hoch."
+
+#: cirs/templates/cirs/qm/_definitions.html:33
+msgid ""
+"For risk, frequency, hazard and category: not yet classified; for the area, "
+"without a place given."
+msgstr ""
+"Bei Risiko, Häufigkeit, Gefährdung und Kategorie: noch nicht eingestuft; "
+"beim Bereich ohne genannten Ort."
+
 #: cirs/templates/cirs/qm/_incident_rows.html:14
-#: cirs/templates/cirs/qm/reports.html:110
-#: cirs/templates/cirs/qm/worklist.html:114
+#: cirs/templates/cirs/qm/reports.html:117
+#: cirs/templates/cirs/qm/worklist.html:115
 msgid "No."
 msgstr "Nr."
 
 #: cirs/templates/cirs/qm/_incident_rows.html:15
-#: cirs/templates/cirs/qm/worklist.html:115
+#: cirs/templates/cirs/qm/incident/_head.html:12
+#: cirs/templates/cirs/qm/incident/_report.html:14
+#: cirs/templates/cirs/qm/worklist.html:116
 msgid "Reported"
 msgstr "Gemeldet"
 
@@ -1499,9 +1882,9 @@ msgstr "Gemeldet"
 msgid "Overview"
 msgstr "Überblick"
 
-#: cirs/templates/cirs/qm/_nav.html:10 cirs/templates/cirs/qm/worklist.html:12
-#: cirs/templates/cirs/qm/worklist.html:13
-#: cirs/templates/cirs/qm/worklist.html:111
+#: cirs/templates/cirs/qm/_nav.html:10 cirs/templates/cirs/qm/worklist.html:13
+#: cirs/templates/cirs/qm/worklist.html:14
+#: cirs/templates/cirs/qm/worklist.html:112
 msgid "Incidents"
 msgstr "Meldungen"
 
@@ -1510,22 +1893,133 @@ msgstr "Meldungen"
 msgid "Evaluations"
 msgstr "Auswertungen"
 
-#: cirs/templates/cirs/qm/base.html:16
+#: cirs/templates/cirs/qm/base.html:18
+#: cirs/templates/cirs/qm/reports_print.html:38
 #, python-format
 msgid "Department: %(names)s"
 msgid_plural "Departments: %(names)s"
 msgstr[0] "Abteilung: %(names)s"
 msgstr[1] "Abteilungen: %(names)s"
 
-#: cirs/templates/cirs/qm/base.html:19 cirs/views.py:307
+#: cirs/templates/cirs/qm/base.html:21 cirs/views.py:334
 msgid ""
 "Your account has no associated department! Please contact the administrator!"
 msgstr ""
 "Ihr Zugang gehört keiner Abteilung an. Bitte den Administrator kontaktieren!"
 
-#: cirs/templates/cirs/qm/base.html:25
+#: cirs/templates/cirs/qm/base.html:28
 msgid "There is nothing to show here yet."
 msgstr "Hier gibt es noch nichts anzuzeigen."
+
+#: cirs/templates/cirs/qm/incident.html:12
+#: cirs/templates/cirs/qm/incident.html:13
+#, python-format
+msgid "Report %(number)s"
+msgstr "Meldung %(number)s"
+
+#
+#: cirs/templates/cirs/qm/incident/_dialogue.html:9
+#: cirs/templates/cirs/qm/incident/_head.html:21
+msgid "Dialogue with the reporting person"
+msgstr "Dialog mit der meldenden Person"
+
+#
+#: cirs/templates/cirs/qm/incident/_dialogue.html:37
+msgid "Your account is not allowed to reply."
+msgstr "Ihr Konto darf nicht antworten."
+
+#
+#: cirs/templates/cirs/qm/incident/_head.html:16
+msgid "Back to the list"
+msgstr "Zurück zur Liste"
+
+#: cirs/templates/cirs/qm/incident/_head.html:17
+msgid "On this page"
+msgstr "Auf dieser Seite"
+
+#: cirs/templates/cirs/qm/incident/_head.html:20
+#: cirs/templates/cirs/qm/incident/_review.html:8
+msgid "Assessment"
+msgstr "Bewertung"
+
+#: cirs/templates/cirs/qm/incident/_head.html:23
+#: cirs/templates/cirs/qm/incident/_history.html:8
+msgctxt "incident page"
+msgid "History"
+msgstr "Verlauf"
+
+#
+#: cirs/templates/cirs/qm/incident/_history.html:12
+msgid "Status changes of this report"
+msgstr "Statuswechsel dieser Meldung"
+
+#: cirs/templates/cirs/qm/incident/_history.html:30
+msgid "No status change is recorded for this report."
+msgstr "Für diese Meldung ist kein Statuswechsel erfasst."
+
+#
+#: cirs/templates/cirs/qm/incident/_publication.html:11
+msgid ""
+"The reporting person did not agree to the publication of this report. It "
+"cannot be published."
+msgstr ""
+"Die meldende Person hat der Veröffentlichung dieser Meldung nicht "
+"zugestimmt. Sie kann nicht veröffentlicht werden."
+
+#
+#: cirs/templates/cirs/qm/incident/_publication.html:14
+msgid "Not published"
+msgstr "Nicht veröffentlicht"
+
+#
+#: cirs/templates/cirs/qm/incident/_publication.html:15
+msgid "Mandatory languages complete"
+msgstr "Pflichtsprachen vollständig"
+
+#
+#: cirs/templates/cirs/qm/incident/_publication.html:15
+msgid "Mandatory languages incomplete"
+msgstr "Pflichtsprachen unvollständig"
+
+#: cirs/templates/cirs/qm/incident/_publication.html:17
+#, python-format
+msgid ""
+"Mandatory languages: %(languages)s. Title, description and measures and "
+"consequences have to be filled in every one of them before the case can be "
+"published."
+msgstr ""
+"Pflichtsprachen: %(languages)s. Titel, Beschreibung sowie Maßnahmen und "
+"Konsequenzen müssen in jeder davon ausgefüllt sein, bevor der Fall "
+"veröffentlicht werden kann."
+
+#: cirs/templates/cirs/qm/incident/_publication.html:18
+msgid "This is how the staff see it"
+msgstr "So sehen es die Mitarbeitenden"
+
+#
+#: cirs/templates/cirs/qm/incident/_publication.html:23
+#: cirs/templates/cirs/qm/incident/_review.html:14
+msgid "Saving …"
+msgstr "Wird gespeichert …"
+
+#
+#: cirs/templates/cirs/qm/incident/_publication.html:24
+msgid "Save publication"
+msgstr "Veröffentlichung speichern"
+
+#
+#: cirs/templates/cirs/qm/incident/_publication.html:27
+msgid "Your account is not allowed to publish cases."
+msgstr "Ihr Konto darf Fälle nicht veröffentlichen."
+
+#: cirs/templates/cirs/qm/incident/_review.html:15
+msgid "Save assessment"
+msgstr "Bewertung speichern"
+
+#
+#: cirs/templates/cirs/qm/incident/_review.html:18
+msgid "Your account is not allowed to change the assessment."
+msgstr "Ihr Konto darf die Bewertung nicht ändern."
 
 #: cirs/templates/cirs/qm/overview.html:17
 msgid "What is new?"
@@ -1557,13 +2051,13 @@ msgstr "Was wartet auf uns?"
 
 #: cirs/templates/cirs/qm/overview.html:39
 #: cirs/templates/cirs/qm/overview.html:44
-#: cirs/templates/cirs/qm/worklist.html:80
+#: cirs/templates/cirs/qm/worklist.html:81
 #: cirs/templates/cirs/qm/worklist.html:139
 msgid "Without processing"
 msgstr "Ohne Bearbeitung"
 
 #: cirs/templates/cirs/qm/overview.html:40
-#: cirs/templates/cirs/qm/worklist.html:82
+#: cirs/templates/cirs/qm/worklist.html:83
 #, python-format
 msgid "New and older than %(days)s day."
 msgid_plural "New and older than %(days)s days."
@@ -1586,13 +2080,13 @@ msgstr "Nichts offen."
 
 #: cirs/templates/cirs/qm/overview.html:50
 #: cirs/templates/cirs/qm/overview.html:55
-#: cirs/templates/cirs/qm/worklist.html:73
+#: cirs/templates/cirs/qm/worklist.html:74
 #: cirs/templates/cirs/qm/worklist.html:138
 msgid "Waiting for the QM"
 msgstr "Wartet auf QM"
 
 #: cirs/templates/cirs/qm/overview.html:51
-#: cirs/templates/cirs/qm/worklist.html:75
+#: cirs/templates/cirs/qm/worklist.html:76
 msgid "The last reply is from the reporting person."
 msgstr "Die letzte Rückmeldung stammt von der meldenden Person."
 
@@ -1634,188 +2128,197 @@ msgid "Quick selection"
 msgstr "Schnellwahl"
 
 #: cirs/templates/cirs/qm/reports.html:66
+msgid ""
+"This page shows every number, small ones too, and is not printed. Open the "
+"print view (“Print / save as PDF”) and print there."
+msgstr ""
+"Diese Seite zeigt jede Zahl, auch kleine, und wird nicht gedruckt. Öffnen "
+"Sie die Druckansicht („Drucken / als PDF speichern“) und drucken Sie dort."
+
+#: cirs/templates/cirs/qm/reports.html:68
+#: cirs/templates/cirs/qm/reports_print.html:36
 #, python-format
 msgid "Period: %(period)s"
 msgstr "Zeitraum: %(period)s"
 
-#: cirs/templates/cirs/qm/reports.html:66
+#: cirs/templates/cirs/qm/reports.html:68
+#: cirs/templates/cirs/qm/reports_print.html:37
 #, python-format
 msgid "Area: %(area)s"
 msgstr "Bereich: %(area)s"
 
 #: cirs/templates/cirs/qm/reports.html:69
-msgid "Key figures"
-msgstr "Kennzahlen"
+msgid "Export"
+msgstr "Exportieren"
 
-#: cirs/templates/cirs/qm/reports.html:79
-msgid "Monthly trend"
-msgstr "Monatsverlauf"
+#: cirs/templates/cirs/qm/reports.html:70
+#: cirs/templates/cirs/qm/reports_print.html:28
+msgid "Print / save as PDF"
+msgstr "Drucken / als PDF speichern"
 
-#: cirs/templates/cirs/qm/reports.html:83
-#: cirs/templates/cirs/qm/reports.html:100
+#: cirs/templates/cirs/qm/reports.html:71
+msgid "Download as CSV"
+msgstr "Als CSV herunterladen"
+
+#: cirs/templates/cirs/qm/reports.html:73
+#, python-format
+msgid ""
+"The print view and the CSV file do not state small numbers (above 0 and "
+"below %(min)s); on the screen you see every number."
+msgstr ""
+"Druckansicht und CSV-Datei geben kleine Zahlen (über 0 und unter %(min)s) "
+"nicht an; am Bildschirm sehen Sie jede Zahl."
+
+#: cirs/templates/cirs/qm/reports.html:90
+#: cirs/templates/cirs/qm/reports.html:107
+#: cirs/templates/cirs/qm/reports_print.html:57
+#: cirs/templates/cirs/qm/reports_print.html:74
 msgid "No reports in this period."
 msgstr "Keine Meldungen im Zeitraum."
 
-#: cirs/templates/cirs/qm/reports.html:88
+#: cirs/templates/cirs/qm/reports.html:95
+#: cirs/templates/cirs/qm/reports_print.html:62
 msgid "Distributions"
 msgstr "Verteilungen"
 
-#: cirs/templates/cirs/qm/reports.html:105
+#: cirs/templates/cirs/qm/reports.html:112
+#: cirs/templates/cirs/qm/reports_print.html:79
 msgid "Measures"
 msgstr "Maßnahmen"
 
-#: cirs/templates/cirs/qm/reports.html:117
+#: cirs/templates/cirs/qm/reports.html:124
+#: cirs/templates/cirs/qm/reports_print.html:93
 msgid "No published cases for this period."
 msgstr "Keine veröffentlichten Fälle für diesen Zeitraum."
 
-#: cirs/templates/cirs/qm/reports.html:122
+#: cirs/templates/cirs/qm/reports.html:129
+#: cirs/templates/cirs/qm/reports_print.html:98
 msgid "Definitions"
 msgstr "Begriffe"
 
-#: cirs/templates/cirs/qm/reports.html:125
-msgid "Reports whose date of report falls in the period."
-msgstr "Meldungen, deren Meldedatum im Zeitraum liegt."
+#: cirs/templates/cirs/qm/reports_print.html:19
+msgid "Evaluation"
+msgstr "Auswertung"
 
-#: cirs/templates/cirs/qm/reports.html:127
-msgid "Reports that are completed now and were last completed in the period."
-msgstr ""
-"Meldungen, die jetzt abgeschlossen sind und zuletzt im Zeitraum "
-"abgeschlossen wurden."
+#
+#: cirs/templates/cirs/qm/reports_print.html:29
+msgid "Back to the evaluations"
+msgstr "Zurück zur Auswertung"
 
-#: cirs/templates/cirs/qm/reports.html:129
+#: cirs/templates/cirs/qm/reports_print.html:31
 msgid ""
-"Reports that are not completed; known only for a period that ends today or "
-"later."
+"To print the page or save it as a PDF, press Ctrl+P (Cmd+P on a Mac) and "
+"choose “Save as PDF” as the printer."
 msgstr ""
-"Meldungen, die nicht abgeschlossen sind; nur bekannt für einen Zeitraum, der "
-"heute oder später endet."
+"Zum Drucken oder Speichern als PDF drücken Sie Strg+P (am Mac Cmd+P) und "
+"wählen als Drucker „Als PDF speichern“."
 
-#: cirs/templates/cirs/qm/reports.html:131
+#: cirs/templates/cirs/qm/reports_print.html:35
+msgid "Evaluation of reports"
+msgstr "Auswertung der Meldungen"
+
+#: cirs/templates/cirs/qm/reports_print.html:39
+#, python-format
+msgid "Created on %(date)s"
+msgstr "Erstellt am %(date)s"
+
+#: cirs/templates/cirs/qm/reports_print.html:40
+#, python-format
 msgid ""
-"Published cases of the reports received in the period; a case has no date of "
-"its own."
+"Small numbers are not stated: a number above 0 and below %(min)s appears as "
+"“%(marker)s” (see the notes at the end)."
 msgstr ""
-"Veröffentlichte Fälle zu Meldungen aus dem Zeitraum; ein Fall hat kein "
-"eigenes Datum."
+"Kleine Zahlen sind nicht angegeben: Eine Zahl über 0 und unter %(min)s steht "
+"als „%(marker)s“ (siehe Hinweise am Ende)."
 
-#: cirs/templates/cirs/qm/reports.html:133
+#: cirs/templates/cirs/qm/reports_print.html:91
+#, python-format
 msgid ""
-"Days from the report to the first change away from “new”, counted in the "
-"period of that change."
+"Fewer than %(min)s published cases in this period; they are not listed one "
+"by one."
 msgstr ""
-"Tage von der Meldung bis zum ersten Wechsel weg von „Neu“, gezählt im "
-"Zeitraum dieses Wechsels."
+"Weniger als %(min)s veröffentlichte Fälle in diesem Zeitraum; sie werden "
+"hier nicht einzeln aufgeführt."
 
-#: cirs/templates/cirs/qm/reports.html:135
-msgid ""
-"Days from the report to the last completion of a report that is completed "
-"now, counted in the period of that completion."
-msgstr ""
-"Tage von der Meldung bis zum letzten Abschluss einer Meldung, die jetzt "
-"abgeschlossen ist, gezählt im Zeitraum dieses Abschlusses."
-
-#: cirs/templates/cirs/qm/reports_print.html:4
-#: cirs/templates/cirs/qm/reports_print.html:5
-msgid "Evaluation (print view)"
-msgstr "Auswertung (Druckansicht)"
-
-#: cirs/templates/cirs/qm/worklist.html:17
+#: cirs/templates/cirs/qm/worklist.html:18
 msgid "Filter the incidents"
 msgstr "Meldungen filtern"
 
-#: cirs/templates/cirs/qm/worklist.html:20
-#: cirs/templates/cirs/qm/worklist.html:116
-msgctxt "incident list"
-msgid "Status"
-msgstr "Stand"
-
-#: cirs/templates/cirs/qm/worklist.html:25
+#: cirs/templates/cirs/qm/worklist.html:26
 msgid "The state of the work on the incident."
 msgstr "Der Stand der Bearbeitung."
 
-#: cirs/templates/cirs/qm/worklist.html:42
+#: cirs/templates/cirs/qm/worklist.html:43
 msgid "An incident can have several categories."
 msgstr "Eine Meldung kann mehrere Kategorien haben."
 
-#: cirs/templates/cirs/qm/worklist.html:50
+#: cirs/templates/cirs/qm/worklist.html:51
 msgid "The classification by the QM."
 msgstr "Die Einstufung durch das QM."
 
-#: cirs/templates/cirs/qm/worklist.html:53
+#: cirs/templates/cirs/qm/worklist.html:54
 msgid "Reported from"
 msgstr "Gemeldet von"
 
-#: cirs/templates/cirs/qm/worklist.html:55
-#: cirs/templates/cirs/qm/worklist.html:60
-msgid "Format: YYYY-MM-DD, for example 2026-01-31."
-msgstr "Format: JJJJ-MM-TT, zum Beispiel 2026-01-31."
+#: cirs/templates/cirs/qm/worklist.html:56
+#: cirs/templates/cirs/qm/worklist.html:61
+msgid "Day, month and year; the order depends on your browser."
+msgstr "Tag, Monat und Jahr; die Reihenfolge richtet sich nach Ihrem Browser."
 
-#: cirs/templates/cirs/qm/worklist.html:58
+#: cirs/templates/cirs/qm/worklist.html:59
 msgid "Reported until"
 msgstr "Gemeldet bis"
 
-#: cirs/templates/cirs/qm/worklist.html:66
+#: cirs/templates/cirs/qm/worklist.html:67
 msgid "The search looks in the text of the incident."
 msgstr "Gesucht wird im Text der Meldung."
 
-#: cirs/templates/cirs/qm/worklist.html:69
+#: cirs/templates/cirs/qm/worklist.html:70
 msgid "Show only"
 msgstr "Nur anzeigen"
 
-#: cirs/templates/cirs/qm/worklist.html:87
+#: cirs/templates/cirs/qm/worklist.html:88
 msgid "Apply filter"
 msgstr "Filter anwenden"
 
-#: cirs/templates/cirs/qm/worklist.html:97
+#: cirs/templates/cirs/qm/worklist.html:98
 #, python-format
 msgid "%(counter)s incident matches your filters."
 msgid_plural "%(counter)s incidents match your filters."
 msgstr[0] "%(counter)s Meldung entspricht Ihren Filtern."
 msgstr[1] "%(counter)s Meldungen entsprechen Ihren Filtern."
 
-#: cirs/templates/cirs/qm/worklist.html:100
+#: cirs/templates/cirs/qm/worklist.html:101
 #, python-format
 msgid "Search for “%(term)s” in the text of the incidents."
 msgstr "Suche nach „%(term)s“ im Text der Meldungen."
 
-#: cirs/templates/cirs/qm/worklist.html:121
+#: cirs/templates/cirs/qm/worklist.html:112
+#, python-format
+msgid "%(counter)s in total"
+msgstr "insgesamt %(counter)s"
+
+#: cirs/templates/cirs/qm/worklist.html:122
 msgid "Last activity"
 msgstr "Letzte Aktivität"
 
-#: cirs/templates/cirs/qm/worklist.html:122
-msgid "Notes"
-msgstr "Hinweise"
-
-#: cirs/templates/cirs/qm/worklist.html:123
-msgid "Edit"
-msgstr "Bearbeiten"
-
-#: cirs/templates/cirs/qm/worklist.html:141
-msgid "Edit in the admin"
-msgstr "Im Admin bearbeiten"
-
-#: cirs/templates/cirs/qm/worklist.html:141
-#, python-format
-msgid "incident %(number)s"
-msgstr "Meldung %(number)s"
-
-#: cirs/templates/cirs/qm/worklist.html:151
+#: cirs/templates/cirs/qm/worklist.html:150
 msgid "Pages of the incident list"
 msgstr "Seiten der Meldungsliste"
 
-#: cirs/templates/cirs/qm/worklist.html:160
+#: cirs/templates/cirs/qm/worklist.html:159
 msgid "No incident matches your filters."
 msgstr "Keine Meldung entspricht Ihren Filtern."
 
-#: cirs/templates/cirs/qm/worklist.html:161
+#: cirs/templates/cirs/qm/worklist.html:160
 msgid "Please check the filters or clear them."
 msgstr "Bitte prüfen Sie die Filter oder heben Sie sie auf."
 
-#: cirs/templates/cirs/qm/worklist.html:167
+#: cirs/templates/cirs/qm/worklist.html:166
 msgid "There are no incidents yet."
 msgstr "Es gibt noch keine Meldungen."
 
-#: cirs/templates/cirs/qm/worklist.html:168
+#: cirs/templates/cirs/qm/worklist.html:167
 msgid "As soon as a report comes in, it appears here."
 msgstr "Sobald eine Meldung eingeht, erscheint sie hier."
 
@@ -1887,7 +2390,7 @@ msgstr "Veröffentlichte Fälle ansehen"
 msgid "Report another incident"
 msgstr "Weiteres Ereignis melden"
 
-#: cirs/views.py:140
+#: cirs/views.py:142
 msgid ""
 "If you want comment on any incident, please click on the number of comments "
 "in the last column for published incidents or use the \"View on site\" link "
@@ -1898,15 +2401,15 @@ msgstr ""
 "oder benutzen Sie den \"Auf der Website anzeigen\" Link im administrativen "
 "Bereich!"
 
-#: cirs/views.py:168
+#: cirs/views.py:170
 msgid "Access to this report has ended."
 msgstr "Der Zugang zu dieser Meldung ist beendet."
 
-#: cirs/views.py:205
+#: cirs/views.py:221
 msgid "Your reply has been saved and is listed under “Replies”."
 msgstr "Ihre Antwort wurde gespeichert. Sie steht jetzt unter „Rückmeldungen“."
 
-#: cirs/views.py:251
+#: cirs/views.py:278
 msgid ""
 "Your e-mail address has been deleted. You will receive no more e-mails about "
 "this report."
@@ -1914,12 +2417,12 @@ msgstr ""
 "Ihre E-Mail-Adresse wurde gelöscht. Sie erhalten zu dieser Meldung keine E-"
 "Mails mehr."
 
-#: cirs/views.py:254
+#: cirs/views.py:281
 msgid "Please confirm that you want to delete your e-mail address permanently."
 msgstr ""
 "Bitte bestätigen Sie, dass Sie Ihre E-Mail-Adresse endgültig löschen möchten."
 
-#: cirs/views.py:304
+#: cirs/views.py:331
 msgid ""
 "This is a valid account, but you are neither reporter, nor reviewer. Please "
 "contact the administrator!"
@@ -1927,13 +2430,13 @@ msgstr ""
 "Ihr Zugang ist weder Reporter noch Reviewer. Bitte den Administrator "
 "kontaktieren!"
 
-#: cirs/views.py:310
+#: cirs/views.py:337
 msgid "Reporting works without logging in. Please use “Report incident”."
 msgstr ""
 "Melden funktioniert ohne Anmeldung. Bitte nutzen Sie „Ereignis melden“."
 
 #. Translators: {} is the address of the password reset; keep the a tag around the link text.
-#: cirs/views.py:313
+#: cirs/views.py:340
 msgid ""
 "Your username or password is incorrect, you are not logged in. If you have "
 "forgotten your password, you can <a href=\"{}\">reset your password</a>."
@@ -1942,9 +2445,40 @@ msgstr ""
 "Sie Ihr Passwort vergessen haben, können Sie <a href=\"{}\">Ihr Passwort "
 "zurücksetzen</a>."
 
-#: cirs/views.py:353
+#: cirs/views.py:380
 msgid "Your account is not active, please contact the admin."
 msgstr "Ihr Zugang ist nicht mehr aktiv. Bitte den Administrator kontaktieren."
+
+#~ msgid ""
+#~ "Reports that are in the status “Completed” now and reached it, for the "
+#~ "last time, in the period."
+#~ msgstr ""
+#~ "Meldungen, die jetzt im Stand „Erledigt“ sind und diesen Stand zuletzt im "
+#~ "Zeitraum erreicht haben."
+
+#~ msgid "Evaluation (print view)"
+#~ msgstr "Auswertung (Druckansicht)"
+
+#~ msgid "Completions are not recorded yet."
+#~ msgstr "Abschlüsse werden noch nicht erfasst."
+
+#~ msgid "Open at the end of the period"
+#~ msgstr "Offen am Ende des Zeitraums"
+
+#~ msgid "Completions and times are not recorded yet."
+#~ msgstr "Abschlüsse und Zeiten werden noch nicht erfasst."
+
+#~ msgid "Edit"
+#~ msgstr "Bearbeiten"
+
+#~ msgid "Edit in the admin"
+#~ msgstr "Im Admin bearbeiten"
+
+#~ msgid "Add new incident"
+#~ msgstr "Neues Ereignis hinzufügen"
+
+#~ msgid "Format: YYYY-MM-DD, for example 2026-01-31."
+#~ msgstr "Format: JJJJ-MM-TT, zum Beispiel 2026-01-31."
 
 #~ msgid ""
 #~ "Optional. With an address your report is no longer completely anonymous: "

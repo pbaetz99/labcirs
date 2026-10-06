@@ -20,7 +20,8 @@
 
 The numbers are the real ones, not suppressed: the QM sees the incidents one by one anyway. Every
 number comes from the incidents of the departments of the reviewer (scoped_incidents), and every
-address into the work list from worklist_url.
+address into the work list from worklist_url. An incident that is opened from a list remembers it
+(incident_query), so that the way back leads to that list.
 """
 
 from django.conf import settings
@@ -32,7 +33,7 @@ from cirs.models import STATUS_CHOICES
 
 from . import chart_data, metrics
 from .access import QMPage, scoped_incidents
-from .params import worklist_url
+from .params import incident_query, worklist_url
 
 LIST_LENGTH = 10  # rows of each list of what is waiting
 MONTHS = 12       # months of the two charts; their texts say "12 months"
@@ -72,8 +73,10 @@ def _waiting(incidents, today):
     return {'overdue_days': days,
             'overdue_rows': list(metrics.overdue(rows, today, days)[:LIST_LENGTH]),
             'overdue_url': worklist_url(ohne_bearbeitung=1),
+            'overdue_query': incident_query(ohne_bearbeitung=1),
             'awaiting_rows': list(metrics.awaiting_qm(rows)[:LIST_LENGTH]),
-            'awaiting_url': worklist_url(wartet=1)}
+            'awaiting_url': worklist_url(wartet=1),
+            'awaiting_query': incident_query(wartet=1)}
 
 
 def _development(incidents, today):
@@ -103,7 +106,7 @@ def _development(incidents, today):
 def _recorded_note(started):
     """What the page says about the months without completions: since when the log has them."""
     if started is None:
-        return gettext('Completions are not recorded yet.')
+        return gettext('The log is not running yet.')
     return gettext('Completions recorded since %(date)s.') % {
         'date': date_format(started, 'SHORT_DATE_FORMAT')}
 

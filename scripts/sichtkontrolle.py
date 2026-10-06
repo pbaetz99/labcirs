@@ -36,12 +36,19 @@ The pages of the QM (overview, incident list, evaluations, print view) are opene
 the reviewer of the demo data (qm-demo, its password from DEMO_QM_PASSWORD). The CSV file is a
 download and has no page to look at.
 
+The print view is also made into a PDF as the browser prints it (print media, the page size of the
+style sheet): the file must be A4 and have at least one page and at most MAX_PDF_PAGES, and it is
+saved next to the screenshots. The evaluations page is looked at in print media too: its results
+must be left out and the note that sends to the print view must be there, because that page shows
+every number, small ones too.
+
 At the end it prints a table and exits with status 1 if anything was found. Pages that create data
 (the report form, the success page) send invented text only.
 """
 
 import argparse
 import os
+import re
 import sys
 from datetime import date, timedelta
 from urllib.parse import urlsplit
@@ -51,6 +58,11 @@ from playwright.sync_api import sync_playwright
 WIDTHS = (320, 768, 1440)
 HEIGHT = 900
 MIN_SVG_FONT_PX = 11
+A4_POINTS = (595.3, 841.9)  # the size of the page of the print view in PDF points (210 x 297 mm)
+A4_TOLERANCE = 2
+MAX_PDF_PAGES = 8
+PRINT_VIEW = 'qm-reports-print'
+EVALUATIONS = 'qm-reports'
 
 # Collects the violation events of the Content Security Policy as the page sees them. The init
 # script is injected by the browser, so the policy of the site does not block it.
@@ -89,6 +101,44 @@ class Run:
 
     def url(self, path):
         return self.base + path
+
+
+def pdf_facts(data):
+    """(number of pages, (width, height) of the first page in points) of a PDF that the browser
+    made. The pages are the objects of the type Page (not Pages); the size is the media box."""
+    pages = len(re.findall(rb'/Type\s*/Page(?![s\w])', data))
+    box = re.search(rb'/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)\s*\]', data)
+    size = (float(box.group(1)), float(box.group(2))) if box else None
+    return pages, size
+
+
+def is_a4(size):
+    return size is not None and all(abs(have - want) <= A4_TOLERANCE
+                                    for have, want in zip(size, A4_POINTS))
+
+
+def print_view_pdf(page, out, number, width):
+    """The print view as the browser prints it: print media and the page size of the style sheet
+    (no format is given, so that a style sheet without `@page` gives Letter and fails the check)."""
+    page.emulate_media(media='print')
+    data = page.pdf(prefer_css_page_size=True)
+    path = os.path.join(out, '%02d-%s-%d.pdf' % (number, PRINT_VIEW, width))
+    with open(path, 'wb') as handle:
+        handle.write(data)
+    pages, size = pdf_facts(data)
+    return {'path': path, 'pages': pages, 'size': size,
+            'ok': is_a4(size) and 1 <= pages <= MAX_PDF_PAGES}
+
+
+def evaluations_on_paper(page):
+    """Whether the evaluations page leaves its results out on paper and shows the note instead."""
+    page.emulate_media(media='print')
+    return page.evaluate("""() => {
+        const results = document.querySelector('.ui-ergebnis');
+        const note = document.querySelector('.ui-druckhinweis');
+        return !!results && getComputedStyle(results).display === 'none'
+            && !!note && getComputedStyle(note).display !== 'none';
+    }""")
 
 
 def fill_report(page, text):
@@ -236,6 +286,11 @@ def check_page(browser, run, name, path, step, expected, width, number):
     measured = page.evaluate(MEASURE, MIN_SVG_FONT_PX)
     shot = os.path.join(run.out, '%02d-%s-%d.png' % (number, name, width))
     page.screenshot(path=shot, full_page=True)
+    pdf, paper = None, None
+    if width == WIDTHS[-1] and name == PRINT_VIEW:
+        pdf = print_view_pdf(page, run.out, number, width)
+    if width == WIDTHS[-1] and name == EVALUATIONS:
+        paper = evaluations_on_paper(page)
     context.close()
     status = statuses[-1] if statuses else None
     return {
@@ -243,18 +298,31 @@ def check_page(browser, run, name, path, step, expected, width, number):
         'overflow': measured['scroll'] > measured['client'],
         'scroll': measured['scroll'], 'client': measured['client'],
         'csp': console + measured['csp'], 'foreign': sorted(set(foreign)),
-        'small_text': measured['smallText'],
+        'small_text': measured['smallText'], 'pdf': pdf, 'paper': paper,
         'status': status, 'status_ok': status == expected,
     }
 
 
+def paper_text(result):
+    """What the table says of the paper: the pages of the PDF of the print view, or whether the
+    evaluations page leaves its results out on paper; a dash for the other pages."""
+    if result['pdf']:
+        pdf = result['pdf']
+        return '%d p. %s' % (pdf['pages'], 'A4' if is_a4(pdf['size']) else 'NOT A4 %s' % (pdf['size'],))
+    if result['paper'] is not None:
+        return 'results left out' if result['paper'] else 'RESULTS PRINTED'
+    return '-'
+
+
 def print_table(results):
-    header = ('page', 'width', 'status', 'h-scroll', 'CSP', 'foreign origins', 'small SVG text')
+    header = ('page', 'width', 'status', 'h-scroll', 'CSP', 'foreign origins', 'small SVG text',
+              'paper')
     rows = [header]
     for r in results:
         rows.append((r['page'], str(r['width']), str(r['status']),
                      'YES %d>%d' % (r['scroll'], r['client']) if r['overflow'] else 'no',
-                     str(len(r['csp'])), str(len(r['foreign'])), str(len(r['small_text']))))
+                     str(len(r['csp'])), str(len(r['foreign'])), str(len(r['small_text'])),
+                     paper_text(r)))
     widths = [max(len(row[i]) for row in rows) for i in range(len(header))]
     for index, row in enumerate(rows):
         print('  '.join(cell.ljust(widths[i]) for i, cell in enumerate(row)))
@@ -321,6 +389,11 @@ def main():
             findings.append('%s: request to another origin: %s' % (where, url))
         for text in r['small_text']:
             findings.append('%s: SVG text under %d px: %s' % (where, MIN_SVG_FONT_PX, text))
+        if r['pdf'] and not r['pdf']['ok']:
+            findings.append('%s: the PDF is %s pages of %s points, not 1 to %d pages of A4 %s'
+                            % (where, r['pdf']['pages'], r['pdf']['size'], MAX_PDF_PAGES, A4_POINTS))
+        if r['paper'] is False:
+            findings.append('%s: on paper the page prints its results and has no note' % where)
         if not r['status_ok']:
             findings.append('%s: unexpected status %s' % (where, r['status']))
     print()
@@ -331,7 +404,8 @@ def main():
             print('  ' + finding)
         return 1
     print('NO FINDINGS: no horizontal scrolling, no CSP messages, no requests to other origins, '
-          'no SVG text under %d px' % MIN_SVG_FONT_PX)
+          'no SVG text under %d px, the print view is A4 and the evaluations page prints no '
+          'numbers' % MIN_SVG_FONT_PX)
     return 0
 
 

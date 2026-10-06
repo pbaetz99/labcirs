@@ -26,6 +26,20 @@ from model_bakery import baker
 
 from cirs.models import CriticalIncident, TranslationStatusMixin
 
+from .test_pages_report import css_text
+
+
+class TopBarTest(TestCase):
+
+    def test_the_bar_sticks_only_where_one_row_fits_the_navigation_of_the_qm(self):
+        # Wrapped to two rows a sticky bar would cover the element that has the focus. The
+        # navigation of the QM is about 260 px longer than the one of a visitor.
+        self.assertIn('@media (max-width: 80rem) { .ui-topbar { position: static; } }', css_text())
+
+    def test_the_text_of_a_chart_does_not_grow_with_the_font_size_of_the_browser(self):
+        rule = re.search(r'\.ui-diagramm__beschriftung, [^{]*\{([^}]*)\}', css_text()).group(1)
+        self.assertRegex(rule, r'font-size: \d+px')
+
 
 class LayoutTest(TestCase):
 

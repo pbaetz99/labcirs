@@ -4,7 +4,7 @@
   department (only for a QM of several departments: `departments` of the page) and the place.
   The incidents come with their department and organisational unit (select_related), so that the
   rows ask the database for nothing more. caption names the list for those who do not see the
-  heading above it.
+  heading above it. list_query is what the address of an incident takes to remember this list.
 {% endcomment %}
 <div class="ui-tablewrap">
   <table class="ui-table ui-kachel__liste">
@@ -20,7 +20,7 @@
     <tbody>
       {% for incident in rows %}
       <tr>
-        <td class="ui-strong"><a href="{{ incident.get_absolute_url }}">{{ incident.pk }}</a></td>
+        <td class="ui-strong"><a href="{{ incident.get_absolute_url }}{{ list_query }}">{{ incident.pk }}</a></td>
         <td class="ui-nowrap"><time datetime="{{ incident.reported|date:'Y-m-d' }}">{{ incident.reported|date:"SHORT_DATE_FORMAT" }}</time></td>
         {% if departments|length > 1 %}<td>{{ incident.department.name }}</td>{% endif %}
         <td>{% if incident.org_unit %}{{ incident.org_unit }}{% else %}{% translate "Not specified" %}{% endif %}</td>

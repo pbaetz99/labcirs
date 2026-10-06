@@ -40,6 +40,8 @@ from .context_processors import cirs_data
 from .forms import CommentForm, IncidentCreateForm, IncidentSearchForm
 from .models import (Comment, CriticalIncident, Department, LabCIRSConfig,
                      PublishableIncident, ReporterContact, group_code)
+from .qm.access import reviewer_of
+from .qm.incident_work import QMIncidentMixin
 
 
 def get_active_department(label):
@@ -173,30 +175,44 @@ class IncidentAccessMixin(RedirectMixin):
     """
     Views of one incident (URL kwargs dept and pk): only the reviewers of its department and the
     reporter who entered the code get in. The incident is self.incident.
+
+    Whoever may not see the incident is sent away, and where to is the same whether the number
+    exists or not: reviewers to the start page, everybody else to the code page of the department
+    in the address, superusers to the admin. Somebody who counts through the numbers learns
+    nothing from it. A number that exists under another label is a number that is not there. Only
+    a label that is no department is a 404: labels are public, and a department that takes no new
+    reports is still one, because the QM goes on working on its incidents.
     """
 
     def dispatch(self, request, *args, **kwargs):
         # Access is checked here, before GET and POST alike.
-        self.incident = get_object_or_404(CriticalIncident, pk=kwargs['pk'],
-                                          department__label=kwargs['dept'])
+        label = kwargs['dept']
+        self.incident = (CriticalIncident.objects.select_related('department__reporter')
+                         .filter(pk=kwargs['pk'], department__label=label).first())
+        if self.incident is None:
+            get_object_or_404(Department, label=label)
         user = request.user
-        if hasattr(user, 'reviewer'):
-            if not user.reviewer.departments.filter(pk=self.incident.department_id).exists():
+        reviewer = reviewer_of(user)  # none for a superuser: the administrator is no QM
+        if reviewer is not None:
+            if (self.incident is None
+                    or not reviewer.departments.filter(pk=self.incident.department_id).exists()):
                 return redirect('labcirs_home')
         # Superusers pass on to RedirectMixin, which sends them to the admin.
         elif (not user.is_superuser
-              and request.session.get('accessible_incident') != self.incident.pk):
-            return redirect('incident_search', dept=self.incident.department.label)
+              and (self.incident is None
+                   or request.session.get('accessible_incident') != self.incident.pk)):
+            return redirect('incident_search', dept=label)
         return super(IncidentAccessMixin, self).dispatch(request, *args, **kwargs)
 
 
 # TODO: Rename to Comment view?
 @method_decorator(never_cache, name='dispatch')
-class IncidentDetailView(ContextAndRedirectMixin, IncidentAccessMixin, SuccessMessageMixin,
-                         CreateView):
+class IncidentDetailView(QMIncidentMixin, ContextAndRedirectMixin, IncidentAccessMixin,
+                         SuccessMessageMixin, CreateView):
     """
     Delivers detail view of an incident for commenting. Simple form for comments
-    is included and followed by a list of comments for this incident
+    is included and followed by a list of comments for this incident. The reviewers of its
+    department get the page of the QM instead (cirs.qm.incident_work), at the same address.
     """
     model = Comment
     form_class = CommentForm
@@ -214,6 +230,14 @@ class IncidentDetailView(ContextAndRedirectMixin, IncidentAccessMixin, SuccessMe
             form.fields['text'].help_text = ''
         return form
 
+    def post(self, request, *args, **kwargs):
+        if self.reviewer is not None:
+            self.object = None
+            return self.post_as_qm(request)
+        if 'aktion' in request.POST:
+            raise PermissionDenied  # whoever holds a code can reply and nothing else
+        return super().post(request, *args, **kwargs)
+
     def form_valid(self, form):
         user = self.request.user
         form.instance.author = (user if hasattr(user, 'reviewer')
@@ -230,6 +254,9 @@ class IncidentDetailView(ContextAndRedirectMixin, IncidentAccessMixin, SuccessMe
         context['reporter_email_active'] = (
             not hasattr(self.request.user, 'reviewer')
             and ReporterContact.objects.filter(incident=self.incident).exists())
+        if self.reviewer is not None:
+            context.update(self.work_context(kwargs.get('review_form'),
+                                             kwargs.get('publication_form')))
         return context
 
 

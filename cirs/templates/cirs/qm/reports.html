@@ -62,14 +62,21 @@
 </form>
 
 {% if report %}
-<div class="ui-stack ui-mt-4">
+{# Paper: this page shows every number, small ones too. What is printed from it is the print view. #}
+<p class="ui-druckhinweis">{% translate "This page shows every number, small ones too, and is not printed. Open the print view (“Print / save as PDF”) and print there." %}</p>
+<div class="ui-stack ui-mt-4 ui-ergebnis">
   <p class="ui-secondary ui-mb-0">{% blocktranslate with period=period_text %}Period: {{ period }}{% endblocktranslate %}{% if area_name %} &middot; {% blocktranslate with area=area_name %}Area: {{ area }}{% endblocktranslate %}{% endif %}</p>
+  <div class="ui-row" role="group" aria-label="{% translate 'Export' %}">
+    <a class="ui-btn ui-btn--secondary ui-btn--sm" href="{{ print_url }}">{% translate "Print / save as PDF" %}</a>
+    <a class="ui-btn ui-btn--secondary ui-btn--sm" href="{{ csv_url }}">{% translate "Download as CSV" %}</a>
+  </div>
+  <p class="ui-secondary ui-mb-0">{% blocktranslate with min=min_cell %}The print view and the CSV file do not state small numbers (above 0 and below {{ min }}); on the screen you see every number.{% endblocktranslate %}</p>
 
   <section class="ui-card" aria-labelledby="auswertung-kennzahlen">
     <h2 class="ui-card__title" id="auswertung-kennzahlen">{% translate "Key figures" %}</h2>
     <dl class="ui-kennzahlen ui-prose">
       {% for figure in figures %}
-      <div><dt>{{ figure.label }}</dt><dd{% if figure.text %} class="ui-kennzahlen__text"{% endif %}>{{ figure.value }}</dd></div>
+      <div><dt>{{ figure.label }}</dt><dd{% if figure.text %} class="ui-kennzahlen__text"{% endif %}>{{ figure.value }}{% if figure.suffix %} <span class="ui-kennzahlen__zusatz">{{ figure.suffix }}</span>{% endif %}</dd></div>
       {% endfor %}
     </dl>
     {% if recorded_note %}<p class="ui-secondary ui-mt-3 ui-mb-0">{{ recorded_note }}</p>{% endif %}
@@ -120,20 +127,7 @@
 
   <section class="ui-card" aria-labelledby="auswertung-begriffe">
     <h2 class="ui-card__title" id="auswertung-begriffe">{% translate "Definitions" %}</h2>
-    <dl class="ui-begriffe ui-prose">
-      <dt>{% translate "Incoming" %}</dt>
-      <dd>{% translate "Reports whose date of report falls in the period." %}</dd>
-      <dt>{% translate "Completed" %}</dt>
-      <dd>{% translate "Reports that are completed now and were last completed in the period." %}</dd>
-      <dt>{% translate "Open at the end of the period" %}</dt>
-      <dd>{% translate "Reports that are not completed; known only for a period that ends today or later." %}</dd>
-      <dt>{% translate "Published" %}</dt>
-      <dd>{% translate "Published cases of the reports received in the period; a case has no date of its own." %}</dd>
-      <dt>{% translate "Reaction time" %}</dt>
-      <dd>{% translate "Days from the report to the first change away from “new”, counted in the period of that change." %}</dd>
-      <dt>{% translate "Processing time" %}</dt>
-      <dd>{% translate "Days from the report to the last completion of a report that is completed now, counted in the period of that completion." %}</dd>
-    </dl>
+    {% include "cirs/qm/_definitions.html" %}
   </section>
 </div>
 {% endif %}

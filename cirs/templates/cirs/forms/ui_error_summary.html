@@ -1,0 +1,18 @@
+{% load i18n %}
+{% comment %}
+  The summary of the errors of a form, on top of its fields: role alert, focus goes there on load
+  through autofocus, every item links to its field. Used by ui_form.html and the grouped forms of the QM.
+{% endcomment %}
+{% if form.errors %}
+<div class="ui-alert ui-alert--danger" role="alert" tabindex="-1" autofocus aria-labelledby="ui-fehler-titel">
+  <div class="ui-alert__body">
+    <strong class="ui-alert__titel" id="ui-fehler-titel">{% translate "Please check your entries." %}</strong>
+    <ul>
+      {% for error in errors %}<li>{{ error }}</li>{% endfor %}
+      {% for field, field_errors in fields %}{% for error in field_errors %}
+      <li><a href="#{{ field.auto_id }}">{{ field.label }}</a>: {{ error }}</li>
+      {% endfor %}{% endfor %}
+    </ul>
+  </div>
+</div>
+{% endif %}

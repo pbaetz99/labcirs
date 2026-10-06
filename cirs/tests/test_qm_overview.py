@@ -33,7 +33,7 @@ from model_bakery import baker
 
 from cirs.models import OrgUnit
 from cirs.qm.metrics import OPEN_STATUSES
-from cirs.qm.params import worklist_url
+from cirs.qm.params import incident_query, worklist_url
 
 from .canary import CanaryMixin
 from .helpers import csp_violations, make_incident
@@ -145,9 +145,12 @@ class TilesTest(OverviewTestCase):
 
     def test_each_row_links_to_its_incident_and_each_list_to_the_work_list(self):
         waiting = tile(self.html(), 'kachel-wartet')
+        # an incident remembers the list it was opened from, so the way back keeps the filter
         self.assertEqual(hrefs(waiting),
-                         [self.late.get_absolute_url(), worklist_url(ohne_bearbeitung=1),
-                          self.waiting.get_absolute_url(), worklist_url(wartet=1)])
+                         [self.late.get_absolute_url() + incident_query(ohne_bearbeitung=1),
+                          worklist_url(ohne_bearbeitung=1),
+                          self.waiting.get_absolute_url() + incident_query(wartet=1),
+                          worklist_url(wartet=1)])
         # a screen reader tells the two links apart by the list they lead to
         for name in ('Ohne Bearbeitung', 'Wartet auf QM'):
             self.assertIn('Alle anzeigen<span class="ui-visually-hidden">: %s</span></a>' % name,
@@ -301,7 +304,7 @@ class RecordedMonthsTest(OverviewBase):
         [chart] = tables(tile(html, 'kachel-verlauf'))
         self.assertEqual([row[1:] for row in chart[1:]],
                          [['1' if month == 'Sep' else '0', NOT_RECORDED] for month in MONTHS])
-        self.assertIn('Abschlüsse werden noch nicht erfasst.', words(html))
+        self.assertIn('Das Protokoll läuft noch nicht.', words(html))
         self.assertNotIn('Abschlüsse seit', html)
 
 

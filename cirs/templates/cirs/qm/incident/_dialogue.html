@@ -1,0 +1,40 @@
+{% load i18n %}
+{% comment %}
+  The dialogue with the reporting person: the replies, oldest first, and the form of the reply. Senders
+  are roles, never user names: the replies of the reporting person are written by the technical
+  reporter account of the department. The replies are the only cards that are an article, so that the
+  last article is the last reply. The comments of the incident are read once, whatever their number.
+{% endcomment %}
+<section aria-labelledby="rueckmeldungen-titel">
+  <h2 class="ui-mt-0" id="rueckmeldungen-titel">{% translate "Dialogue with the reporting person" %}</h2>
+  {% if comments %}
+    <p class="ui-secondary">{% blocktranslate count counter=comments|length %}{{ counter }} reply{% plural %}{{ counter }} replies, oldest first{% endblocktranslate %}.</p>
+    <div class="ui-stack">
+      {% with reporter_user_id=incident.department.reporter.user_id %}
+      {% for comment in comments %}
+        <article class="ui-card" aria-labelledby="k{{ comment.pk }}-titel">
+          <h3 class="ui-mt-0" id="k{{ comment.pk }}-titel">{% if comment.author_id == reporter_user_id %}{% translate "Reporting person" %}{% else %}{% translate "Quality management" %}{% endif %} <span class="ui-secondary">&middot; <time datetime="{{ comment.created|date:'Y-m-d' }}">{{ comment.created|date:"SHORT_DATE_FORMAT" }}</time></span></h3>
+          <p class="ui-prose ui-mt-2 ui-mb-0">{{ comment.text|linebreaksbr }}</p>
+        </article>
+      {% endfor %}
+      {% endwith %}
+    </div>
+  {% else %}
+    <p class="ui-secondary">{% translate "There are no replies yet." %}</p>
+  {% endif %}
+  <div class="ui-card ui-mt-4">
+    <h3 class="ui-card__title ui-mt-0" id="antwort-titel">{% translate "Reply" %}</h3>
+    {% if can_reply %}
+    <p class="ui-secondary">{% translate "Your reply is also sent by e-mail to the reporter if they have set up notifications. Do not write names or patient data." %}</p>
+    <form method="post" data-einmal-absenden>
+      {% csrf_token %}
+      <input type="hidden" name="aktion" value="antwort">
+      {{ form }}
+      {% translate "Sending …" as busy_text %}
+      <button class="ui-btn ui-btn--secondary" type="submit" data-busy-text="{{ busy_text }}">{% translate "Send reply" %}</button>
+    </form>
+    {% else %}
+    <p class="ui-muted ui-mb-0">{% translate "Your account is not allowed to reply." %}</p>
+    {% endif %}
+  </div>
+</section>

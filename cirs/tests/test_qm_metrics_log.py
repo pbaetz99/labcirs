@@ -27,8 +27,8 @@ from django.db.models import QuerySet
 from django.test import override_settings
 
 from cirs.models import CriticalIncident
-from cirs.qm.metrics import (MonthRow, awaiting_qm, completed, monthly, overdue,
-                             protocol_start)
+from cirs.qm.metrics import (MonthRow, awaiting_qm, completed, has_status_change, monthly,
+                             overdue, protocol_start, unprocessed)
 from cirs.tests.helpers import create_user
 from cirs.tests.test_qm_metrics import FEB, JAN, WHOLE, DataTestCase
 
@@ -89,6 +89,100 @@ class ProtocolStartTest(LogTestCase):
             self.incident(date(2026, 2, 1), history=[('new', utc(2026, 2, day, 9))])
         with self.assertNumQueries(1):
             protocol_start(self.scope)
+
+
+class UnprocessedTest(LogTestCase):
+
+    def test_only_the_incidents_of_the_period_that_are_still_new(self):
+        self.incident(date(2026, 2, 3), history=[('new', utc(2026, 2, 3, 9))])
+        self.incident(date(2026, 2, 10), history=[('new', utc(2026, 2, 10, 9))])
+        self.incident(date(2026, 2, 11), history=[('new', utc(2026, 2, 11, 9)),
+                                                  ('in process', utc(2026, 2, 12, 9))])
+        self.incident(date(2026, 2, 12), history=[('new', utc(2026, 2, 12, 9)),
+                                                  ('completed', utc(2026, 2, 13, 9))])
+        self.assertEqual(unprocessed(self.scope, *FEB), 2)
+
+    def test_the_day_of_the_report_decides_not_the_day_of_the_log(self):
+        self.incident(date(2026, 1, 31), history=[('new', utc(2026, 2, 1, 9))])
+        self.incident(date(2026, 2, 28), history=[('new', utc(2026, 3, 1, 9))])
+        self.assertEqual(unprocessed(self.scope, *FEB), 1)
+        self.assertEqual(unprocessed(self.scope, *JAN), 1)
+
+    def test_an_incident_that_was_reopened_is_new_again(self):
+        self.incident(date(2026, 2, 3), history=[('new', utc(2026, 2, 3, 9)),
+                                                 ('completed', utc(2026, 2, 4, 9)),
+                                                 ('new', utc(2026, 2, 5, 9))])
+        self.assertEqual(unprocessed(self.scope, *FEB), 1)
+
+    def test_an_incident_from_before_the_log_counts_by_its_state(self):
+        self.incident(date(2026, 2, 3), legacy=True, status='new')
+        self.incident(date(2026, 2, 4), legacy=True, status='in process')
+        self.assertEqual(unprocessed(self.scope, *FEB), 1)
+
+    def test_without_incidents_the_number_is_0(self):
+        self.assertEqual(unprocessed(self.scope, *WHOLE), 0)
+
+    def test_incidents_of_another_department_never_count(self):
+        self.foreign(date(2026, 2, 3), history=[('new', utc(2026, 2, 3, 9))])
+        self.assertEqual(unprocessed(self.scope, *FEB), 0)
+
+    def test_one_query_for_one_and_for_many_incidents(self):
+        self.incident(date(2026, 2, 3), history=[('new', utc(2026, 2, 3, 9))])
+        with self.assertNumQueries(1):
+            unprocessed(self.scope, *FEB)
+        for day in range(4, 28):
+            self.incident(date(2026, 2, day), history=[('new', utc(2026, 2, day, 9))])
+        with self.assertNumQueries(1):
+            unprocessed(self.scope, *FEB)
+
+
+class StatusChangeTest(LogTestCase):
+
+    def test_the_entry_of_the_creation_is_no_change(self):
+        self.incident(date(2026, 2, 3), history=[('new', utc(2026, 2, 3, 9))])
+        self.assertFalse(has_status_change(self.scope, *FEB))
+
+    def test_a_later_entry_is_a_change_on_the_day_it_was_made(self):
+        self.incident(date(2026, 2, 3), history=[('new', utc(2026, 2, 3, 9)),
+                                                 ('in process', utc(2026, 3, 2, 9))])
+        self.assertFalse(has_status_change(self.scope, *FEB))
+        self.assertTrue(has_status_change(self.scope, date(2026, 3, 1), date(2026, 3, 31)))
+
+    def test_both_days_of_the_period_count(self):
+        self.incident(date(2026, 1, 31), history=[('new', utc(2026, 1, 31, 9)),
+                                                  ('in process', utc(2026, 2, 28, 23))])
+        self.assertTrue(has_status_change(self.scope, *FEB))
+        self.assertFalse(has_status_change(self.scope, *JAN))
+
+    def test_the_first_entry_of_an_incident_from_before_the_log_is_a_change(self):
+        # it was created before the log, so the first thing the log saw is a change
+        self.incident(date(2026, 1, 3), legacy=True,
+                      history=[('new', utc(2026, 1, 3, 9)), ('in process', utc(2026, 2, 3, 9))])
+        self.assertTrue(has_status_change(self.scope, *FEB))
+
+    def test_a_reopening_is_a_change_though_it_says_new(self):
+        self.incident(date(2026, 1, 3), history=[('new', utc(2026, 1, 3, 9)),
+                                                 ('completed', utc(2026, 1, 4, 9)),
+                                                 ('new', utc(2026, 2, 5, 9))])
+        self.assertTrue(has_status_change(self.scope, *FEB))
+
+    def test_incidents_of_another_department_never_count(self):
+        self.foreign(date(2026, 2, 3), history=[('new', utc(2026, 2, 3, 9)),
+                                                ('in process', utc(2026, 2, 4, 9))])
+        self.assertFalse(has_status_change(self.scope, *FEB))
+
+    def test_a_period_without_a_log_has_no_change(self):
+        self.assertFalse(has_status_change(self.scope, *WHOLE))
+
+    def test_one_query_for_one_and_for_many_incidents(self):
+        self.incident(date(2026, 2, 3), history=[('new', utc(2026, 2, 3, 9))])
+        with self.assertNumQueries(1):
+            has_status_change(self.scope, *FEB)
+        for day in range(4, 28):
+            self.incident(date(2026, 2, day), history=[('new', utc(2026, 2, day, 9)),
+                                                       ('in process', utc(2026, 2, day, 10))])
+        with self.assertNumQueries(1):
+            has_status_change(self.scope, *FEB)
 
 
 class CompletedTest(LogTestCase):

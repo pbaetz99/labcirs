@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LabCIRS\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-01 14:09+0000\n"
+"POT-Creation-Date: 2026-10-06 13:01+0000\n"
 "PO-Revision-Date: 2019-05-22 15:00+0200\n"
 "Last-Translator: Sebastian Major <sebastian.major@charite.de>\n"
 "Language-Team: \n"
@@ -63,6 +63,210 @@ msgstr ""
 "Der Fehler wurde nicht durch Sie verursacht. Bitte versuchen Sie es später "
 "noch einmal."
 
+#: templates/admin/index.html:14
+msgid "To the QM area"
+msgstr "Zum QM-Bereich"
+
+#: templates/admin/system_status.html:13
+msgid "System status"
+msgstr "Systemzustand"
+
+#: templates/admin/system_status.html:14 templates/base.html:112
+#, python-format
+msgid "Version %(version)s"
+msgstr "Version %(version)s"
+
+#: templates/admin/system_status.html:16
+msgid "Last backup"
+msgstr "Letzte Sicherung"
+
+#: templates/admin/system_status.html:19
+msgid "Not set up."
+msgstr "Nicht eingerichtet."
+
+#: templates/admin/system_status.html:20
+msgid ""
+"The backup status appears as soon as the setting LABCIRS_BACKUP_STATUS_DIR "
+"names a folder with the status file of the backup script."
+msgstr "Der Sicherungsstatus erscheint, sobald die Einstellung LABCIRS_BACKUP_STATUS_DIR einen Ordner mit der Statusdatei des Sicherungsskripts nennt."
+
+#: templates/admin/system_status.html:22 templates/admin/system_status.html:24
+#: templates/admin/system_status.html:26 templates/admin/system_status.html:31
+msgctxt "system status"
+msgid "Note:"
+msgstr "Hinweis:"
+
+#: templates/admin/system_status.html:22
+msgid "The folder for the backup status does not exist."
+msgstr "Der Ordner für den Sicherungsstatus ist nicht vorhanden."
+
+#: templates/admin/system_status.html:24
+msgid "No backup has been reported yet."
+msgstr "Es wurde noch keine Sicherung gemeldet."
+
+#: templates/admin/system_status.html:26
+msgid "The status file of the last backup could not be read."
+msgstr "Die Statusdatei der letzten Sicherung konnte nicht gelesen werden."
+
+#: templates/admin/system_status.html:29 templates/admin/system_status.html:47
+msgctxt "system status"
+msgid "Warning:"
+msgstr "Warnung:"
+
+#: templates/admin/system_status.html:29
+#, python-format
+msgid "The last backup is older than %(hours)s hours."
+msgstr "Die letzte Sicherung ist älter als %(hours)s Stunden."
+
+#: templates/admin/system_status.html:31
+msgid ""
+"The time of the last backup lies in the future. Please check the clock of "
+"the server."
+msgstr "Der Zeitpunkt der letzten Sicherung liegt in der Zukunft. Bitte prüfen Sie die Uhr des Servers."
+
+#: templates/admin/system_status.html:33
+#, python-format
+msgid "Age: %(age)s"
+msgstr "Alter: %(age)s"
+
+#: templates/admin/system_status.html:35
+#, python-format
+msgid "File: %(name)s (%(size)s)"
+msgstr "Datei: %(name)s (%(size)s)"
+
+#: templates/admin/system_status.html:37
+#, python-format
+msgid "File: %(name)s"
+msgstr "Datei: %(name)s"
+
+#: templates/admin/system_status.html:39
+#, python-format
+msgid "Size: %(size)s"
+msgstr "Größe: %(size)s"
+
+#: templates/admin/system_status.html:44
+msgid "Departments without QM"
+msgstr "Abteilungen ohne QM"
+
+#: templates/admin/system_status.html:47
+msgid "These departments have no QM. Nobody can handle their reports."
+msgstr "Diese Abteilungen haben kein QM. Niemand kann ihre Meldungen bearbeiten."
+
+#: templates/admin/system_status.html:50
+msgid "(inactive)"
+msgstr "(inaktiv)"
+
+#: templates/admin/system_status.html:54
+msgid "All departments have a QM."
+msgstr "Alle Abteilungen haben ein QM."
+
+#: templates/admin/system_status.html:56
+msgid "There are no departments yet."
+msgstr "Es gibt noch keine Abteilungen."
+
+#: templates/admin/system_status.html:60
+msgid "Mail delivery"
+msgstr "Mailversand"
+
+#: templates/admin/system_status.html:61
+msgid "Mail delivery set up"
+msgstr "Mailversand eingerichtet"
+
+#: templates/admin/system_status.html:61
+msgid "Yes"
+msgstr "Ja"
+
+#: templates/admin/system_status.html:61
+msgid "No"
+msgstr "Nein"
+
+#: templates/admin/system_status.html:63
+msgid ""
+"It needs a mail server other than localhost and a sender address "
+"(LABCIRS_EMAIL_HOST and LABCIRS_DEFAULT_FROM_EMAIL). Until then nobody is "
+"notified by mail."
+msgstr "Dafür braucht es einen Mailserver außer localhost und eine Absenderadresse (LABCIRS_EMAIL_HOST und LABCIRS_DEFAULT_FROM_EMAIL). Bis dahin wird niemand per Mail benachrichtigt."
+
+#: templates/admin/system_status.html:67
+msgid "Notification of the QM by department"
+msgstr "Benachrichtigung des QM je Abteilung"
+
+#: templates/admin/system_status.html:70
+msgid "Department"
+msgstr "Abteilung"
+
+#: templates/admin/system_status.html:71
+msgid "Notification of the QM"
+msgstr "Benachrichtigung des QM"
+
+#: templates/admin/system_status.html:78
+msgctxt "system status"
+msgid "On"
+msgstr "An"
+
+#: templates/admin/system_status.html:78
+msgctxt "system status"
+msgid "Off"
+msgstr "Aus"
+
+#: templates/admin/system_status.html:85 templates/admin/system_status.html:91
+msgctxt "system status"
+msgid "Accounts"
+msgstr "Konten"
+
+#: templates/admin/system_status.html:87
+msgid "Accounts by role"
+msgstr "Konten nach Rolle"
+
+#: templates/admin/system_status.html:90 templates/admin/system_status.html:115
+msgctxt "system status"
+msgid "Role"
+msgstr "Rolle"
+
+#: templates/admin/system_status.html:92
+msgid "Of these inactive"
+msgstr "Davon inaktiv"
+
+#: templates/admin/system_status.html:105
+msgid ""
+"Reporter accounts are the technical accounts of the departments. They never "
+"log in."
+msgstr "Reporter-Konten sind die technischen Konten der Abteilungen. Sie melden sich nie an."
+
+#: templates/admin/system_status.html:107
+#: templates/admin/system_status.html:111
+#, python-format
+msgid "Accounts without login for over %(days)s days"
+msgstr "Konten ohne Anmeldung seit über %(days)s Tagen"
+
+#: templates/admin/system_status.html:114
+msgctxt "system status"
+msgid "Account"
+msgstr "Konto"
+
+#: templates/admin/system_status.html:116
+msgid "No login since"
+msgstr "Ohne Anmeldung seit"
+
+#: templates/admin/system_status.html:124
+msgid "(created, never logged in)"
+msgstr "(angelegt, nie angemeldet)"
+
+#: templates/admin/system_status.html:130
+#, python-format
+msgid "One more account is not shown."
+msgid_plural "%(counter)s more accounts are not shown."
+msgstr[0] "Ein weiteres Konto wird nicht angezeigt."
+msgstr[1] "%(counter)s weitere Konten werden nicht angezeigt."
+
+#: templates/admin/system_status.html:130
+msgid "Show all users"
+msgstr "Alle Benutzer anzeigen"
+
+#: templates/admin/system_status.html:133
+msgid "None."
+msgstr "Keine."
+
 #: templates/base.html:30
 msgid "Skip to content"
 msgstr "Zum Inhalt springen"
@@ -98,11 +302,6 @@ msgstr "Anmelden"
 #: templates/base.html:78
 msgid "Language"
 msgstr "Sprache"
-
-#: templates/base.html:112
-#, python-format
-msgid "Version %(version)s"
-msgstr "Version %(version)s"
 
 #: templates/base.html:115
 msgid "Legal"
@@ -223,9 +422,6 @@ msgstr "Warum eine Ente? Enten sind die Lieblingstiere Ihres IT-Admins."
 #~ msgid "User"
 #~ msgstr "Benutzer"
 
-#~ msgid "Department"
-#~ msgstr "Abteilung"
-
 #~ msgid "To approve this, please"
 #~ msgstr "Um dies zu bestätigen, bitte"
 
@@ -234,9 +430,6 @@ msgstr "Warum eine Ente? Enten sind die Lieblingstiere Ihres IT-Admins."
 
 #~ msgid "To approve this, please click the following link"
 #~ msgstr "Zur Bestätigung bitte auf den folgenden Link klicken"
-
-#~ msgid "Account approval for"
-#~ msgstr "Accountgenehmigung für"
 
 #~ msgid "Register for an LabCIRS account"
 #~ msgstr "Registrierung eines LabCIRS-Accounts"

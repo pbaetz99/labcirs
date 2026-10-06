@@ -21,7 +21,8 @@
 from django.urls import path
 
 from .views_overview import OverviewView
-from .views_reports import ReportCsvView, ReportPrintView, ReportView
+from .views_export import ReportCsvView, ReportPrintView
+from .views_reports import ReportView
 from .views_worklist import WorklistView
 
 urlpatterns = [

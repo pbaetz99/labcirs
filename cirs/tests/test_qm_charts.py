@@ -290,7 +290,7 @@ class RenderTest(SimpleTestCase):
 
     def table(self, html):
         details = re.search(r'<details\b[^>]*>(.*?)</details>', html, re.S).group(1)
-        self.assertRegex(details, r'^\s*<summary>[^<]+</summary>')
+        self.assertRegex(details, r'^\s*<summary>[^<]+(?:<span class="ui-visually-hidden">[^<]*</span>)?</summary>')
         return re.search(r'<table\b.*?</table>', details, re.S).group(0)
 
     def cells(self, table):
@@ -359,7 +359,8 @@ class RenderTest(SimpleTestCase):
     def test_summary_and_default_value_header_in_English(self):
         with translation.override('en'):
             html = bars([bar('Ward A', 7)])
-        self.assertIn('<summary>Numbers as a table</summary>', html)
+        self.assertIn('<summary>Numbers as a table<span class="ui-visually-hidden">: Synthetic title</span>'
+                      '</summary>', html)
         self.assertEqual(self.cells(self.table(html))[0], ['Label', 'Number'])
 
     def test_the_table_is_closed_unless_asked_otherwise(self):

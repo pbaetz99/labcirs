@@ -174,15 +174,15 @@ class KeyFiguresTest(ReportData):
 
     def test_the_key_figures_of_this_year_up_to_the_current_month(self):
         self.assertEqual(figures(self.html(THIS_YEAR)), {
-            'Eingang': '6', 'Abgeschlossen': '3', 'Offen am Ende des Zeitraums': '4',
+            'Eingang': '6', 'Abgeschlossen': '3', 'Offen (Stand heute)': '4',
             'Veröffentlicht': '1', 'Reaktionszeit': 'Median 3,5 Tage, Anzahl 4',
-            'Bearbeitungsdauer': 'Median 16 Tage, Anzahl 3'})
+            'Bearbeitungsdauer': 'Median 16 Tage, Anzahl 3', 'Noch ohne Bearbeitung': '2'})
 
     def test_the_figures_are_those_of_the_report(self):
         report = build_report(scoped_incidents(self.reviewer.user), date(2026, 1, 1),
                               date(2026, 10, 1), today=TODAY)
-        self.assertEqual((report.incoming, report.completed, report.open_end, report.published),
-                         (6, 3, 4, 1))
+        self.assertEqual((report.incoming, report.completed, report.open_end, report.published,
+                          report.unprocessed), (6, 3, 4, 1, 2))
         self.assertEqual((report.reaction, report.processing),
                          (Durations(3.5, 4), Durations(16.0, 3)))
         self.assertEqual(list(figures(self.html(THIS_YEAR)).values())[:4],
@@ -202,17 +202,18 @@ class KeyFiguresTest(ReportData):
     def test_a_period_that_ended_does_not_know_what_was_open_at_its_end(self):
         # the state of the day is not recorded: only the state of now is known
         html = self.html({'von_monat': 1, 'von_jahr': 2026, 'bis_monat': 9, 'bis_jahr': 2026})
-        self.assertEqual(figures(html)['Offen am Ende des Zeitraums'], NOT_RECORDED)
+        self.assertEqual(figures(html)['Offen (Stand heute)'], NOT_RECORDED)
         self.assertIn('<dd class="ui-kennzahlen__text">nicht erfasst</dd>', html)
         self.assertEqual(figures(html)['Eingang'], '6')
 
     def test_a_period_that_reaches_today_has_the_open_incidents_of_now(self):
         html = self.html({'von_monat': 10, 'von_jahr': 2026, 'bis_monat': 10, 'bis_jahr': 2026})
-        self.assertEqual(figures(html)['Offen am Ende des Zeitraums'], '4')
+        self.assertEqual(figures(html)['Offen (Stand heute)'], '4')
         self.assertEqual(figures(html)['Eingang'], '0')
 
     def test_one_day_is_singular_and_the_dash_stands_for_no_incident(self):
-        html = self.html({'von_monat': 1, 'von_jahr': 2023, 'bis_monat': 1, 'bis_jahr': 2023})
+        # the log runs in October and nothing was changed in it: no incident to take a time from
+        html = self.html({'von_monat': 10, 'von_jahr': 2026, 'bis_monat': 10, 'bis_jahr': 2026})
         self.assertEqual(figures(html)['Reaktionszeit'], '–')
         self.assertEqual(figures(html)['Bearbeitungsdauer'], '–')
         feb = self.html({'von_monat': 2, 'von_jahr': 2026, 'bis_monat': 2, 'bis_jahr': 2026})
@@ -233,6 +234,89 @@ class KeyFiguresTest(ReportData):
         html = self.html(THIS_YEAR)
         self.assertNotIn('Abschlüsse und Zeiten werden', html)
         self.assertNotIn(NOT_RECORDED, tile(html, 'auswertung-verlauf'))
+
+    def test_a_still_new_incident_of_the_period_is_still_without_processing(self):
+        # d and e are new, a, b and f are further along; g was reported the year before
+        self.assertEqual(figures(self.html(THIS_YEAR))['Noch ohne Bearbeitung'], '2')
+        march = self.html({'von_monat': 3, 'von_jahr': 2026, 'bis_monat': 3, 'bis_jahr': 2026})
+        self.assertEqual(figures(march)['Noch ohne Bearbeitung'], '0')
+        make_incident(self.dept, reported=date(2026, 3, 9), preventability='avoidable',
+                      history=[('new', at(3, 9))])
+        self.assertEqual(figures(self.html({'von_monat': 3, 'von_jahr': 2026, 'bis_monat': 3,
+                                            'bis_jahr': 2026}))['Noch ohne Bearbeitung'], '1')
+
+
+class LogCoverageTest(ReportData):
+    """Completions and times are known from the day the status log began. For a period before
+    that day the figures say "not recorded" and not 0, and for a period that the log covers in
+    part they say from when they count."""
+
+    BEFORE = {'von_monat': 1, 'von_jahr': 2023, 'bis_monat': 1, 'bis_jahr': 2023}
+    PART = {'von_monat': 1, 'von_jahr': 2025, 'bis_monat': 12, 'bis_jahr': 2025}  # log: 20 Dec
+    TIMES = ('Abgeschlossen', 'Reaktionszeit', 'Bearbeitungsdauer')
+
+    def build(self, first, last):
+        return build_report(scoped_incidents(self.reviewer.user), first, last, today=TODAY)
+
+    def test_a_period_before_the_log_began_does_not_know_completions_or_times(self):
+        shown = figures(self.html(self.BEFORE))
+        for label in self.TIMES:
+            self.assertEqual(shown[label], NOT_RECORDED, label)
+        # what the log does not decide is counted as always
+        self.assertEqual((shown['Eingang'], shown['Veröffentlicht'], shown['Noch ohne Bearbeitung']),
+                         ('0', '0', '0'))
+
+    def test_what_is_not_recorded_is_the_small_text_of_the_figure_and_has_no_suffix(self):
+        html = self.html(self.BEFORE)
+        # the three and the open incidents of a period in the past
+        self.assertEqual(html.count('<dd class="ui-kennzahlen__text">nicht erfasst</dd>'), 4)
+        self.assertNotIn('(ab ', tile(html, 'auswertung-kennzahlen'))
+
+    def test_a_period_that_ends_the_day_before_the_log_began_is_not_recorded_either(self):
+        november = self.html({'von_monat': 11, 'von_jahr': 2025, 'bis_monat': 11, 'bis_jahr': 2025})
+        for label in self.TIMES:
+            self.assertEqual(figures(november)[label], NOT_RECORDED, label)
+        december = self.html({'von_monat': 12, 'von_jahr': 2025, 'bis_monat': 12, 'bis_jahr': 2025})
+        self.assertEqual(figures(december)['Abgeschlossen'], '0 (ab 20.12.2025)')
+
+    def test_a_period_that_the_log_covers_in_part_says_from_when_the_figures_count(self):
+        shown = figures(self.html(self.PART))
+        self.assertEqual(shown['Abgeschlossen'], '0 (ab 20.12.2025)')
+        self.assertEqual(shown['Reaktionszeit'], '– (ab 20.12.2025)')
+        self.assertEqual(shown['Bearbeitungsdauer'], '– (ab 20.12.2025)')
+        for label in ('Eingang', 'Veröffentlicht', 'Noch ohne Bearbeitung'):
+            self.assertNotIn('(ab ', shown[label], label)
+        # the log began inside December: g (16 days to its first change) and a (2 days) are in it
+        january = figures(self.html({'von_monat': 12, 'von_jahr': 2025, 'bis_monat': 1,
+                                     'bis_jahr': 2026}))
+        self.assertEqual(january['Reaktionszeit'], 'Median 9 Tage, Anzahl 2 (ab 20.12.2025)')
+
+    def test_the_suffix_stands_in_a_span_of_its_own_in_the_smaller_type(self):
+        html = self.html(self.PART)
+        self.assertIn('0 <span class="ui-kennzahlen__zusatz">(ab 20.12.2025)</span></dd>', html)
+
+    def test_a_period_that_the_log_covers_wholly_has_no_suffix_and_nothing_not_recorded(self):
+        for label, value in figures(self.html(THIS_YEAR)).items():
+            self.assertNotIn('(ab ', value, label)
+            self.assertNotIn(NOT_RECORDED, value, label)
+
+    def test_the_report_holds_none_for_what_is_not_recorded(self):
+        before = self.build(date(2023, 1, 1), date(2023, 1, 1))
+        self.assertEqual((before.completed, before.reaction, before.processing),
+                         (None, None, None))
+        self.assertEqual((before.incoming, before.published, before.unprocessed), (0, 0, 0))
+        part = self.build(date(2025, 1, 1), date(2025, 12, 1))
+        self.assertEqual(part.completed, 0)
+        self.assertEqual((part.reaction, part.processing),
+                         (Durations(None, 0), Durations(None, 0)))
+        whole = self.build(date(2026, 1, 1), date(2026, 10, 1))
+        self.assertEqual(whole.completed, 3)
+
+    def test_the_months_before_the_log_and_the_figure_agree_on_what_is_not_recorded(self):
+        html = self.html({'von_monat': 11, 'von_jahr': 2025, 'bis_monat': 12, 'bis_jahr': 2025})
+        [chart] = tables(tile(html, 'auswertung-verlauf'))
+        self.assertEqual([row[2] for row in chart[1:]], [NOT_RECORDED, '0'])
+        self.assertEqual(figures(html)['Abgeschlossen'], '0 (ab 20.12.2025)')
 
 
 class DevelopmentTest(ReportData):
@@ -274,15 +358,34 @@ class DevelopmentTest(ReportData):
                          1)
         self.assertIn('seit 20.12.2025 erfasst', tile(html, 'auswertung-verlauf'))
 
-    def test_the_table_opens_by_itself_for_more_than_12_months(self):
+    def test_the_table_opens_by_itself_where_no_number_fits_over_the_columns(self):
+        # a person who sees and does not click needs the numbers somewhere: over the columns
+        # while they fit, in the table when they do not
         opened = '<details class="ui-diagramm__tabelle" open>'
-        year = {'von_monat': 1, 'von_jahr': 2026, 'bis_monat': 12, 'bis_jahr': 2026}
-        self.assertEqual(self.html(year).count(opened), 0)
-        longer = {'von_monat': 12, 'von_jahr': 2025, 'bis_monat': 12, 'bis_jahr': 2026}
-        html = self.html(longer)
-        self.assertEqual(html.count(opened), 1)
-        self.assertIn(opened, tile(html, 'auswertung-verlauf'))
-        [chart] = tables(tile(html, 'auswertung-verlauf'))
+        for first_month, first_year, last_month, last_year, months in (
+                (3, 2026, 3, 2026, 1), (1, 2026, 6, 2026, 6), (1, 2026, 10, 2026, 10),
+                (1, 2026, 12, 2026, 12), (12, 2025, 12, 2026, 13), (1, 2024, 12, 2026, 36)):
+            html = tile(self.html({'von_monat': first_month, 'von_jahr': first_year,
+                                   'bis_monat': last_month, 'bis_jahr': last_year}),
+                        'auswertung-verlauf')
+            if '<table' not in html:
+                continue  # no report in the months: no chart
+            with self.subTest(months=months):
+                self.assertEqual(opened in html, 'ui-diagramm__wert' not in html)
+        # a year of twelve months: the columns are too thin for any number
+        year = tile(self.html({'von_monat': 1, 'von_jahr': 2026, 'bis_monat': 12,
+                               'bis_jahr': 2026}), 'auswertung-verlauf')
+        self.assertIn(opened, year)
+        self.assertNotIn('ui-diagramm__wert', year)
+        # six months: the numbers stand over the columns and the table stays closed
+        half = tile(self.html({'von_monat': 1, 'von_jahr': 2026, 'bis_monat': 6, 'bis_jahr': 2026}),
+                    'auswertung-verlauf')
+        self.assertIn('ui-diagramm__wert', half)
+        self.assertNotIn(opened, half)
+        longer = tile(self.html({'von_monat': 12, 'von_jahr': 2025, 'bis_monat': 12,
+                                 'bis_jahr': 2026}), 'auswertung-verlauf')
+        self.assertIn(opened, longer)
+        [chart] = tables(longer)
         self.assertEqual(len(chart), 14)
 
     def test_a_period_without_reports_and_completions_has_no_chart(self):
@@ -304,7 +407,7 @@ class DistributionTest(ReportData):
          ['Das Ereignis war vermeidbar', '3'], ['Das Ereignis war nicht vermeidbar', '2']],
         [['Risiko', 'Anzahl'], ['niedrig', '1'], ['mittel', '1'], ['hoch', '2'],
          ['Keine Angabe', '2']],
-        [['Häufigkeit', 'Anzahl'], ['einzellfall (erstmalig)', '0'], ['selten (1 pro Jahr)', '2'],
+        [['Häufigkeit', 'Anzahl'], ['Einzelfall (erstmalig)', '0'], ['selten (1 pro Jahr)', '2'],
          ['gelegentlich (1 pro Monat)', '1'], ['häufig (1 pro Woche)', '0'],
          ['ständig (täglich)', '0'], ['Keine Angabe', '3']],
         [['Gefährdung', 'Anzahl'], ['sehr niedrig', '0'], ['niedrig', '2'], ['moderat', '1'],
@@ -411,9 +514,9 @@ class AreaTest(ReportData):
         html = self.of(self.labor)
         # a (in the group through its unit), b and, for the times of completion, g
         self.assertEqual(figures(html), {
-            'Eingang': '2', 'Abgeschlossen': '3', 'Offen am Ende des Zeitraums': '0',
+            'Eingang': '2', 'Abgeschlossen': '3', 'Offen (Stand heute)': '0',
             'Veröffentlicht': '1', 'Reaktionszeit': 'Median 2 Tage, Anzahl 3',
-            'Bearbeitungsdauer': 'Median 16 Tage, Anzahl 3'})
+            'Bearbeitungsdauer': 'Median 16 Tage, Anzahl 3', 'Noch ohne Bearbeitung': '0'})
         self.assertEqual(tables(tile(html, 'auswertung-verteilungen'))[0],
                          [['Bereich', 'Anzahl'], ['Labor', '2']])
         [chart] = tables(tile(html, 'auswertung-verlauf'))
@@ -424,9 +527,9 @@ class AreaTest(ReportData):
     def test_another_area_has_its_own_numbers(self):
         html = self.of(self.pflege)
         self.assertEqual(figures(html), {
-            'Eingang': '2', 'Abgeschlossen': '0', 'Offen am Ende des Zeitraums': '2',
+            'Eingang': '2', 'Abgeschlossen': '0', 'Offen (Stand heute)': '2',
             'Veröffentlicht': '0', 'Reaktionszeit': 'Median 5 Tage, Anzahl 1',
-            'Bearbeitungsdauer': '–'})
+            'Bearbeitungsdauer': '–', 'Noch ohne Bearbeitung': '1'})
         self.assertIn('Keine veröffentlichten Fälle für diesen Zeitraum.',
                       words(tile(html, 'auswertung-massnahmen')))
         self.assertNotIn('Titel B', html)
@@ -463,7 +566,7 @@ class AreaTest(ReportData):
             shown = figures(self.of(group))
             self.assertEqual(shown['Eingang'], str(report.incoming))
             self.assertEqual(shown['Abgeschlossen'], str(report.completed))
-            self.assertEqual(shown['Offen am Ende des Zeitraums'], str(report.open_end))
+            self.assertEqual(shown['Offen (Stand heute)'], str(report.open_end))
 
 
 class FormTest(ReportData):
@@ -528,9 +631,10 @@ class FormTest(ReportData):
 
     def test_last_year_is_not_recorded_at_its_end_and_has_the_note_on_the_log(self):
         html = self.html({'von_monat': 1, 'von_jahr': 2025, 'bis_monat': 12, 'bis_jahr': 2025})
-        self.assertEqual(figures(html)['Offen am Ende des Zeitraums'], NOT_RECORDED)
+        self.assertEqual(figures(html)['Offen (Stand heute)'], NOT_RECORDED)
         self.assertIn('Abschlüsse und Zeiten werden seit 20.12.2025 erfasst.', words(html))
         self.assertEqual(figures(html)['Eingang'], '1')
+        self.assertEqual(figures(html)['Abgeschlossen'], '0 (ab 20.12.2025)')
 
 
 class InvalidTest(ReportData):
@@ -655,12 +759,13 @@ class InvalidTest(ReportData):
 
 class RecordedTest(ReportBase):
 
-    def test_an_empty_department_has_zeros_and_empty_states_and_says_nothing_is_recorded(self):
+    def test_an_empty_department_has_zeros_and_empty_states_and_says_the_log_does_not_run(self):
         html = self.html()
         self.assertEqual(figures(html), {
-            'Eingang': '0', 'Abgeschlossen': '0', 'Offen am Ende des Zeitraums': '0',
-            'Veröffentlicht': '0', 'Reaktionszeit': '–', 'Bearbeitungsdauer': '–'})
-        self.assertIn('Abschlüsse und Zeiten werden noch nicht erfasst.', words(html))
+            'Eingang': '0', 'Abgeschlossen': NOT_RECORDED, 'Offen (Stand heute)': '0',
+            'Veröffentlicht': '0', 'Reaktionszeit': NOT_RECORDED,
+            'Bearbeitungsdauer': NOT_RECORDED, 'Noch ohne Bearbeitung': '0'})
+        self.assertIn('Das Protokoll läuft noch nicht.', words(html))
         for name in ('auswertung-verlauf', 'auswertung-verteilungen'):
             self.assertIn('Keine Meldungen im Zeitraum.', words(tile(html, name)))
             self.assertNotIn('<table', tile(html, name))
@@ -672,14 +777,45 @@ class RecordedTest(ReportBase):
         make_incident(self.dept, reported=date(2026, 1, 1), legacy=True, status='completed',
                       preventability='avoidable')
         html = self.html()
-        self.assertIn('Abschlüsse und Zeiten werden noch nicht erfasst.', words(html))
+        self.assertIn('Das Protokoll läuft noch nicht.', words(html))
         self.assertEqual(figures(html)['Eingang'], '1')
-        self.assertEqual(figures(html)['Abgeschlossen'], '0')
-        self.assertEqual(figures(html)['Offen am Ende des Zeitraums'], '0')
-        self.assertEqual(figures(html)['Reaktionszeit'], '–')
+        self.assertEqual(figures(html)['Abgeschlossen'], NOT_RECORDED)
+        self.assertEqual(figures(html)['Offen (Stand heute)'], '0')
+        self.assertEqual(figures(html)['Reaktionszeit'], NOT_RECORDED)
+        self.assertEqual(figures(html)['Bearbeitungsdauer'], NOT_RECORDED)
         [chart] = tables(tile(html, 'auswertung-verlauf'))
         self.assertEqual({row[2] for row in chart[1:]}, {NOT_RECORDED})
         self.assertNotIn('Abschlüsse und Zeiten werden seit', html)
+
+    def test_a_log_that_runs_but_has_no_status_change_says_so(self):
+        make_incident(self.dept, reported=date(2026, 1, 1), history=[('new', at(1, 1))])
+        html = self.html()
+        self.assertIn('Bisher ist kein Statuswechsel erfasst.', words(html))
+        self.assertNotIn('Das Protokoll läuft noch nicht.', html)
+        # the log covers the whole period, so the zeros are zeros and not gaps
+        self.assertEqual(figures(html)['Abgeschlossen'], '0')
+        self.assertEqual(figures(html)['Reaktionszeit'], '–')
+        self.assertNotIn('Abschlüsse und Zeiten werden seit', html)
+
+    def test_a_status_change_takes_that_note_away(self):
+        make_incident(self.dept, reported=date(2026, 1, 1),
+                      history=[('new', at(1, 1)), ('in process', at(1, 3))])
+        self.assertNotIn('Bisher ist kein Statuswechsel erfasst.', words(self.html()))
+
+    def test_a_log_that_began_in_the_period_says_since_when_and_that_nothing_changed(self):
+        make_incident(self.dept, reported=date(2026, 3, 1), history=[('new', at(3, 1))])
+        html = self.html()
+        self.assertIn('Abschlüsse und Zeiten werden seit 01.03.2026 erfasst. Reaktionszeiten gibt es '
+                      'nur für Meldungen seit dem Beginn des Protokolls. Bisher ist kein '
+                      'Statuswechsel erfasst.', words(html))
+        self.assertEqual(figures(html)['Abgeschlossen'], '0 (ab 01.03.2026)')
+
+    def test_a_log_that_began_after_the_period_does_not_say_that_nothing_changed(self):
+        make_incident(self.dept, reported=date(2026, 3, 1), history=[('new', at(3, 1))])
+        html = self.html({'von_monat': 1, 'von_jahr': 2026, 'bis_monat': 2, 'bis_jahr': 2026})
+        self.assertIn('Abschlüsse und Zeiten werden seit 01.03.2026 erfasst.', words(html))
+        self.assertNotIn('Bisher ist kein Statuswechsel erfasst.', html)
+        self.assertEqual(figures(html)['Abgeschlossen'], NOT_RECORDED)
 
     def test_the_year_before_can_always_be_chosen(self):
         # the quick choice of last year has to be a period that the form takes, also for a QM
@@ -800,7 +936,7 @@ class CanaryTest(ReportData):
     def test_its_incidents_are_in_no_number(self):
         html = self.html(THIS_YEAR)
         self.assertEqual(figures(html)['Eingang'], '6')  # nine with the three of the foreign one
-        self.assertEqual(figures(html)['Offen am Ende des Zeitraums'], '4')
+        self.assertEqual(figures(html)['Offen (Stand heute)'], '4')
         self.assertEqual(figures(html)['Veröffentlicht'], '1')
         for incident in self.canary_incidents:
             self.assertNotIn(incident.get_absolute_url(), html)
@@ -831,16 +967,63 @@ class PageTest(ReportData):
                          ['Bereich', 'Kategorie', 'Vermeidbarkeit', 'Risiko', 'Häufigkeit',
                           'Gefährdung'])
 
-    def test_each_key_figure_is_defined_in_one_sentence(self):
-        begriffe = tile(self.html(THIS_YEAR), 'auswertung-begriffe')
-        terms = [words(t) for t in re.findall(r'<dt>(.*?)</dt>', begriffe, re.S)]
-        self.assertEqual(terms, ['Eingang', 'Abgeschlossen', 'Offen am Ende des Zeitraums',
-                                 'Veröffentlicht', 'Reaktionszeit', 'Bearbeitungsdauer'])
-        sentences = [words(d) for d in re.findall(r'<dd>(.*?)</dd>', begriffe, re.S)]
-        self.assertEqual(len(sentences), 6)
-        for sentence in sentences:
-            self.assertTrue(sentence.endswith('.'), sentence)
-            self.assertEqual(sentence.count('. '), 0, sentence)
+    def definitions(self, **extra):
+        """The terms of the section "Begriffe" and their definitions, in order."""
+        begriffe = tile(self.html(THIS_YEAR, **extra), 'auswertung-begriffe')
+        return dict(zip((words(t) for t in re.findall(r'<dt>(.*?)</dt>', begriffe, re.S)),
+                        (words(d) for d in re.findall(r'<dd>(.*?)</dd>', begriffe, re.S))))
+
+    def test_each_term_is_defined_in_one_sentence(self):
+        definitions = self.definitions()
+        self.assertEqual(list(definitions), [
+            'Eingang', 'Abgeschlossen', 'Offen (Stand heute)', 'Veröffentlicht', 'Reaktionszeit',
+            'Bearbeitungsdauer', 'Noch ohne Bearbeitung', 'Vermeidbarkeit', 'Risiko',
+            'Häufigkeit', 'Gefährdung', 'Keine Angabe'])
+        for term, sentence in definitions.items():
+            self.assertTrue(sentence.endswith('.'), term)
+            self.assertEqual(sentence.count('. '), 0, term)
+
+    def test_completed_is_tied_to_the_state_it_is_counted_from(self):
+        self.assertIn('„Erledigt“', self.definitions()['Abgeschlossen'])
+        self.assertIn('“Completed”', self.definitions(**EN)['Completed'])
+
+    def test_open_is_the_state_of_now_with_the_older_reports(self):
+        sentence = self.definitions()['Offen (Stand heute)']
+        self.assertIn('derzeit offen', sentence)
+        self.assertIn('auch ältere', sentence)
+        self.assertIn('Vergangenheit', sentence)
+
+    def test_the_times_count_only_what_was_processed_and_say_what_the_count_is(self):
+        definitions = self.definitions()
+        reaction, processing = definitions['Reaktionszeit'], definitions['Bearbeitungsdauer']
+        self.assertIn('noch neu sind', reaction)
+        self.assertIn('noch offen sind', processing)
+        for sentence in (reaction, processing):
+            self.assertIn('zählen nicht', sentence)
+            self.assertIn('Anzahl', sentence)
+            self.assertIn('Median berechnet', sentence)
+
+    def test_still_without_processing_is_the_state_new(self):
+        self.assertEqual(self.definitions()['Noch ohne Bearbeitung'],
+                         'Meldungen des Zeitraums, die noch im Stand „Neu“ sind.')
+
+    def test_the_classifications_say_whose_assessment_they_are(self):
+        definitions = self.definitions()
+        self.assertIn('meldenden Person', definitions['Vermeidbarkeit'])
+        self.assertIn('QM', definitions['Risiko'])
+        self.assertIn('Schätzung', definitions['Häufigkeit'])
+        self.assertIn('keine Zahl von Fällen', definitions['Häufigkeit'])
+        # what the model says about the hazard: for employees or for the research process,
+        # nothing about patients
+        self.assertIn('Mitarbeiter', definitions['Gefährdung'])
+        self.assertIn('Forschungsprozess', definitions['Gefährdung'])
+        self.assertNotIn('Patient', ' '.join(definitions.values()))
+
+    def test_not_specified_means_not_yet_classified(self):
+        sentence = self.definitions()['Keine Angabe']
+        for field in ('Risiko', 'Häufigkeit', 'Gefährdung'):
+            self.assertIn(field, sentence)
+        self.assertIn('noch nicht eingestuft', sentence)
 
     def test_no_inline_code(self):
         self.assertEqual(csp_violations(self.html(THIS_YEAR)), [])
@@ -879,7 +1062,8 @@ class PageTest(ReportData):
         html = self.html(THIS_YEAR, **EN)
         for text in ('Key figures', 'Monthly trend', 'Distributions', 'Measures', 'Definitions',
                      'Evaluate', 'Quick selection', 'Last quarter', 'Current year', 'Last year',
-                     'Open at the end of the period', 'Reaction time', 'Processing time',
+                     'Open (as of today)', 'Reaction time', 'Processing time',
+                     'Still without processing',
                      'Median 3.5 days, count 4', 'Median 16 days, count 3',
                      'Several answers are possible', 'Period: January 2026 to October 2026'):
             self.assertIn(text, words(html))

@@ -40,7 +40,7 @@
         <p class="ui-secondary">{% blocktranslate count days=overdue_days %}New and older than {{ days }} day.{% plural %}New and older than {{ days }} days.{% endblocktranslate %}</p>
         {% if overdue_rows %}
           {% translate "Reports without processing" as caption %}
-          {% include "cirs/qm/_incident_rows.html" with rows=overdue_rows caption=caption %}
+          {% include "cirs/qm/_incident_rows.html" with rows=overdue_rows caption=caption list_query=overdue_query %}
           <p class="ui-mt-3"><a href="{{ overdue_url }}">{% translate "Show all" context "overview list" %}<span class="ui-visually-hidden">: {% translate "Without processing" %}</span></a></p>
         {% else %}
           <p class="ui-muted">{% translate "Nothing open." %}</p>
@@ -51,7 +51,7 @@
         <p class="ui-secondary">{% translate "The last reply is from the reporting person." %}</p>
         {% if awaiting_rows %}
           {% translate "Reports waiting for the QM" as caption %}
-          {% include "cirs/qm/_incident_rows.html" with rows=awaiting_rows caption=caption %}
+          {% include "cirs/qm/_incident_rows.html" with rows=awaiting_rows caption=caption list_query=awaiting_query %}
           <p class="ui-mt-3"><a href="{{ awaiting_url }}">{% translate "Show all" context "overview list" %}<span class="ui-visually-hidden">: {% translate "Waiting for the QM" %}</span></a></p>
         {% else %}
           <p class="ui-muted">{% translate "No replies open." %}</p>

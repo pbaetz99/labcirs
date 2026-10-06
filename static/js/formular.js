@@ -1,6 +1,6 @@
 /* Form helpers of the design system, vendored into this repository: password toggle and
    protection against double submission. Not written for LabCIRS; covered by the AGPL of
-   this repository. */
+   this repository. The print button at the end was added for LabCIRS. */
 /* Formular-Komfort -- ausschliesslich Verbesserungen, nie Voraussetzung.
  *
  * Grundsatz: ohne JavaScript muss jedes Formular vollstaendig bedienbar bleiben. Deshalb
@@ -62,4 +62,19 @@
       });
     });
   });
+
+  /* --- Print button (added for LabCIRS) -------------------------------------------------
+   * The print view of the evaluations has a button that opens the print dialog of the browser.
+   * It is served hidden: without a script it would be a dead button, and the page tells the way
+   * with the keyboard (Ctrl+P) instead, which is taken away when the button works.
+   */
+  if (typeof window.print === "function") {
+    document.querySelectorAll("[data-drucken]").forEach(function (knopf) {
+      knopf.hidden = false;
+      knopf.addEventListener("click", function () { window.print(); });
+    });
+    document.querySelectorAll("[data-drucken-hinweis]").forEach(function (hinweis) {
+      hinweis.hidden = true;
+    });
+  }
 })();

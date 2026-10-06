@@ -1,0 +1,25 @@
+{% load i18n %}
+{% comment %}
+  The head of the page: the status as a word in a badge (the colour is not the only sign), the day of the
+  report, the department (only for a QM of several), the way back to the list with its filters and the
+  links to the parts of the page, which is long.
+{% endcomment %}
+<section class="ui-mt-2" aria-labelledby="stand-titel">
+  <h2 class="ui-visually-hidden" id="stand-titel">{% translate "Processing status" %}</h2>
+  <p class="ui-row ui-mb-0">
+    <span>{% translate "Current status" %}:
+      <span class="ui-badge ui-badge--{% if incident.status == 'completed' %}success{% else %}info{% endif %}">{{ incident.get_status_display|capfirst }}</span></span>
+    <span class="ui-secondary">{% translate "Reported" %}: <time datetime="{{ incident.reported|date:'Y-m-d' }}">{{ incident.reported|date:"SHORT_DATE_FORMAT" }}</time></span>
+    {% if departments|length > 1 %}<span class="ui-secondary">{% translate "Department" %}: {{ incident.department.name }}</span>{% endif %}
+  </p>
+</section>
+<p class="ui-mt-3 ui-mb-0"><a class="ui-btn ui-btn--secondary" href="{{ back_url }}">{% translate "Back to the list" %}</a></p>
+<nav class="ui-mt-3" aria-label="{% translate 'On this page' %}">
+  <ul class="ui-seitenweg">
+    <li><a href="#meldung-titel">{% translate "Details of the report" %}</a></li>
+    <li><a href="#bewertung-titel">{% translate "Assessment" %}</a></li>
+    <li><a href="#rueckmeldungen-titel">{% translate "Dialogue with the reporting person" %}</a></li>
+    <li><a href="#veroeffentlichung-titel">{% translate "Publication" %}</a></li>
+    <li><a href="#verlauf-titel">{% translate "History" context "incident page" %}</a></li>
+  </ul>
+</nav>

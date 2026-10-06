@@ -214,6 +214,16 @@ TIME_ZONE = get_local_setting('TIME_ZONE', 'UTC')
 STATICFILES_DIRS = (join_path(BASE_DIR, 'static'),)
 
 
+# A QM account opens every report of its departments and the proxy only slows a guessing down,
+# so a new password must be long and not a common one. Existing passwords stay valid.
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+     'OPTIONS': {'min_length': 12}},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
+
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 60 * 60 # one hour, not logged out users will leave a ghost session in db!
 SESSION_SAVE_EVERY_REQUEST = True

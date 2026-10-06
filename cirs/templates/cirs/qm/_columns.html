@@ -34,7 +34,7 @@
     {% endfor %}
   </svg>
   <details class="ui-diagramm__tabelle"{% if table_open %} open{% endif %}>
-    <summary>{% translate "Numbers as a table" %}</summary>
+    <summary>{% translate "Numbers as a table" %}<span class="ui-visually-hidden">: {{ title }}</span></summary>
     <div class="ui-tablewrap">
       <table class="ui-table">
         <caption class="ui-visually-hidden">{{ title }}</caption>

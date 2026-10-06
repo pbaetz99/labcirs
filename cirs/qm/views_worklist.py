@@ -34,8 +34,8 @@ from cirs.models import CATEGORY_CHOICES, RISK_CHOICES, STATUS_CHOICES
 
 from . import metrics
 from .access import QMPage, scoped_incidents
-from .params import (FILTERS, MAX_SEARCH_LENGTH, NO_PLACE, PARAMS, SORTS, parse_params,
-                     worklist_url)
+from .params import (FILTERS, MAX_SEARCH_LENGTH, NO_PLACE, PARAMS, SORTS, incident_query,
+                     parse_params, worklist_url)
 
 PAGE_SIZE = 25
 DEFAULT_SORT = '-gemeldet'  # the newest report first
@@ -141,6 +141,7 @@ class WorklistView(QMPage):
             raise Http404('No such page') from None
         context.update(
             selected=values, ignored=_notes(ignored), sorts=_sorts(values),
+            list_query=incident_query(**values),  # the numbers lead to the incident and back here
             filters_active=any(name in values for name in FILTERS),
             clear_url=worklist_url(sort=values.get('sort')),
             paginator=paginator, page_obj=page, is_paginated=paginator.num_pages > 1,

@@ -16,7 +16,7 @@
 # along with LabCIRS.
 # If not, see <https://www.gnu.org/licenses/>.
 
-"""The evaluations of the QM: the page, the print view and the CSV file of the same numbers.
+"""The evaluations of the QM: the page and the form that asks for it.
 
 The page asks for a period of whole months (from month and year to month and year) and, if wished,
 for one area. Without parameters it shows this year up to the running month. A request that is not
@@ -25,24 +25,21 @@ sent. All numbers come from a Report (build_report); this module only turns them
 and the charts of the page.
 """
 
-import codecs
 from datetime import date
+from typing import NamedTuple
 from urllib.parse import urlencode
 
 from django import forms
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db.models import Min
-from django.http import HttpResponse
-from django.template.defaultfilters import floatformat
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.dates import MONTHS
-from django.utils.formats import date_format
-from django.utils.translation import gettext, gettext_lazy as _, ngettext, pgettext_lazy
-from django.views.generic import View
+from django.utils.translation import gettext, gettext_lazy as _, pgettext_lazy
 
-from . import chart_data, metrics
-from .access import QMAccessMixin, QMPage, scoped_incidents
+from . import metrics, report_page
+from .access import QMPage, scoped_incidents
 from .report import MAX_MONTHS, build_report, month_count
 
 # The words of the period are generic: the catalogs of Django have words of their own for some
@@ -53,8 +50,6 @@ UNTIL = pgettext_lazy('report period', 'Until')
 LEGENDS = {'von_monat': FROM, 'von_jahr': FROM, 'bis_monat': UNTIL, 'bis_jahr': UNTIL}
 CHOICE_ERRORS = {code: _('Please choose an entry from the list.')
                  for code in ('required', 'invalid_choice')}
-MANY_MONTHS = 12  # a chart of more months opens its table: the columns are too thin for numbers
-NO_DURATION = '–'
 
 
 def _select(label, choices=(), **kwargs):
@@ -108,13 +103,14 @@ class ReportForm(forms.Form):
         return data
 
 
-def report_url(first_month, last_month, group_id=None):
-    """The address of the page for the months from `first_month` to `last_month`."""
+def report_url(first_month, last_month, group_id=None, name='qm_reports'):
+    """The address of the page (or, with the name of its address, of the print view or the CSV
+    file) for the months from `first_month` to `last_month`."""
     query = [('von_monat', first_month.month), ('von_jahr', first_month.year),
              ('bis_monat', last_month.month), ('bis_jahr', last_month.year)]
     if group_id is not None:
         query.append(('bereich', group_id))
-    return reverse('qm_reports') + '?' + urlencode(query)
+    return reverse(name) + '?' + urlencode(query)
 
 
 def _quick_links(today, group_id):
@@ -144,88 +140,34 @@ def _error_items(form):
     return items
 
 
-def _period_text(period):
-    first, last = (date_format(day, 'F Y') for day in period)
-    if first == last:
-        return first
-    return gettext('%(first)s to %(last)s') % {'first': first, 'last': last}
+class Query(NamedTuple):
+    """What the query of a request asks for: the form (with what was sent), the areas that can be
+    chosen, and the months and the area. The months are None where the query is not in order."""
+    form: ReportForm
+    areas: list
+    first_month: date | None
+    last_month: date | None
+    group_id: int | None
+
+    @property
+    def valid(self):
+        return self.first_month is not None
 
 
-def _duration(durations):
-    """The text "Median 7.5 days, count 4", or a dash where there is no incident to take it from."""
-    if not durations.count:
-        return NO_DURATION
-    return ngettext('Median %(days)s day, count %(count)d',
-                    'Median %(days)s days, count %(count)d',
-                    1 if durations.median == 1 else 2) % {
-        'days': floatformat(durations.median, '-1'), 'count': durations.count}
-
-
-def _figures(report):
-    """The key figures: label and value, and whether the value is a text (it is set smaller)."""
-    open_end = report.open_end
-    return [
-        {'label': gettext('Incoming'), 'value': report.incoming},
-        {'label': gettext('Completed'), 'value': report.completed},
-        {'label': gettext('Open at the end of the period'),
-         'value': gettext('not recorded') if open_end is None else open_end,
-         'text': open_end is None},
-        {'label': gettext('Published'), 'value': report.published},
-        {'label': gettext('Reaction time'), 'value': _duration(report.reaction), 'text': True},
-        {'label': gettext('Processing time'), 'value': _duration(report.processing),
-         'text': True},
-    ]
-
-
-def _recorded_note(report):
-    """What the page says where completions and times are not known for the whole period: since
-    when the status log has them, or that it has none yet. Nothing if it covers the period."""
-    started = report.protocol_start
-    if started is None:
-        return gettext('Completions and times are not recorded yet.')
-    if started > report.period.start:
-        return gettext('Completions and times have been recorded since %(date)s.') % {
-            'date': date_format(started, 'SHORT_DATE_FORMAT')}
-    return ''
-
-
-def _development(report, period_text):
-    """The columns of the months with their texts, None if no month holds a report or a
-    completion. The table opens by itself where there are many months: the columns are then too
-    thin for their numbers."""
-    rows = report.monthly
-    if not any(row.incoming or row.completed for row in rows):
-        return None
-    desc = gettext('Reports in %(period)s: %(incoming)d received, %(completed)d completed.') % {
-        'period': period_text, 'incoming': sum(row.incoming for row in rows),
-        'completed': sum(row.completed or 0 for row in rows)}
-    note = _recorded_note(report) if any(row.completed is None for row in rows) else ''
-    return {'chart': chart_data.month_columns(rows, 'M Y'),
-            'title': gettext('Incoming and completed per month, %(period)s') % {
-                'period': period_text},
-            'desc': f'{desc} {note}'.strip(), 'label_header': gettext('Month'),
-            'table_open': len(rows) > MANY_MONTHS}
-
-
-def _most(distribution):
-    """The key message of a distribution: the cell with the most incidents."""
-    top = max(distribution.buckets, key=lambda bucket: bucket.count, default=None)
-    if top is None or not top.count:
-        return ''
-    if distribution.multiple_answers:
-        return gettext('Most: %(label)s with %(count)d.') % {'label': top.label,
-                                                            'count': top.count}
-    return gettext('Most: %(label)s with %(count)d of %(total)d.') % {
-        'label': top.label, 'count': top.count,
-        'total': sum(bucket.count for bucket in distribution.buckets)}
-
-
-def _distributions(report, period_text):
-    return [{'id': 'chart-' + distribution.field.replace('_', '-'), 'name': distribution.title,
-             'chart': chart_data.bucket_bars(distribution.buckets),
-             'title': f'{distribution.title}, {period_text}', 'desc': _most(distribution),
-             'note': metrics.MULTIPLE_ANSWERS_NOTE if distribution.multiple_answers else ''}
-            for distribution in report.distributions]
+def read_query(request, incidents, today):
+    """The Query of the request, for the page and for the exports alike: without parameters this
+    year up to the running month, and as soon as one parameter is there, all of them are checked."""
+    areas = metrics.places(incidents)
+    asked = any(name in request.GET for name in ReportForm.base_fields)
+    form = ReportForm(request.GET if asked else None, years=_years(incidents, today),
+                      areas=areas, today=today)
+    if not asked:
+        first, last = metrics.quick_ranges(today)['this_year']
+        return Query(form, areas, first, last, None)
+    if not form.is_valid():
+        return Query(form, areas, None, None, form.cleaned_data.get('bereich'))
+    return Query(form, areas, form.cleaned_data['first_month'], form.cleaned_data['last_month'],
+                 form.cleaned_data['bereich'])
 
 
 class ReportView(QMPage):
@@ -237,40 +179,24 @@ class ReportView(QMPage):
             return context  # no incidents to evaluate: the page says so and shows nothing else
         incidents = scoped_incidents(self.request.user)
         today = timezone.localdate()
-        areas = metrics.places(incidents)
-        # Asked for as soon as one parameter is there, a wrong one too: it is checked, not ignored.
-        asked = any(name in self.request.GET for name in ReportForm.base_fields)
-        form = ReportForm(self.request.GET if asked else None, years=_years(incidents, today),
-                          areas=areas, today=today)
-        context['form'] = form
-        if asked and not form.is_valid():
-            context['error_items'] = _error_items(form)
-            context['quick_links'] = _quick_links(today, form.cleaned_data.get('bereich'))
+        query = read_query(self.request, incidents, today)
+        context['form'] = query.form
+        if not query.valid:
+            context['error_items'] = _error_items(query.form)
+            context['quick_links'] = _quick_links(today, query.group_id)
             return context
-        if asked:
-            first, last = form.cleaned_data['first_month'], form.cleaned_data['last_month']
-            group_id = form.cleaned_data['bereich']
-        else:
-            (first, last), group_id = metrics.quick_ranges(today)['this_year'], None
-        report = build_report(incidents, first, last, group_id, today)
-        period_text = _period_text(report.period)
+        report = build_report(incidents, query.first_month, query.last_month, query.group_id,
+                              today)
+        period = report_page.period_text(report.period)
         context.update(
-            quick_links=_quick_links(today, group_id), report=report, period_text=period_text,
-            area_name=dict(areas).get(group_id, ''), figures=_figures(report),
-            recorded_note=_recorded_note(report),
-            development=_development(report, period_text),
-            distributions=_distributions(report, period_text))
+            quick_links=_quick_links(today, query.group_id), report=report, period_text=period,
+            area_name=dict(query.areas).get(query.group_id, ''),
+            figures=report_page.figures(report), recorded_note=report_page.recorded_note(report),
+            development=report_page.development(report, period),
+            distributions=report_page.distributions(report, period),
+            print_url=report_url(query.first_month, query.last_month, query.group_id,
+                                 'qm_reports_print'),
+            csv_url=report_url(query.first_month, query.last_month, query.group_id,
+                               'qm_reports_csv'),
+            min_cell=settings.REPORT_MIN_CELL)
         return context
-
-
-class ReportPrintView(QMPage):
-    template_name = 'cirs/qm/reports_print.html'
-
-
-class ReportCsvView(QMAccessMixin, View):
-    """UTF-8 with a byte order mark, so that Excel reads the umlauts. Always a download."""
-
-    def get(self, request):
-        response = HttpResponse(codecs.BOM_UTF8, content_type='text/csv; charset=utf-8')
-        response['Content-Disposition'] = 'attachment; filename="auswertung.csv"'
-        return response

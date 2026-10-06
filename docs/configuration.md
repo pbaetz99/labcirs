@@ -91,8 +91,8 @@ gunicorn writes no access log.
 | `LABCIRS_SITE_URL` | empty | Address of the site, for example `https://cirs.example.org`. It appears as plain text (never as a link) at the end of mails to reporters, so that the reader knows where to go. |
 | `LABCIRS_ASK_PUBLICATION_CONSENT` | `true` | `true`: the report form asks whether the report may be published after editing. `false`: the form does not ask and every report counts as consented. The QM still decides what is published. |
 | `LABCIRS_QM_OVERDUE_DAYS` | `14` | Days after which a report that is still `new` counts as "without processing" in the QM area. A whole number, at least 1. |
-| `LABCIRS_REPORT_MIN_CELL` | `3` | Smallest number that the print view and the CSV of the evaluations will show; they come in a later release and nothing uses the value yet. A number above 0 and below it will appear as `< 3` (with the default), so that the numbers of very small units cannot be read off. A whole number, at least 1. The screen pages show every number: the QM sees the reports one by one anyway. |
-| `LABCIRS_BACKUP_STATUS_DIR` | empty | Folder with the status note of the last backup. The admin start page shows from it when the last backup was made. Empty: the page says that no backup status is set up. |
+| `LABCIRS_REPORT_MIN_CELL` | `3` | Smallest number that the print view and the CSV file of the evaluations show. A number above 0 and below it appears as `< 3` (with the default), so that the numbers of very small units cannot be read off; where a hidden number could still be worked out from the numbers next to it, a further number is withheld (`*`), and a median over fewer incidents is not stated. A whole number, at least 1. The screen pages show every number: the QM sees the reports one by one anyway. |
+| `LABCIRS_BACKUP_STATUS_DIR` | empty | Folder with the status file `letzte-sicherung` that your backup script writes after each backup that worked. The admin start page shows from it when the last backup was made, and warns when it is older than 26 hours. Empty: the page says that no backup status is set up. See [System status on the admin start page](#system-status-on-the-admin-start-page). |
 | `LABCIRS_LOGO_URL` | empty | Logo in the top bar and the admin. Empty: the organization name as text. Must be on the same host, for example `/branding/logo.svg`. |
 | `LABCIRS_THEME_CSS_URL` | empty | Extra stylesheet that overrides the colour tokens, for example `/branding/theme.css`. Same host only. |
 | `LABCIRS_IMPRINT_URL`, `LABCIRS_PRIVACY_URL` | empty | Footer links "Imprint" and "Privacy". Shown only when set. |
@@ -123,6 +123,67 @@ Mails to the QM are written in the language set by `LABCIRS_LANGUAGE_CODE`, what
 
 LabCIRS sends no error mails. Django's `mail_admins` handler is replaced, so there is no `ADMINS` setting: such mails would carry request data. Errors go to the container log (`docker compose logs app`).
 
+### System status on the admin start page
+
+Superusers see a section "System status" above the list of models on `/admin/`. It tells how the system is run and never what is reported in it: there is no number and no text of any report on it. A QM sees a button "To the QM area" in its place.
+
+The section shows:
+
+- the version of LabCIRS,
+- the last backup (see below),
+- the departments that have no QM, so that nobody can handle their reports,
+- whether mail can be sent (a mail server other than `localhost` and a sender address, see [Mail](#mail)) and, for each department, whether the QM is notified of new reports,
+- the accounts by role (superuser, QM, reporter account, no role) and how many of them are switched off,
+- the accounts that have not logged in for over 180 days, the 20 oldest of them. An account that never logged in counts from the day it was made. Switched-off accounts and reporter accounts (technical accounts that never log in) are left out.
+
+#### Backup status
+
+LabCIRS does not make backups and never opens the backup files. Your backup script tells it by writing a small file into a folder of its own after each backup that worked, and the app reads only that file.
+
+| | |
+|---|---|
+| Folder | `LABCIRS_BACKUP_STATUS_DIR`, as the app container sees it. Empty: the page says that no backup status is set up. |
+| File | `letzte-sicherung` (German for "last backup"; the name is fixed) |
+| Content | One line: the name of the backup file and its size in bytes, for example `labcirs-2026-10-06.dump 1234567`. Both parts are optional. |
+| Time | The modification time of the file, never something written in it. |
+
+The page shows the time and, from the line, the name and size of the backup file. It warns when the file is older than 26 hours (a nightly backup, and two hours of room for a long one). Of the name only its last part is shown, so a path in the line leaves a file name, without control characters and at most 120 characters. The folder itself is never shown on the page.
+
+Whatever is wrong ends in a note on the page, never in an error: the folder is missing (is it mounted?), there is no file or an empty one, the file cannot be read, or its time lies in the future (check the clock of the server). Only the file `letzte-sicherung` counts. Other files in the folder, hidden files, `*.tmp` and `*.part` are ignored. It must be a plain file: a link, a pipe or a folder in its place is refused, not followed, so that the page can never show what another file of the server holds.
+
+Example, the end of a nightly backup script on the host:
+
+```sh
+status_dir=/var/backups/labcirs-status
+dump=/var/backups/labcirs/labcirs-$(date +%F).dump
+# ... your backup command writes $dump here, and the script goes on only if it worked ...
+printf '%s %s\n' "$(basename "$dump")" "$(stat -c %s "$dump")" > "$status_dir/letzte-sicherung.tmp"
+mv "$status_dir/letzte-sicherung.tmp" "$status_dir/letzte-sicherung"
+```
+
+The script writes to a temporary name and renames it, so the app never reads a half-written file. It writes the file only after the backup worked, because the time of the file is the time of the backup.
+
+With Docker, bind the status folder, and only it, read-only into the app container. In `compose.override.yaml` next to `compose.yaml`:
+
+```yaml
+services:
+  app:
+    volumes:
+      - /var/backups/labcirs-status:/backup-status:ro
+```
+
+In `.env`:
+
+```
+LABCIRS_BACKUP_STATUS_DIR=/backup-status
+```
+
+Then `docker compose up -d` recreates the app container. Three things to know:
+
+- Mount the folder, not the file. The script replaces the file with `mv`, and a mounted single file would go on showing the old one.
+- The app runs as user ID 10001 and reads the file like any other user. Make the folder readable for everybody (`chmod 755`) and the file too (`chmod 644`).
+- Keep the backups themselves in another folder. The app container needs no access to them.
+
 ## Fixed in code
 
 These are not settings.
@@ -136,7 +197,7 @@ These are not settings.
 
 ## Logs and IP addresses
 
-The system does not log client addresses or user agents: the proxy access log has the format `time "request" status bytes`, gunicorn writes no access log, and the app logs only paths and tracebacks. The one exception is the proxy error log. It is set to level `crit`, where nginx rarely writes a client address, for example when a TLS handshake fails in a particular way. This is accepted. Keep the proxy log (`docker compose logs proxy`) away from people who do not need it, and limit how long Docker keeps container logs (`log-driver` options `max-size` and `max-file` in `/etc/docker/daemon.json`).
+The system does not log client addresses or user agents: the proxy access log has the format `time "method path" status bytes` without the query string, so a search term never reaches it, gunicorn writes no access log, and the app logs only paths and tracebacks. The one exception is the proxy error log. It is set to level `crit`, where nginx rarely writes a client address, for example when a TLS handshake fails in a particular way. This is accepted. Keep the proxy log (`docker compose logs proxy`) away from people who do not need it, and limit how long Docker keeps container logs (`log-driver` options `max-size` and `max-file` in `/etc/docker/daemon.json`).
 
 ## Running without Docker firewall rules (host network)
 

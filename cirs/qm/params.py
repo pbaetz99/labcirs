@@ -36,11 +36,16 @@ worklist_url() builds an address and refuses what is out of range, because a wro
 link is a mistake of the program. parse_params() reads an address and drops what is out of range,
 because a person can write anything into the address bar. It says which parameters it dropped, so
 the page can tell that a filter did not apply.
+
+An incident that is opened from the list remembers the list in one more parameter, liste, whose
+value is the query of that list. incident_query() writes it, list_params() reads it. The way back
+to the list is built from what list_params() returns by worklist_url(), so it is a path of the
+list with parameters of the list whatever the parameter holds: never another place.
 """
 
 import re
 from datetime import date
-from urllib.parse import urlencode
+from urllib.parse import parse_qsl, urlencode
 
 from django.urls import reverse
 
@@ -49,6 +54,8 @@ from cirs.models import CATEGORY_CHOICES, RISK_CHOICES, STATUS_CHOICES
 FILTERS = ('stand', 'wo', 'kategorie', 'risiko', 'von', 'bis', 'wartet', 'ohne_bearbeitung', 'q')
 SORTS = ('nr', 'gemeldet', 'aktivitaet')
 PARAMS = FILTERS + ('sort', 'page')
+LIST_PARAM = 'liste'  # on the address of an incident: the query of the list it was opened from
+MAX_LIST_FIELDS = 2 * len(PARAMS)  # a list of the page has at most one field of each name
 MAX_SEARCH_LENGTH = 200
 MAX_NUMBER = 2**31 - 1  # what an id or a page may be: a larger number cannot be one
 NO_PLACE = 'keine'  # the value of wo for the incidents that name no place
@@ -154,3 +161,37 @@ def parse_params(query):
         except ValueError:
             dropped.append(name)
     return values, dropped
+
+
+def incident_query(**params):
+    """
+    The query that the address of an incident takes to remember the work list it was opened from:
+    "?liste=" and the query of that list, written once more as a value, so that it holds nothing
+    that ends the parameter. '' for the plain list, which needs no parameter. The list is written
+    by worklist_url, so what is wrong for the list is wrong here: ValueError.
+    """
+    query = worklist_url(**params).partition('?')[2]
+    return '?' + urlencode({LIST_PARAM: query}) if query else ''
+
+
+def list_params(query):
+    """
+    The typed parameters of the work list that an incident was opened from, read from the
+    parameters of the request (request.GET). {} where there is no list, and for a value that is
+    none: a person can write anything into the address bar, so what is out of range is left out,
+    as in the list itself. The value is read as a query and nothing else, so a link, a path or a
+    script in it is a field of no name the list knows and counts for nothing.
+    """
+    text = query.get(LIST_PARAM, '')
+    if not text.strip():
+        return {}
+    try:
+        pairs = parse_qsl(text, max_num_fields=MAX_LIST_FIELDS)
+    except ValueError:  # more fields than a list has
+        return {}
+    # NUL is something that PostgreSQL refuses in a text. Written as %00 it only shows after the
+    # decoding, so the pairs are looked at, not the text.
+    if any('\x00' in part for pair in pairs for part in pair):
+        return {}
+    values, _dropped = parse_params(dict(pairs))
+    return values

@@ -138,6 +138,13 @@ def published(qs, start, end):
     return in_period(qs, start, end).filter(publishableincident__publish=True).count()
 
 
+def unprocessed(qs, start, end):
+    """The number of incidents reported in the period that are still new: nobody has taken them up
+    yet. Reaction time and processing time count only the incidents that were taken up and
+    completed, so this number says how many are left out of them."""
+    return in_period(qs, start, end).filter(status='new').count()
+
+
 def _zone():
     return ZoneInfo(settings.TIME_ZONE)
 
@@ -157,6 +164,22 @@ def protocol_start(qs):
     first = (IncidentStatusChange.objects.filter(incident__in=qs)
              .aggregate(first=Min('changed_at'))['first'])
     return first.astimezone(_zone()).date() if first else None
+
+
+def has_status_change(qs, start, end):
+    """Whether the status log holds a change of the status of one of the incidents on the days from
+    `start` to `end`. The entry that an incident gets when it is created is no change. A change is
+    an entry that has an earlier one of the same incident, and the first entry of an incident
+    from before the log if it says anything but "new" (it is then the first change that the log
+    has seen)."""
+    begin, after = _moments(start, end)
+    earlier = IncidentStatusChange.objects.filter(
+        Q(changed_at__lt=OuterRef('changed_at'))
+        | Q(changed_at=OuterRef('changed_at'), pk__lt=OuterRef('pk')),
+        incident=OuterRef('incident'))
+    return (IncidentStatusChange.objects
+            .filter(incident__in=qs, changed_at__gte=begin, changed_at__lt=after)
+            .filter(Exists(earlier) | ~Q(status='new')).exists())
 
 
 def _completions(qs):

@@ -1,0 +1,32 @@
+{% load i18n %}
+{% comment %}
+  The status log to read. The entry of the report itself (the first one, if it says new) has its day and
+  no time of day, not even in the machine-readable attribute: the time of an anonymous report says who
+  may have written it (cirs.status_log). The changes of the QM keep their time.
+{% endcomment %}
+<section class="ui-card" aria-labelledby="verlauf-titel">
+  <h2 class="ui-card__title" id="verlauf-titel">{% translate "History" context "incident page" %}</h2>
+  {% if history %}
+  <div class="ui-tablewrap">
+    <table class="ui-table">
+      <caption class="ui-visually-hidden">{% translate "Status changes of this report" %}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{% translate "Status" context "incident list" %}</th>
+          <th scope="col">{% translate "Changed at" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in history %}
+        <tr>
+          <td>{{ row.status|capfirst }}</td>
+          <td class="ui-nowrap">{% if row.with_time %}<time datetime="{{ row.moment|date:'c' }}">{{ row.moment|date:"SHORT_DATETIME_FORMAT" }}</time>{% else %}<time datetime="{{ row.moment|date:'Y-m-d' }}">{{ row.moment|date:"SHORT_DATE_FORMAT" }}</time>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="ui-muted ui-mb-0">{% translate "No status change is recorded for this report." %}</p>
+  {% endif %}
+</section>

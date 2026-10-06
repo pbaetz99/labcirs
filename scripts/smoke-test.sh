@@ -153,7 +153,10 @@ pass "django.request warnings reach the app log"
 # 127.0.0.1 are removed from the lines first, so a line with such an address and a client address
 # still counts. The startup notice of nginx names the kernel version, which can have four numbers.
 # Only IPv4 is checked, Docker runs without IPv6 here.
+# A search term stays out of the proxy log: only the path is written, never the query string.
+status "$HTTPS/incidents/smoke/?q=smoke-search-term" > /dev/null
 dc logs proxy | grep -q '"GET ' || fail "proxy log shows no requests"
+dc logs proxy | grep -q 'smoke-search-term' && fail "a search term reached the proxy log"
 leaks=$(dc logs proxy app | grep -v '\[notice\] .* OS: ' \
     | sed -E 's/\b(0\.0\.0\.0|127\.0\.0\.1)\b//g' \
     | grep -E '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b' || true)

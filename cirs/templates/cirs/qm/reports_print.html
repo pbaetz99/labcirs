@@ -1,5 +1,110 @@
-{% extends "cirs/qm/base.html" %}
-{% load i18n %}
+{% load i18n static %}<!DOCTYPE html>
+{% comment %}
+  The print view of the evaluations: a page of its own, without the top bar, the navigation and the
+  footer of the application, so that what is printed is the report and nothing else. It is made
+  from a redacted Report (cirs.qm.report.redact) and from the texts of cirs.qm.report_page: no
+  number in it is a number that may not be shown, and no text or chart says more than they do.
+  On screen it is a sheet on the grey of the page with a button that prints (formular.js shows
+  it; without a script the hint for Ctrl+P is what there is); on paper only the sheet remains.
+  The head names the organisation, the system, the period (in months), the departments and the day
+  the report is made, and never the person who makes it. The table of the monthly chart is open,
+  because a closed table is not printed; the bars have their numbers in sight.
+{% endcomment %}
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE }}" data-theme="hell">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {# The title is the name that "save as PDF" proposes for the file. #}
+  <title>{% translate "Evaluation" %} · {{ period_text }} · {{ SITE_NAME }}</title>
+  <link rel="stylesheet" href="{% static 'css/core.css' %}">
+  <link rel="stylesheet" href="{% static 'css/labcirs.css' %}">
+  {% if THEME_CSS_URL %}<link rel="stylesheet" href="{{ THEME_CSS_URL }}">{% endif %}
+  <script src="{% static 'js/formular.js' %}" defer></script>
+</head>
+<body class="ui-druckseite">
+  <main class="ui-druck" id="inhalt">
+    <div class="ui-druck__aktionen ui-row">
+      <button type="button" class="ui-btn ui-btn--primary" data-drucken hidden>{% translate "Print / save as PDF" %}</button>
+      <a class="ui-btn ui-btn--secondary" href="{{ back_url }}">{% translate "Back to the evaluations" %}</a>
+    </div>
+    <p class="ui-secondary ui-druck__hinweis" data-drucken-hinweis>{% translate "To print the page or save it as a PDF, press Ctrl+P (Cmd+P on a Mac) and choose “Save as PDF” as the printer." %}</p>
 
-{% block title %}{% translate "Evaluation (print view)" %}{% endblock %}
-{% block heading %}{% translate "Evaluation (print view)" %}{% endblock %}
+    <header class="ui-druck__kopf">
+      <p class="ui-druck__traeger"><span class="ui-druck__organisation">{{ ORGANIZATION }}</span>{% if SITE_NAME != ORGANIZATION %} &middot; <span>{{ SITE_NAME }}</span>{% endif %}</p>
+      <h1>{% translate "Evaluation of reports" %}</h1>
+      <p>{% blocktranslate with period=period_text %}Period: {{ period }}{% endblocktranslate %}</p>
+      {% if area_name %}<p>{% blocktranslate with area=area_name %}Area: {{ area }}{% endblocktranslate %}</p>{% endif %}
+      <p>{% blocktranslate count counter=departments|length with names=department_names %}Department: {{ names }}{% plural %}Departments: {{ names }}{% endblocktranslate %}</p>
+      <p>{% blocktranslate with date=created %}Created on {{ date }}{% endblocktranslate %}</p>
+      <p class="ui-secondary ui-mb-0">{% blocktranslate with min=min_cell marker=less_marker %}Small numbers are not stated: a number above 0 and below {{ min }} appears as “{{ marker }}” (see the notes at the end).{% endblocktranslate %}</p>
+    </header>
+
+    <section class="ui-druck__block" aria-labelledby="auswertung-kennzahlen">
+      <h2 id="auswertung-kennzahlen">{% translate "Key figures" %}</h2>
+      <dl class="ui-kennzahlen">
+        {% for figure in figures %}
+        <div><dt>{{ figure.label }}</dt><dd{% if figure.text %} class="ui-kennzahlen__text"{% endif %}>{{ figure.value }}{% if figure.suffix %} <span class="ui-kennzahlen__zusatz">{{ figure.suffix }}</span>{% endif %}</dd></div>
+        {% endfor %}
+      </dl>
+    </section>
+
+    <section class="ui-druck__block" aria-labelledby="auswertung-verlauf">
+      <h2 id="auswertung-verlauf">{% translate "Monthly trend" %}</h2>
+      {% if development %}
+        {% include "cirs/qm/_columns.html" with chart=development.chart chart_id="chart-verlauf" title=development.title desc=development.desc label_header=development.label_header table_open=development.table_open %}
+      {% else %}
+        <p class="ui-muted">{% translate "No reports in this period." %}</p>
+      {% endif %}
+    </section>
+
+    <section class="ui-druck__block" aria-labelledby="auswertung-verteilungen">
+      <h2 id="auswertung-verteilungen">{% translate "Distributions" %}</h2>
+      {% if report.incoming %}
+      <div class="ui-grid ui-grid--2">
+        {% for item in distributions %}
+        <div class="ui-druck__verteilung">
+          <h3 class="ui-mt-0">{{ item.name }}</h3>
+          {% if item.note %}<p class="ui-secondary">{{ item.note }}</p>{% endif %}
+          {% include "cirs/qm/_bars.html" with chart=item.chart chart_id=item.id title=item.title desc=item.desc label_header=item.name %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+        <p class="ui-muted">{% translate "No reports in this period." %}</p>
+      {% endif %}
+    </section>
+
+    <section class="ui-druck__block" aria-labelledby="auswertung-massnahmen">
+      <h2 id="auswertung-massnahmen">{% translate "Measures" %}</h2>
+      {% if report.measures %}
+      <ul class="ui-massnahmen">
+        {% for measure in report.measures %}
+        <li>
+          <p class="ui-massnahmen__kopf"><time datetime="{{ measure.reported|date:'Y-m' }}">{{ measure.reported|date:"F Y" }}</time></p>
+          <p class="ui-strong ui-mb-0">{{ measure.title }}</p>
+          {% if measure.measures %}<p class="ui-mt-2 ui-mb-0">{{ measure.measures|linebreaksbr }}</p>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% elif published_hidden %}
+        <p>{% blocktranslate with min=min_cell %}Fewer than {{ min }} published cases in this period; they are not listed one by one.{% endblocktranslate %}</p>
+      {% else %}
+        <p class="ui-muted">{% translate "No published cases for this period." %}</p>
+      {% endif %}
+    </section>
+
+    <section class="ui-druck__block" aria-labelledby="auswertung-begriffe">
+      <h2 id="auswertung-begriffe">{% translate "Definitions" %}</h2>
+      {% include "cirs/qm/_definitions.html" %}
+    </section>
+
+    <section class="ui-druck__block" aria-labelledby="auswertung-hinweise">
+      <h2 id="auswertung-hinweise">{% translate "Notes" %}</h2>
+      <ul class="ui-druck__hinweise">
+        {% for note in notes %}<li><strong>{{ note.title }}.</strong> {{ note.text }}</li>{% endfor %}
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

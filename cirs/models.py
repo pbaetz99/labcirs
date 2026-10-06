@@ -390,6 +390,8 @@ class PublishableIncident(TranslationStatusMixin, TranslatableModel):
         ordering = ['-id']
 
     def clean(self):
+        if self.critical_incident_id is None:
+            return  # the field names its own error, the rules below need the incident
         if self.critical_incident.public is False:
             raise ValidationError(_("The reporter did not agreed to publish this incident!"))
         if self.publish is True:

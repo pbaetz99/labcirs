@@ -22,13 +22,22 @@ The crawl follows the links on the admin index, so a model registered later is c
 without touching this file. A failure lists every failing URL, not just the first one.
 """
 
+import logging
+import os
 import re
+import tempfile
+import time
+from datetime import date
+from pathlib import Path
+from urllib.parse import urlencode
+
 from django.db import transaction
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from model_bakery import baker
 
 from cirs.models import Comment, OrgUnit, PublishableIncident, ReporterContact
+from cirs.qm.params import incident_query
 from cirs.tests.helpers import create_user, csp_violations
 
 ADMIN_LINK = re.compile(r'href="(/admin/[^"?#]*)')
@@ -68,12 +77,13 @@ class PageCrawlTest(TestCase):
     def setUp(self):
         self.failures = []
 
-    def fetch(self, client, role, url, method='get', allowed=(200,), follow=False):
+    def fetch(self, client, role, url, method='get', allowed=(200,), follow=False, data=None):
         """Requests url and records a failure instead of stopping at the first one."""
+        arguments = (url,) if data is None else (url, data)
         try:
             # a savepoint, so that one failing page leaves the next ones a usable connection
             with transaction.atomic():
-                response = getattr(client, method)(url, follow=follow,
+                response = getattr(client, method)(*arguments, follow=follow,
                                                    HTTP_ACCEPT_LANGUAGE='de')
         except Exception as error:
             self.failures.append('%s %s: %s' % (role, url, type(error).__name__))
@@ -168,6 +178,45 @@ class PageCrawlTest(TestCase):
         self.assertIn(reverse('admin:cirs_orgunit_change', args=[self.org_unit.pk]),
                       visited['superuser'])
 
+    def test_admin_start_page_never_errors_in_any_state_of_the_backup_status(self):
+        """The start page of the admin shows the superuser the system status and the QM the way to
+        the QM area, whatever the folder of the backup status holds."""
+        # the warnings about a status file that cannot be used would fill the output of the run
+        logging.disable(logging.CRITICAL)
+        self.addCleanup(logging.disable, logging.NOTSET)
+        index = reverse('admin:index')
+        superuser, qm = self.client_for(self.superuser), self.client_for(self.reviewer.user)
+        with tempfile.TemporaryDirectory() as folder:
+            status_file = Path(folder, 'letzte-sicherung')
+
+            def written(hours_ago, content='labcirs-2026-10-06.dump 1234567'):
+                status_file.write_text(content, encoding='utf-8')
+                moment = time.time() - hours_ago * 3600
+                os.utime(status_file, (moment, moment))
+
+            states = [('not set up', '', lambda: None),
+                      ('no folder', str(Path(folder, 'missing')), lambda: None),
+                      ('no status file', folder, lambda: None),
+                      ('fresh', folder, lambda: written(1)),
+                      ('stale', folder, lambda: written(50)),
+                      ('future', folder, lambda: written(-48)),
+                      ('empty status file', folder, lambda: written(1, '')),
+                      ('name that is a way', folder, lambda: written(1, '../../etc/passwd 1')),
+                      ('status file that is a folder', folder,
+                       lambda: (status_file.unlink(), status_file.mkdir()))]
+            for label, directory, prepare in states:
+                prepare()
+                with override_settings(BACKUP_STATUS_DIR=directory):
+                    page = self.fetch(superuser, 'superuser (%s)' % label, index)
+                    link = self.fetch(qm, 'QM (%s)' % label, index)
+                for response, mark, present in ((page, 'id="system-status"', True),
+                                                (link, 'id="system-status"', False),
+                                                (link, 'href="/qm/"', True)):
+                    if response is not None and (mark in response.content.decode()) != present:
+                        self.failures.append('%s: %s %s' % (label, mark, 'missing' if present
+                                                            else 'must not be there'))
+        self.assertNoFailures()
+
     def test_qm_pages_never_error(self):
         names = ('qm_overview', 'qm_incidents', 'qm_reports', 'qm_reports_print', 'qm_reports_csv')
         urls = [reverse(name) for name in names]
@@ -182,6 +231,39 @@ class PageCrawlTest(TestCase):
             self.fetch(Client(), 'anonymous', url, allowed=(302,))
             self.fetch(self.client_for(self.superuser), 'superuser', url, allowed=(403,))
             self.fetch(self.client_for(self.dept.reporter.user), 'reporter', url, allowed=(403,))
+        self.assertNoFailures()
+
+    def test_qm_incident_page_never_errors(self):
+        url = self.commented.get_absolute_url()
+        qm = self.client_for(self.reviewer.user)
+        # the list it was opened from may be anything: a value that is none is no list, never a 500
+        for query in ('', incident_query(stand='new', page=2), '?liste=q%3D%2500',
+                      '?liste=' + 'x' * 3000):
+            self.fetch(qm, 'QM', url + query)
+        self.fetch(qm, 'QM', self.published.get_absolute_url())  # with a published case
+        # each action that is not in order shows the page again, with the errors
+        for data in ({'aktion': 'bewertung', 'status': 'new', 'risk': 'high'},
+                     {'aktion': 'antwort', 'text': ''},
+                     {'aktion': 'veroeffentlichung', 'de-description': 'Only a text'}):
+            self.fetch(qm, 'QM', url, method='post', data=data)
+        # nobody else gets to the page of the QM: an administrator goes to the admin, anonymous
+        # visitors to the code page
+        self.fetch(self.client_for(self.superuser), 'superuser', url, allowed=(302,))
+        self.fetch(Client(), 'anonymous', url, allowed=(302,))
+        self.assertNoFailures()
+
+    def test_qm_export_pages_never_error(self):
+        qm = self.client_for(self.reviewer.user)
+        year = date.today().year
+        base = {'von_monat': 1, 'von_jahr': year, 'bis_monat': 12, 'bis_jahr': year}
+        queries = ['', '?' + urlencode(base), '?' + urlencode({**base, 'bereich': self.org_unit.pk}),
+                   '?' + urlencode({**base, 'von_jahr': year - 1})]
+        for name in ('qm_reports_print', 'qm_reports_csv'):
+            for query in queries:
+                self.fetch(qm, 'QM', reverse(name) + query)
+            # a request that is not in order is sent to the page, which names what is wrong
+            self.fetch(qm, 'QM', reverse(name) + '?von_monat=13', allowed=(302,))
+            self.fetch(qm, 'QM', reverse(name) + '?von_monat=13', follow=True)
         self.assertNoFailures()
 
     def test_config_add_page_is_forbidden(self):

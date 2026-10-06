@@ -95,6 +95,8 @@ docker compose run --rm --no-deps -T app tar -czf - -C /media . > media-$(date +
 
 Keep both off the host. A backup is only worth something after you restored it once on a scratch machine. [upgrade.md](upgrade.md) shows the restore commands.
 
+The admin start page can show when the last backup was made and warn when it is overdue. For that, your backup script writes a small status file after each backup that worked, see [configuration.md](configuration.md#system-status-on-the-admin-start-page).
+
 ## Update to a newer version of LabCIRS
 
 ```

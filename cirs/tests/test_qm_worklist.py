@@ -36,7 +36,7 @@ from model_bakery import baker
 from cirs.models import OrgUnit
 from cirs.qm import metrics
 from cirs.qm.metrics import annotate_workflow, awaiting_qm, monthly, overdue, protocol_start
-from cirs.qm.params import FILTERS, NO_PLACE, SORTS, worklist_url
+from cirs.qm.params import FILTERS, NO_PLACE, SORTS, incident_query, worklist_url
 from cirs.qm.views_worklist import NARROWINGS, PAGE_SIZE
 
 from .canary import CANARY, CanaryMixin
@@ -48,7 +48,7 @@ from .test_qm_overview import TODAY, at, tables, tile, words
 DE = {'HTTP_ACCEPT_LANGUAGE': 'de'}
 EN = {'HTTP_ACCEPT_LANGUAGE': 'en'}
 LIST_COLUMNS = ['Nr.', 'Gemeldet', 'Stand', 'Wo', 'Kategorie', 'Risiko', 'Letzte Aktivität',
-                'Hinweise', 'Bearbeiten']
+                'Hinweise']
 
 
 def listed(html):
@@ -634,13 +634,10 @@ class RowTest(WorklistData):
     def row(self, incident):
         return next(row for row in rows_of(self.html())[1:] if row[0] == str(incident.pk))
 
-    def admin_cell(self, incident):
-        return 'Im Admin bearbeiten : Meldung %d' % incident.pk
-
     def test_a_row_with_everything(self):
         self.assertEqual(self.row(self.waiting), [
             str(self.waiting.pk), '30.09.2026', 'In Bearbeitung', 'Labor › Station A',
-            'Infrastruktur', 'Hoch', '01.10.2026', 'Wartet auf QM', self.admin_cell(self.waiting)])
+            'Infrastruktur', 'Hoch', '01.10.2026', 'Wartet auf QM'])
 
     def test_a_row_without_a_place_a_category_or_a_risk_says_so(self):
         self.assertEqual(self.row(self.fresh)[3:6], ['Labor', 'Keine Angabe', 'Keine Angabe'])
@@ -664,13 +661,19 @@ class RowTest(WorklistData):
         self.assertIn('<span class="ui-badge ui-badge--info">Neu</span>', html)
         self.assertIn('<span class="ui-badge ui-badge--info">Unter Beobachtung</span>', html)
 
-    def test_the_number_links_to_the_incident_and_the_admin_is_one_link_further(self):
+    def test_the_number_links_to_the_incident_which_is_where_the_work_is_done(self):
         html = self.html()
         for incident in self.everyone:
             self.assertIn('<td class="ui-strong"><a href="%s">%d</a></td>'
                           % (incident.get_absolute_url(), incident.pk), html)
-            self.assertIn('<a href="%s">Im Admin bearbeiten' % reverse(
-                'admin:cirs_criticalincident_change', args=[incident.pk]), html)
+        self.assertNotIn('/admin/cirs/criticalincident/', html)  # no second way to the same work
+
+    def test_the_number_remembers_the_list_with_its_filters_sort_and_page(self):
+        html = self.html({'stand': 'new', 'sort': 'nr', 'von': 'x'})  # what was left out is not kept
+        suffix = incident_query(stand='new', sort='nr')
+        for incident in (self.fresh, self.late):
+            self.assertIn('<td class="ui-strong"><a href="%s%s">%d</a></td>'
+                          % (incident.get_absolute_url(), suffix, incident.pk), html)
 
     def test_the_day_is_a_time_element(self):
         self.assertIn('<time datetime="2026-09-30">30.09.2026</time>', self.html())
@@ -696,9 +699,14 @@ class PageTest(WorklistData):
 
     def test_the_table_has_a_caption_and_every_head_cell_a_scope(self):
         html = self.html()
-        self.assertRegex(html, r'<caption class="ui-visually-hidden">Meldungen</caption>')
+        self.assertRegex(html, r'<caption class="ui-visually-hidden">Meldungen, insgesamt \d+</caption>')
         self.assertEqual(len(re.findall(r'<th[\s>]', html)), len(LIST_COLUMNS))
         self.assertEqual(html.count('<th scope="col"'), len(LIST_COLUMNS))
+
+    def test_the_hint_of_the_date_fields_names_no_format_the_field_does_not_show(self):
+        html = self.html()
+        self.assertIn('Tag, Monat und Jahr; die Reihenfolge richtet sich nach Ihrem Browser.', html)
+        self.assertNotIn('JJJJ-MM-TT', html)
 
     def test_every_field_has_its_label_and_its_hint(self):
         html = self.html()
@@ -731,7 +739,7 @@ class PageTest(WorklistData):
     def test_the_texts_are_translatable(self):
         html = self.html({'stand': 'new', 'von': 'x'}, **EN)
         for text in ('Filter the incidents', 'Reported from', 'Waiting for the QM', 'Last activity',
-                     'Edit in the admin', 'Clear filter', 'incidents match your filters',
+                     'Clear filter', 'incidents match your filters',
                      'The filter “von” was ignored: invalid date.', 'Show only'):
             self.assertIn(text, html)
         empty = self.html({'stand': 'new', 'risiko': 'high'}, **EN)
