@@ -765,8 +765,9 @@ class QueriesTest(WorklistBase):
         cls.second = baker.make_recipe('cirs.department', name='Station Zwei')
         cls.second.reviewers.add(cls.reviewer)
         cls.departments = [cls.dept, cls.second]
-        cls.units = [OrgUnit.objects.create(name='Labor'), None,
-                     OrgUnit.objects.create(name='Pflege')]
+        # one of the places is a sub-unit: its name has to come with the parent in the same query
+        labor = OrgUnit.objects.create(name='Labor')
+        cls.units = [labor, None, OrgUnit.objects.create(name='Pflege', parent=labor)]
         cls.categories = [['other'], [], ['infrastructure', 'other']]
 
     def add(self, number):

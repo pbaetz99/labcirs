@@ -98,7 +98,7 @@ def _figures(report):
     rows = [(gettext('Incoming'), report.incoming)]
     rows += _logged(gettext('Completed'), report.completed, suffix)
     rows += [(gettext('Open (as of today)'), open_end), (gettext('Published'), report.published),
-             (gettext('Still without processing'), report.unprocessed)]
+             (gettext('Still in status “new”'), report.unprocessed)]
     rows += _times(gettext('Reaction time'), report.reaction, suffix)
     rows += _times(gettext('Processing time'), report.processing, suffix)
     return [(gettext('Key figures'), name, _cell(value)) for name, value in rows]

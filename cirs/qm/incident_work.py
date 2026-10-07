@@ -34,12 +34,15 @@ asks for the same work. A permission the account lacks hides the form and refuse
 import copy
 
 from django.contrib import messages
+from django.contrib.admin.models import CHANGE, LogEntry
 from django.core.exceptions import BadRequest, PermissionDenied
+from django.db import transaction
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
+from cirs.models import CriticalIncident
 from cirs.status_log import log_rows
 
 from .access import reviewer_of, scoped_departments
@@ -93,12 +96,15 @@ class QMIncidentMixin:
         action = self.action()
         if action not in ACTIONS:
             raise BadRequest('Unknown action')
-        form, permission = self._bind(action, request.POST)
-        if not request.user.has_perm(permission):
-            raise PermissionDenied
-        if not form.is_valid():
+        with transaction.atomic():
+            form, permission = self._bind(action, request.POST)
+            if not request.user.has_perm(permission):
+                raise PermissionDenied
+            saved = self._save(action, form) if form.is_valid() else None
+            if saved is not None:
+                self._log(request.user, action, form)
+        if saved is None:
             return self.render_to_response(self.get_context_data(**{CONTEXT_KEYS[action]: form}))
-        saved = self._save(action, form)
         if action in SAVED:
             text = SAVED[action]
         else:
@@ -109,9 +115,12 @@ class QMIncidentMixin:
     def _bind(self, action, data):
         """The form of the action with the data, and the permission that the action needs."""
         if action == 'bewertung':
-            # a copy: a form that is not in order has changed its instance, and the page above it
-            # shows the incident as it is stored
-            return ReviewForm(data, instance=copy.copy(self.incident)), CHANGE_INCIDENT
+            # Locked and read again: two requests that save at once must not both see the old
+            # status (two entries in the log, two mails). It is a copy of the incident as well: a
+            # form that is not in order has changed its instance, and the page above it shows the
+            # incident as it is stored.
+            incident = CriticalIncident.objects.select_for_update().get(pk=self.incident.pk)
+            return ReviewForm(data, instance=incident), CHANGE_INCIDENT
         if action == 'antwort':
             return self.get_form_class()(data), CHANGE_INCIDENT
         form = PublicationForm(self.incident, data)
@@ -122,6 +131,13 @@ class QMIncidentMixin:
             form.instance.author = self.request.user
             form.instance.critical_incident = self.incident
         return form.save()
+
+    def _log(self, user, action, form):
+        """The trail that the admin leaves for the same work: who, when and which fields, on the
+        incident, and never what was written."""
+        fields = ', '.join(form.changed_data) or '-'
+        LogEntry.objects.log_actions(user.pk, [self.incident], CHANGE,
+                                     f'QM page, {action}: {fields}', single_object=True)
 
     def work_context(self, review_form=None, publication_form=None):
         """What the page of the QM has besides what the page of the reporter has."""

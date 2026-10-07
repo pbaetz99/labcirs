@@ -255,6 +255,9 @@ QM_OVERDUE_DAYS = get_positive_int_setting('QM_OVERDUE_DAYS', 14)
 # The smallest number that print view and CSV of the evaluations show: a number above 0 but below
 # this is replaced by "< n". Raising it protects small units more.
 REPORT_MIN_CELL = get_positive_int_setting('REPORT_MIN_CELL', 3)
+if REPORT_MIN_CELL < 3:
+    # "< 2" can only mean 1, and 1 hides nothing: the rule would promise more than it does
+    raise ImproperlyConfigured(f'{ENV_PREFIX}REPORT_MIN_CELL must be at least 3, not {REPORT_MIN_CELL}')
 # Folder with the status note of the last backup (admin start page). Empty: not set up.
 BACKUP_STATUS_DIR = get_local_setting('BACKUP_STATUS_DIR', '')
 if not isinstance(BACKUP_STATUS_DIR, str):

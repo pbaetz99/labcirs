@@ -77,12 +77,14 @@ class Measure:
     """A published case of an incident reported in the period: the number of the incident, the
     address of its page, the day of the report, and the title and the measures of the case in the
     active language. In a redacted Report there is no number and no address, and the day is the
-    first of its month."""
+    first of its month, or the first of its year (`year_only`) where the month would give a hidden
+    number of the months away."""
     number: int | None
     url: str
     reported: date
     title: str
     measures: str
+    year_only: bool = False
 
 
 @dataclass(frozen=True)
@@ -195,18 +197,33 @@ def _with_total(values, min_cell, total):
     return cells, shown
 
 
+def _withhold_smallest(cells):
+    """The cells of a series with the smallest one above 0 withheld (SECONDARY_MARK)."""
+    positive = [i for i, cell in enumerate(cells) if cell > 0]
+    if not positive:
+        return cells
+    smallest = min(positive, key=lambda i: (cells[i], i))
+    return [SECONDARY_MARK if i == smallest else cell for i, cell in enumerate(cells)]
+
+
 class _Incoming:
     """The incoming over all the series that add up to it: the months, the distributions and the
     incidents still new next to those that are not. It is one number, shown in several places, and
-    if one series has to withhold it, it is withheld in every place."""
+    if one series has to withhold it, it is withheld in every place.
 
-    def __init__(self, incoming, min_cell):
-        self.incoming, self.min_cell, self.verdicts = incoming, min_cell, []
+    With `guard`, the incoming is withheld, and then a printed series that shows every cell would
+    give it back as the sum of its cells: such a series withholds its smallest cell as well."""
 
-    def cells(self, values):
-        """The cells of a series that adds up to the incoming."""
+    def __init__(self, incoming, min_cell, guard=False):
+        self.incoming, self.min_cell, self.guard, self.verdicts = incoming, min_cell, guard, []
+
+    def cells(self, values, printed=True):
+        """The cells of a series that adds up to the incoming. `printed` is False for a series
+        of which only a part is shown anywhere."""
         cells, verdict = _with_total(values, self.min_cell, self.incoming)
         self.verdicts.append(verdict)
+        if self.guard and printed and all(isinstance(cell, int) for cell in cells):
+            cells = _withhold_smallest(cells)
         return cells
 
     def shown(self):
@@ -241,15 +258,25 @@ def _redact_distribution(distribution, min_cell, incoming):
                                           in zip(distribution.buckets, cells)])
 
 
-def _redact_measures(report, published):
+def _redact_measures(report, published, monthly):
     """The measures that may be listed: none if the number of published cases is hidden, since a
     list of one or two cases says what the number does not. A case has no number of its own and
     no address, and its day is the month: the numbers of the incidents run over all the
-    departments, and the public list of the cases names the month as well."""
+    departments, and the public list of the cases names the month as well. A month whose incoming
+    is hidden is not named either: the cases that were reported in it would tell what the cell
+    does not, so such a case names its year only."""
     if not isinstance(published, int):
         return []
-    return [replace(case, number=None, url='', reported=metrics.first_of_month(case.reported))
-            for case in report.measures]
+    named = {row.month for row in monthly if isinstance(row.incoming, int)}
+    cases = []
+    for case in report.measures:
+        month = metrics.first_of_month(case.reported)
+        if month in named:
+            cases.append(replace(case, number=None, url='', reported=month))
+        else:
+            cases.append(replace(case, number=None, url='', reported=date(month.year, 1, 1),
+                                 year_only=True))
+    return cases
 
 
 def redact(report, min_cell):
@@ -270,21 +297,35 @@ def redact(report, min_cell):
     """
     if min_cell < 1:
         raise ValueError('The smallest number to show is at least 1')
-    incoming = _Incoming(report.incoming, min_cell)
+    result = _redact(report, min_cell, guard=False)
+    if result.incoming == SECONDARY_MARK:
+        # Some series withholds the incoming: the others that add up to it have to stand for that.
+        result = _redact(report, min_cell, guard=True)
+    return result
+
+
+def _redact(report, min_cell, guard):
+    incoming = _Incoming(report.incoming, min_cell, guard)
     monthly, completed = _redact_months(report, min_cell, incoming)
     distributions = [_redact_distribution(one, min_cell, incoming)
                      for one in report.distributions]
-    new, _processed = incoming.cells([report.unprocessed, report.incoming - report.unprocessed])
+    # The reports that are not new are no figure of the report: only the first number is printed.
+    new, _processed = incoming.cells(
+        [report.unprocessed, max(0, report.incoming - report.unprocessed)], printed=False)
     shown = incoming.shown()
     published = metrics.suppress(report.published, min_cell)
+    processing = (None if report.processing is None
+                  else redact_duration(report.processing, min_cell))
+    if processing is not None and isinstance(completed, str):
+        # The times are taken from the completions: their count would give back the number that
+        # is hidden.
+        processing = Durations(None, completed)
     return replace(
         report, incoming=shown, completed=completed,
         open_end=None if report.open_end is None else metrics.suppress(report.open_end, min_cell),
         published=published, unprocessed=new,
         reaction=None if report.reaction is None else redact_duration(report.reaction, min_cell),
-        processing=(None if report.processing is None
-                    else redact_duration(report.processing, min_cell)),
-        monthly=monthly,
+        processing=processing, monthly=monthly,
         distributions=[replace(one, total=None if one.multiple_answers else shown)
                        for one in distributions],
-        measures=_redact_measures(report, published))
+        measures=_redact_measures(report, published, monthly))

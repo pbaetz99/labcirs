@@ -93,7 +93,7 @@ def figures(report):
         _logged(gettext('Processing time'),
                 None if report.processing is None else duration_text(report.processing), suffix,
                 True),
-        {'label': gettext('Still without processing'), 'value': report.unprocessed},
+        {'label': gettext('Still in status “new”'), 'value': report.unprocessed},
     ]
 
 
@@ -178,7 +178,7 @@ def notes(report, min_cell):
          % {'min': min_cell}),
         (gettext('Times'), gettext(
             'Reaction time and processing time are medians in days. If fewer than %(min)d reports '
-            'are behind them, neither the median nor the count is stated.') % {'min': min_cell}),
+            'are behind them, the median is not stated and the count shows as “< %(min)d”.') % {'min': min_cell}),
     ]
     log = recorded_note(report)
     if log:

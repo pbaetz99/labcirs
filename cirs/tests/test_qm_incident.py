@@ -30,6 +30,7 @@ from datetime import date, datetime
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
+from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import Permission
 from django.core import mail
 from django.db import connection
@@ -715,3 +716,53 @@ class GermanTest(PageCase):
         rows = re.findall(r'<td[^>]*>(.*?)</td>', section(html, 'verlauf-titel'), re.S)
         self.assertEqual(rows, ['Neu', '<time datetime="2026-09-30">30.09.2026</time>'])
 
+
+
+class TrailTest(PageCase):
+    """The admin writes an entry for every change of an incident: who, when and what. So does the
+    page of the QM, with the names of the fields and never with what was written."""
+
+    def last_entry(self):
+        return LogEntry.objects.latest('pk')
+
+    def test_an_assessment_leaves_an_entry_with_the_account_and_the_fields(self):
+        before = LogEntry.objects.count()
+        self.post('bewertung', REVIEW)
+        entry = self.last_entry()
+        self.assertEqual(LogEntry.objects.count(), before + 1)
+        self.assertEqual((entry.user_id, entry.object_id),
+                         (self.reviewer.user.pk, str(self.incident.pk)))
+        self.assertIn('bewertung', entry.change_message)
+        self.assertIn('status', entry.change_message)
+        self.assertNotIn('Synthetic measure', entry.change_message)
+
+    def test_a_reply_leaves_an_entry_without_the_text(self):
+        self.post('antwort', {'text': 'Synthetic reply text'})
+        entry = self.last_entry()
+        self.assertIn('antwort', entry.change_message)
+        self.assertNotIn('Synthetic reply text', entry.change_message)
+
+    def test_a_publication_leaves_an_entry(self):
+        self.post('veroeffentlichung', {**CASE, 'publish': ''})
+        self.assertIn('veroeffentlichung', self.last_entry().change_message)
+
+    def test_a_form_that_is_not_in_order_leaves_none(self):
+        before = LogEntry.objects.count()
+        self.post('bewertung', {**REVIEW, 'status': 'nonsense'})
+        self.assertEqual(LogEntry.objects.count(), before)
+
+
+class NotificationsEndHintTest(PageCase):
+
+    def test_the_help_of_the_status_says_that_completed_ends_the_notifications(self):
+        self.assertIn('so send a reply first', self.get().content.decode())
+
+    def test_a_completed_report_says_that_a_reply_is_not_sent_by_e_mail(self):
+        CriticalIncident.objects.filter(pk=self.incident.pk).update(status='completed')
+        text = words(section(self.get().content.decode(), 'rueckmeldungen-titel'))
+        self.assertIn('a reply is no longer sent by e-mail', text)
+        self.assertNotIn('Your reply is also sent by e-mail', text)
+
+    def test_an_open_report_says_that_the_reply_goes_by_e_mail(self):
+        text = words(section(self.get().content.decode(), 'rueckmeldungen-titel'))
+        self.assertIn('Your reply is also sent by e-mail', text)

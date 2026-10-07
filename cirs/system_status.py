@@ -178,7 +178,8 @@ def departments():
     """Every department with whether it has a QM and whether the QM is notified of new
     incidents, by name: one query."""
     rows = (Department.objects
-            .annotate(has_qm=Exists(Reviewer.objects.filter(departments=OuterRef('pk'))),
+            .annotate(has_qm=Exists(Reviewer.objects.filter(
+                departments=OuterRef('pk'), user__is_active=True, user__is_superuser=False)),
                       notifies=F('labcirsconfig__send_notification'))
             .order_by('name')
             .values_list('pk', 'name', 'active', 'has_qm', 'notifies'))

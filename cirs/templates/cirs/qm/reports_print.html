@@ -81,7 +81,7 @@
       <ul class="ui-massnahmen">
         {% for measure in report.measures %}
         <li>
-          <p class="ui-massnahmen__kopf"><time datetime="{{ measure.reported|date:'Y-m' }}">{{ measure.reported|date:"F Y" }}</time></p>
+          <p class="ui-massnahmen__kopf">{% if measure.year_only %}<time datetime="{{ measure.reported|date:'Y' }}">{{ measure.reported|date:"Y" }}</time>{% else %}<time datetime="{{ measure.reported|date:'Y-m' }}">{{ measure.reported|date:"F Y" }}</time>{% endif %}</p>
           <p class="ui-strong ui-mb-0">{{ measure.title }}</p>
           {% if measure.measures %}<p class="ui-mt-2 ui-mb-0">{{ measure.measures|linebreaksbr }}</p>{% endif %}
         </li>

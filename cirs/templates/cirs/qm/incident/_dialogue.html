@@ -25,7 +25,11 @@
   <div class="ui-card ui-mt-4">
     <h3 class="ui-card__title ui-mt-0" id="antwort-titel">{% translate "Reply" %}</h3>
     {% if can_reply %}
+    {% if incident.status == 'completed' %}
+    <p class="ui-secondary">{% translate "The notifications for this report ended with the status “Completed”: a reply is no longer sent by e-mail. Do not write names or patient data." %}</p>
+    {% else %}
     <p class="ui-secondary">{% translate "Your reply is also sent by e-mail to the reporter if they have set up notifications. Do not write names or patient data." %}</p>
+    {% endif %}
     <form method="post" data-einmal-absenden>
       {% csrf_token %}
       <input type="hidden" name="aktion" value="antwort">

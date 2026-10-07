@@ -90,7 +90,7 @@ class CsvContentTest(ExportCase):
         self.assertEqual(figures, [
             ['Kennzahlen', 'Eingang', '15'], ['Kennzahlen', 'Abgeschlossen', '8'],
             ['Kennzahlen', 'Offen (Stand heute)', '7'], ['Kennzahlen', 'Veröffentlicht', LESS],
-            ['Kennzahlen', 'Noch ohne Bearbeitung', '3'],
+            ['Kennzahlen', 'Noch im Stand „neu“', '3'],
             ['Kennzahlen', 'Reaktionszeit, Median in Tagen', '2'],
             ['Kennzahlen', 'Reaktionszeit, Anzahl', '12'],
             ['Kennzahlen', 'Bearbeitungsdauer, Median in Tagen', '12,5'],

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LabCIRS\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-06 14:29+0000\n"
+"POT-Creation-Date: 2026-10-07 07:53+0000\n"
 "PO-Revision-Date: 2019-05-22 14:53+0200\n"
 "Last-Translator: Sebastian Major <sebastian.major@charite.de>\n"
 "Language-Team: \n"
@@ -565,17 +565,17 @@ msgstr "Übersetzungsinformation"
 msgid "Incident"
 msgstr "Ereignis"
 
-#: cirs/models.py:375 cirs/qm/forms.py:124
+#: cirs/models.py:375 cirs/qm/forms.py:126
 #: cirs/templates/cirs/publishableincident_list.html:62
 msgid "Description"
 msgstr "Beschreibung"
 
-#: cirs/models.py:376 cirs/qm/forms.py:125
+#: cirs/models.py:376 cirs/qm/forms.py:127
 #: cirs/templates/cirs/publishableincident_list.html:63
 msgid "Measures and consequences"
 msgstr "Maßnahmen und Konsequenzen"
 
-#: cirs/models.py:378 cirs/qm/forms.py:138
+#: cirs/models.py:378 cirs/qm/forms.py:140
 msgid "Publish"
 msgstr "Veröffentlichen"
 
@@ -802,22 +802,23 @@ msgstr "Risiko"
 
 #
 #: cirs/qm/forms.py:84
+#
 msgid ""
 "A new status goes by e-mail to the reporting person if they have set up "
-"notifications. The e-mail names the status and nothing else."
-msgstr ""
-"Ein neuer Stand geht per E-Mail an die meldende Person, wenn sie "
-"Benachrichtigungen eingerichtet hat. Die E-Mail nennt nur den Stand."
+"notifications. The e-mail names the status and nothing else. With "
+"“Completed” the notifications end: later replies and statuses are no longer "
+"sent by e-mail, so send a reply first."
+msgstr "Ein neuer Stand geht per E-Mail an die meldende Person, wenn sie Benachrichtigungen eingerichtet hat. Die E-Mail nennt nur den Stand. Mit „erledigt“ enden die Benachrichtigungen: Spätere Antworten und neue Stände gehen nicht mehr per E-Mail hinaus, senden Sie daher zuerst eine Antwort."
 
-#: cirs/qm/forms.py:86
+#: cirs/qm/forms.py:88
 msgid "You may choose several."
 msgstr "Sie können mehrere wählen."
 
-#: cirs/qm/forms.py:87
+#: cirs/qm/forms.py:89
 msgid "The day on which the measure is to be checked."
 msgstr "Der Tag, an dem die Maßnahme überprüft werden soll."
 
-#: cirs/qm/forms.py:101 cirs/qm/metrics.py:68
+#: cirs/qm/forms.py:103 cirs/qm/metrics.py:68
 #: cirs/templates/cirs/qm/_definitions.html:32
 #: cirs/templates/cirs/qm/_incident_rows.html:26
 #: cirs/templates/cirs/qm/worklist.html:33
@@ -827,11 +828,11 @@ msgstr "Der Tag, an dem die Maßnahme überprüft werden soll."
 msgid "Not specified"
 msgstr "Keine Angabe"
 
-#: cirs/qm/forms.py:124
+#: cirs/qm/forms.py:126
 msgid "Title"
 msgstr "Titel"
 
-#: cirs/qm/forms.py:139
+#: cirs/qm/forms.py:141
 msgid ""
 "Published cases are visible to every visitor of the site, also without "
 "logging in. Make sure that the texts hold no names and no patient data."
@@ -840,36 +841,36 @@ msgstr ""
 "Anmeldung. Achten Sie darauf, dass die Texte keine Namen und keine "
 "Patientendaten enthalten."
 
-#: cirs/qm/forms.py:168
+#: cirs/qm/forms.py:170
 #, python-format
 msgid "%(language)s (mandatory language)"
 msgstr "%(language)s (Pflichtsprache)"
 
-#: cirs/qm/forms.py:169
+#: cirs/qm/forms.py:171
 #, python-format
 msgid "%(language)s (optional language)"
 msgstr "%(language)s (freiwillig)"
 
-#: cirs/qm/forms.py:212
+#: cirs/qm/forms.py:214
 msgid "Please fill in the texts of at least one language."
 msgstr "Bitte füllen Sie die Texte von mindestens einer Sprache aus."
 
 #
-#: cirs/qm/incident_work.py:59
+#: cirs/qm/incident_work.py:62
 msgid "The assessment has been saved."
 msgstr "Die Bewertung wurde gespeichert."
 
 #
-#: cirs/qm/incident_work.py:60
+#: cirs/qm/incident_work.py:63
 msgid "Your reply has been saved and is the last one in the dialogue."
 msgstr "Ihre Antwort wurde gespeichert und steht am Ende des Dialogs."
 
-#: cirs/qm/incident_work.py:61
+#: cirs/qm/incident_work.py:64
 msgid "The publication has been saved. The case is now published."
 msgstr ""
 "Die Veröffentlichung wurde gespeichert. Der Fall ist jetzt veröffentlicht."
 
-#: cirs/qm/incident_work.py:62
+#: cirs/qm/incident_work.py:65
 msgid "The publication has been saved. The case is not published."
 msgstr ""
 "Die Veröffentlichung wurde gespeichert. Der Fall ist nicht veröffentlicht."
@@ -931,8 +932,8 @@ msgstr "Veröffentlicht"
 
 #: cirs/qm/report_csv.py:101 cirs/qm/report_page.py:96
 #: cirs/templates/cirs/qm/_definitions.html:22
-msgid "Still without processing"
-msgstr "Noch ohne Bearbeitung"
+msgid "Still in status “new”"
+msgstr "Noch im Stand „neu“"
 
 #: cirs/qm/report_csv.py:102 cirs/qm/report_page.py:91
 #: cirs/templates/cirs/qm/_definitions.html:18
@@ -1082,11 +1083,9 @@ msgstr "Zeiten"
 #, python-format
 msgid ""
 "Reaction time and processing time are medians in days. If fewer than %(min)d "
-"reports are behind them, neither the median nor the count is stated."
-msgstr ""
-"Reaktionszeit und Bearbeitungsdauer sind Mediane in Tagen. Liegen weniger "
-"als %(min)d Meldungen zugrunde, werden weder der Median noch die Anzahl "
-"angegeben."
+"reports are behind them, the median is not stated and the count shows as “< "
+"%(min)d”."
+msgstr "Reaktionszeit und Bearbeitungsdauer sind Mediane in Tagen. Liegen weniger als %(min)d Meldungen zugrunde, wird der Median nicht angegeben, die Anzahl steht als „< %(min)d“."
 
 #: cirs/qm/report_page.py:185
 msgid "Status log"
@@ -1402,7 +1401,7 @@ msgid "Reply"
 msgstr "Antworten"
 
 #: cirs/templates/cirs/criticalincident_detail.html:99
-#: cirs/templates/cirs/qm/incident/_dialogue.html:28
+#: cirs/templates/cirs/qm/incident/_dialogue.html:31
 msgid ""
 "Your reply is also sent by e-mail to the reporter if they have set up "
 "notifications. Do not write names or patient data."
@@ -1412,12 +1411,12 @@ msgstr ""
 "Patientendaten."
 
 #: cirs/templates/cirs/criticalincident_detail.html:104
-#: cirs/templates/cirs/qm/incident/_dialogue.html:33
+#: cirs/templates/cirs/qm/incident/_dialogue.html:37
 msgid "Sending …"
 msgstr "Wird gesendet …"
 
 #: cirs/templates/cirs/criticalincident_detail.html:105
-#: cirs/templates/cirs/qm/incident/_dialogue.html:34
+#: cirs/templates/cirs/qm/incident/_dialogue.html:38
 msgid "Send reply"
 msgstr "Antwort senden"
 
@@ -1809,16 +1808,13 @@ msgstr ""
 "Median berechnet ist."
 
 #: cirs/templates/cirs/qm/_definitions.html:21
+#
 msgid ""
 "Days from the report to the last completion of a report that is completed "
-"now, counted in the period of that completion; reports that are still open "
-"or were reopened do not count, and the count is the number of reports the "
-"median is taken from."
-msgstr ""
-"Tage von der Meldung bis zum letzten Abschluss einer Meldung, die jetzt "
-"erledigt ist, gezählt im Zeitraum dieses Abschlusses; Meldungen, die noch "
-"offen sind oder wieder geöffnet wurden, zählen nicht, und die Anzahl nennt "
-"die Meldungen, aus denen der Median berechnet ist."
+"now, counted in the period of that completion; reports that are still open, "
+"or were reopened and are not completed again, do not count, and the count is "
+"the number of reports the median is taken from."
+msgstr "Tage von der Meldung bis zum letzten Abschluss einer Meldung, die jetzt abgeschlossen ist, gezählt im Zeitraum dieses Abschlusses; Meldungen, die noch offen sind oder wieder geöffnet und noch nicht erneut abgeschlossen wurden, zählen nicht, und die Anzahl ist die Zahl der Meldungen, aus denen der Median berechnet ist."
 
 #: cirs/templates/cirs/qm/_definitions.html:23
 msgid "Reports of the period that are still in the status “New”."
@@ -1923,8 +1919,14 @@ msgstr "Meldung %(number)s"
 msgid "Dialogue with the reporting person"
 msgstr "Dialog mit der meldenden Person"
 
+#: cirs/templates/cirs/qm/incident/_dialogue.html:29
+msgid ""
+"The notifications for this report ended with the status “Completed”: a reply "
+"is no longer sent by e-mail. Do not write names or patient data."
+msgstr "Die Benachrichtigungen zu dieser Meldung sind mit dem Stand „erledigt“ beendet: Eine Antwort geht nicht mehr per E-Mail hinaus. Schreiben Sie keine Namen oder Patientendaten."
+
 #
-#: cirs/templates/cirs/qm/incident/_dialogue.html:37
+#: cirs/templates/cirs/qm/incident/_dialogue.html:41
 msgid "Your account is not allowed to reply."
 msgstr "Ihr Konto darf nicht antworten."
 
@@ -2448,6 +2450,9 @@ msgstr ""
 #: cirs/views.py:380
 msgid "Your account is not active, please contact the admin."
 msgstr "Ihr Zugang ist nicht mehr aktiv. Bitte den Administrator kontaktieren."
+
+#~ msgid "Still without processing"
+#~ msgstr "Noch ohne Bearbeitung"
 
 #~ msgid ""
 #~ "Reports that are in the status “Completed” now and reached it, for the "

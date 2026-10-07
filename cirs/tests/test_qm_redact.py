@@ -277,8 +277,8 @@ class SeriesTest(SimpleTestCase):
         self.assertEqual(shown.incoming, STAR)
         self.assertEqual([row.incoming for row in shown.monthly], ['< 3'] * 3)
         self.assertEqual([one.total for one in shown.distributions], [STAR, STAR, None])
-        # the other distribution had no reason to hide it, and must not show it now
-        self.assertEqual(counts(shown, 'risk'), [3])
+        # the other distribution would give the total back as the sum of its cells: its one cell goes too
+        self.assertEqual(counts(shown, 'risk'), [STAR])
 
     def test_a_small_total_is_hidden_like_a_small_number(self):
         report = make_report(
@@ -377,3 +377,68 @@ class ChartsOfRedactedNumbersTest(SimpleTestCase):
         chart = chart_data.month_columns(months([1, 1], [None, 3]))
         self.assertEqual([(c.text, c.missing) for c in chart.groups[0].columns],
                          [('1', False), ('not recorded', True)])
+
+
+def splits(total, parts):
+    """Every way to split `total` into `parts` numbers that are 0 or more."""
+    if parts == 1:
+        yield (total,)
+        return
+    for first in range(total + 1):
+        for rest in splits(total - first, parts - 1):
+            yield (first, *rest)
+
+
+class OneExportGivesNothingBackTest(SimpleTestCase):
+    """What an export holds back cannot be worked out from what else the same export says."""
+
+    def test_the_months_do_not_give_back_an_incoming_that_another_series_withholds(self):
+        # two reports under "low" and two under "high": both are hidden, and so is their total
+        report = make_report(incoming=4, completed=0, published=0, unprocessed=0, measures=[],
+                             monthly=months([4], [0]),
+                             distributions=[distribution('risk', [2, 2])])
+        shown = redact(report, 3)
+        self.assertEqual(shown.incoming, STAR)
+        self.assertEqual([row.incoming for row in shown.monthly], [STAR])
+        self.assertEqual(counts(shown, 'risk'), ['< 3', '< 3'])
+
+    def test_whenever_the_incoming_is_withheld_every_series_that_adds_up_to_it_holds_a_cell_back(self):
+        for total in range(1, 7):
+            for in_months in splits(total, 3):
+                for areas in splits(total, 3):
+                    for risks in splits(total, 2):
+                        report = make_report(
+                            incoming=total, completed=0, published=0, unprocessed=0, measures=[],
+                            monthly=months(in_months, [0, 0, 0]),
+                            distributions=[distribution('area', areas),
+                                           distribution('risk', risks)])
+                        shown = redact(report, 3)
+                        if shown.incoming != STAR:
+                            continue
+                        for name, series in (('months', [row.incoming for row in shown.monthly]),
+                                             ('area', counts(shown, 'area')),
+                                             ('risk', counts(shown, 'risk'))):
+                            self.assertTrue(any(not isinstance(cell, int) for cell in series),
+                                            (total, in_months, areas, risks, name, series))
+
+    def test_the_count_of_the_times_does_not_give_back_a_completed_that_is_withheld(self):
+        report = make_report(incoming=15, completed=3, published=0, unprocessed=0, measures=[],
+                             monthly=months([5, 5, 5], [1, 1, 1]),
+                             processing=Durations(9.0, 3),
+                             distributions=[distribution('area', [15])])
+        shown = redact(report, 3)
+        self.assertEqual(shown.completed, STAR)
+        self.assertEqual(shown.processing, Durations(None, STAR))
+
+    def test_a_case_does_not_name_a_month_whose_incoming_is_hidden(self):
+        # 10, 2 and 8 reports: the 2 is hidden and so is the 8 (else 20 - 10 - 8 would give it back)
+        cases = [Measure(1, '', date(2026, 1, 10), 'A', 'x'), Measure(2, '', date(2026, 2, 5), 'B', 'x'),
+                 Measure(3, '', date(2026, 2, 20), 'C', 'x')]
+        report = make_report(incoming=20, completed=0, published=3, unprocessed=0, measures=cases,
+                             monthly=months([10, 2, 8], [0, 0, 0]),
+                             distributions=[distribution('area', [10, 10])])
+        shown = redact(report, 3)
+        self.assertEqual([row.incoming for row in shown.monthly], [10, '< 3', STAR])
+        self.assertEqual([(case.reported, case.year_only) for case in shown.measures],
+                         [(date(2026, 1, 1), False), (date(2026, 1, 1), True),
+                          (date(2026, 1, 1), True)])

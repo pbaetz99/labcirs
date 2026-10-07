@@ -1,6 +1,27 @@
 LabCIRS changelog
 =================
 
+8.1.0a4 (2026-10-07)
+--------------------
+
+Fixes from the review of 8.1.0a3. The most important one concerns the print view and the CSV file of the evaluations.
+
+Privacy
+
+* The print view and the CSV file could give back a small number that was held back, when one export was read as a whole: if one series withheld the total (the incoming), another series that adds up to it still showed every cell and gave the total back. Now every series that adds up to a withheld total holds back its smallest cell as well. The count of the times follows the figure it is taken from ("Completed"), and a published case names its year only where its month would give a hidden number away.
+* ``REPORT_MIN_CELL`` must be at least 3, the app does not start with a smaller value: with 2 a hidden number can only be 1, with 1 nothing is hidden.
+* The note on the times says what is printed ("< 3" for the count), the definition of the processing time and the new name "Still in status new" (for "Still without processing") say what is counted.
+
+QM area
+
+* Assessment, reply and publication are saved in one transaction with the report locked, so a double click gives one entry in the status history and one mail. Each action leaves an entry in the history of the admin (account, time and the names of the fields, never the text).
+* Setting the status to "Completed" ends the notifications to the reporting person, because the address is deleted then. The help of the status and the reply form say so.
+
+Operation
+
+* The proxy counts the comments of reporters and the work of the QM on a report per session instead of for the whole site, so that a flood of anonymous requests cannot keep the QM from saving (``RATE_WRITES``, see ``docs/configuration.md``). Create the proxy container again after the update: ``docker compose up -d --force-recreate proxy``.
+* The system status of the admin counts a department as without a QM when its only QM account is switched off or is a superuser's.
+
 8.1.0a3 (2026-10-06)
 --------------------
 

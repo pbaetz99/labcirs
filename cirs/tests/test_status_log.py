@@ -27,7 +27,7 @@ from django.db import IntegrityError, connection, transaction
 from django.test import TestCase, override_settings
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 from model_bakery import baker
 
 from cirs.admin import admin_site
@@ -347,6 +347,9 @@ class LogRowsTest(TestCase):
     """What the pages show of the log: the entry of the report has its day only."""
 
     def setUp(self):
+        # the names of the statuses are translated: the language that an earlier test left active
+        # in the same process must not decide
+        self.enterContext(translation.override('en'))
         self.dept = baker.make_recipe('cirs.department')
 
     def rows(self, **kwargs):

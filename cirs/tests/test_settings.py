@@ -167,6 +167,13 @@ class PositiveIntSettingTest(SimpleTestCase):
     def test_the_running_settings_have_the_defaults(self):
         self.assertEqual((settings.QM_OVERDUE_DAYS, settings.REPORT_MIN_CELL), (14, 3))
 
+    def test_the_smallest_number_of_the_evaluations_is_at_least_3(self):
+        self.assertEqual(load_settings(REPORT_MIN_CELL='3')['REPORT_MIN_CELL'], 3)
+        for value in ('1', '2'):
+            with self.subTest(value):
+                with self.assertRaisesRegex(ImproperlyConfigured, 'REPORT_MIN_CELL.*at least 3'):
+                    load_settings(REPORT_MIN_CELL=value)
+
     def test_both_settings_are_strict(self):
         for name in ('QM_OVERDUE_DAYS', 'REPORT_MIN_CELL'):
             with self.subTest(name):

@@ -82,7 +82,9 @@ class ReviewForm(GroupedFormMixin, ModelForm):
                    'review_date': DateInput(attrs={'type': 'date'}, format='%Y-%m-%d')}
         help_texts = {
             'status': _('A new status goes by e-mail to the reporting person if they have set up '
-                        'notifications. The e-mail names the status and nothing else.'),
+                        'notifications. The e-mail names the status and nothing else. With '
+                        '“Completed” the notifications end: later replies and statuses are no '
+                        'longer sent by e-mail, so send a reply first.'),
             'category': _('You may choose several.'),
             'review_date': _('The day on which the measure is to be checked.')}
 

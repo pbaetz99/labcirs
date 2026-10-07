@@ -339,8 +339,9 @@ class QueriesTest(OverviewBase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.units = [OrgUnit.objects.create(name='Labor'), None,
-                     OrgUnit.objects.create(name='Pflege')]
+        # one of the places is a sub-unit: its name has to come with the parent in the same query
+        labor = OrgUnit.objects.create(name='Labor')
+        cls.units = [labor, None, OrgUnit.objects.create(name='Pflege', parent=labor)]
         cls.authors = [cls.dept.reporter.user, cls.reviewer.user]
 
     def add(self, number):

@@ -16,6 +16,12 @@ map $request_method $post_key  { POST $server_name;        default ""; }
 map $request_method $login_key { POST $binary_remote_addr; default ""; }
 limit_req_zone $post_key  zone=codes:1m  rate=${RATE_CODES};
 limit_req_zone $post_key  zone=writes:1m rate=${RATE_WRITES};
+# The comments of reporters and the work of the QM on an incident count per session, so that a
+# flood of visitors without one cannot keep the QM from saving. A visitor without a session
+# cookie shares the counter of the site; one with a made up cookie is sent away by the app.
+map $cookie_sessionid $session_or_site { "" $server_name; default $cookie_sessionid; }
+map $request_method $session_post_key { POST $session_or_site; default ""; }
+limit_req_zone $session_post_key zone=incident_writes:1m rate=${RATE_WRITES};
 limit_req_zone $login_key zone=login:1m  rate=${RATE_LOGIN};
 limit_req_status 429;
 
@@ -67,9 +73,14 @@ server {
         limit_req zone=codes burst=10 nodelay;
         proxy_pass http://labcirs_app;
     }
-    # New incident, new comment
-    location ~ ^/incidents/.+/(create/|[0-9]+/)$ {
+    # New incident
+    location ~ ^/incidents/.+/create/$ {
         limit_req zone=writes burst=5 nodelay;
+        proxy_pass http://labcirs_app;
+    }
+    # New comment, assessment, reply and publication
+    location ~ ^/incidents/.+/[0-9]+/$ {
+        limit_req zone=incident_writes burst=5 nodelay;
         proxy_pass http://labcirs_app;
     }
     location ~ ^/(login|admin/login)/$ {

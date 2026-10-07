@@ -176,7 +176,7 @@ class KeyFiguresTest(ReportData):
         self.assertEqual(figures(self.html(THIS_YEAR)), {
             'Eingang': '6', 'Abgeschlossen': '3', 'Offen (Stand heute)': '4',
             'Veröffentlicht': '1', 'Reaktionszeit': 'Median 3,5 Tage, Anzahl 4',
-            'Bearbeitungsdauer': 'Median 16 Tage, Anzahl 3', 'Noch ohne Bearbeitung': '2'})
+            'Bearbeitungsdauer': 'Median 16 Tage, Anzahl 3', 'Noch im Stand „neu“': '2'})
 
     def test_the_figures_are_those_of_the_report(self):
         report = build_report(scoped_incidents(self.reviewer.user), date(2026, 1, 1),
@@ -237,13 +237,13 @@ class KeyFiguresTest(ReportData):
 
     def test_a_still_new_incident_of_the_period_is_still_without_processing(self):
         # d and e are new, a, b and f are further along; g was reported the year before
-        self.assertEqual(figures(self.html(THIS_YEAR))['Noch ohne Bearbeitung'], '2')
+        self.assertEqual(figures(self.html(THIS_YEAR))['Noch im Stand „neu“'], '2')
         march = self.html({'von_monat': 3, 'von_jahr': 2026, 'bis_monat': 3, 'bis_jahr': 2026})
-        self.assertEqual(figures(march)['Noch ohne Bearbeitung'], '0')
+        self.assertEqual(figures(march)['Noch im Stand „neu“'], '0')
         make_incident(self.dept, reported=date(2026, 3, 9), preventability='avoidable',
                       history=[('new', at(3, 9))])
         self.assertEqual(figures(self.html({'von_monat': 3, 'von_jahr': 2026, 'bis_monat': 3,
-                                            'bis_jahr': 2026}))['Noch ohne Bearbeitung'], '1')
+                                            'bis_jahr': 2026}))['Noch im Stand „neu“'], '1')
 
 
 class LogCoverageTest(ReportData):
@@ -263,7 +263,7 @@ class LogCoverageTest(ReportData):
         for label in self.TIMES:
             self.assertEqual(shown[label], NOT_RECORDED, label)
         # what the log does not decide is counted as always
-        self.assertEqual((shown['Eingang'], shown['Veröffentlicht'], shown['Noch ohne Bearbeitung']),
+        self.assertEqual((shown['Eingang'], shown['Veröffentlicht'], shown['Noch im Stand „neu“']),
                          ('0', '0', '0'))
 
     def test_what_is_not_recorded_is_the_small_text_of_the_figure_and_has_no_suffix(self):
@@ -284,7 +284,7 @@ class LogCoverageTest(ReportData):
         self.assertEqual(shown['Abgeschlossen'], '0 (ab 20.12.2025)')
         self.assertEqual(shown['Reaktionszeit'], '– (ab 20.12.2025)')
         self.assertEqual(shown['Bearbeitungsdauer'], '– (ab 20.12.2025)')
-        for label in ('Eingang', 'Veröffentlicht', 'Noch ohne Bearbeitung'):
+        for label in ('Eingang', 'Veröffentlicht', 'Noch im Stand „neu“'):
             self.assertNotIn('(ab ', shown[label], label)
         # the log began inside December: g (16 days to its first change) and a (2 days) are in it
         january = figures(self.html({'von_monat': 12, 'von_jahr': 2025, 'bis_monat': 1,
@@ -516,7 +516,7 @@ class AreaTest(ReportData):
         self.assertEqual(figures(html), {
             'Eingang': '2', 'Abgeschlossen': '3', 'Offen (Stand heute)': '0',
             'Veröffentlicht': '1', 'Reaktionszeit': 'Median 2 Tage, Anzahl 3',
-            'Bearbeitungsdauer': 'Median 16 Tage, Anzahl 3', 'Noch ohne Bearbeitung': '0'})
+            'Bearbeitungsdauer': 'Median 16 Tage, Anzahl 3', 'Noch im Stand „neu“': '0'})
         self.assertEqual(tables(tile(html, 'auswertung-verteilungen'))[0],
                          [['Bereich', 'Anzahl'], ['Labor', '2']])
         [chart] = tables(tile(html, 'auswertung-verlauf'))
@@ -529,7 +529,7 @@ class AreaTest(ReportData):
         self.assertEqual(figures(html), {
             'Eingang': '2', 'Abgeschlossen': '0', 'Offen (Stand heute)': '2',
             'Veröffentlicht': '0', 'Reaktionszeit': 'Median 5 Tage, Anzahl 1',
-            'Bearbeitungsdauer': '–', 'Noch ohne Bearbeitung': '1'})
+            'Bearbeitungsdauer': '–', 'Noch im Stand „neu“': '1'})
         self.assertIn('Keine veröffentlichten Fälle für diesen Zeitraum.',
                       words(tile(html, 'auswertung-massnahmen')))
         self.assertNotIn('Titel B', html)
@@ -764,7 +764,7 @@ class RecordedTest(ReportBase):
         self.assertEqual(figures(html), {
             'Eingang': '0', 'Abgeschlossen': NOT_RECORDED, 'Offen (Stand heute)': '0',
             'Veröffentlicht': '0', 'Reaktionszeit': NOT_RECORDED,
-            'Bearbeitungsdauer': NOT_RECORDED, 'Noch ohne Bearbeitung': '0'})
+            'Bearbeitungsdauer': NOT_RECORDED, 'Noch im Stand „neu“': '0'})
         self.assertIn('Das Protokoll läuft noch nicht.', words(html))
         for name in ('auswertung-verlauf', 'auswertung-verteilungen'):
             self.assertIn('Keine Meldungen im Zeitraum.', words(tile(html, name)))
@@ -977,7 +977,7 @@ class PageTest(ReportData):
         definitions = self.definitions()
         self.assertEqual(list(definitions), [
             'Eingang', 'Abgeschlossen', 'Offen (Stand heute)', 'Veröffentlicht', 'Reaktionszeit',
-            'Bearbeitungsdauer', 'Noch ohne Bearbeitung', 'Vermeidbarkeit', 'Risiko',
+            'Bearbeitungsdauer', 'Noch im Stand „neu“', 'Vermeidbarkeit', 'Risiko',
             'Häufigkeit', 'Gefährdung', 'Keine Angabe'])
         for term, sentence in definitions.items():
             self.assertTrue(sentence.endswith('.'), term)
@@ -1004,7 +1004,7 @@ class PageTest(ReportData):
             self.assertIn('Median berechnet', sentence)
 
     def test_still_without_processing_is_the_state_new(self):
-        self.assertEqual(self.definitions()['Noch ohne Bearbeitung'],
+        self.assertEqual(self.definitions()['Noch im Stand „neu“'],
                          'Meldungen des Zeitraums, die noch im Stand „Neu“ sind.')
 
     def test_the_classifications_say_whose_assessment_they_are(self):
@@ -1063,7 +1063,7 @@ class PageTest(ReportData):
         for text in ('Key figures', 'Monthly trend', 'Distributions', 'Measures', 'Definitions',
                      'Evaluate', 'Quick selection', 'Last quarter', 'Current year', 'Last year',
                      'Open (as of today)', 'Reaction time', 'Processing time',
-                     'Still without processing',
+                     'Still in status “new”',
                      'Median 3.5 days, count 4', 'Median 16 days, count 3',
                      'Several answers are possible', 'Period: January 2026 to October 2026'):
             self.assertIn(text, words(html))

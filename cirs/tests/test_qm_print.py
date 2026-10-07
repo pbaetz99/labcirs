@@ -50,7 +50,7 @@ class PrintContentTest(ExportCase):
         self.assertEqual(figures(self.print_html()), {
             'Eingang': '15', 'Abgeschlossen': '8', 'Offen (Stand heute)': '7',
             'Veröffentlicht': LESS, 'Reaktionszeit': 'Median 2 Tage, Anzahl 12',
-            'Bearbeitungsdauer': 'Median 12,5 Tage, Anzahl 8', 'Noch ohne Bearbeitung': '3'})
+            'Bearbeitungsdauer': 'Median 12,5 Tage, Anzahl 8', 'Noch im Stand „neu“': '3'})
 
     def test_the_months_hide_the_small_ones(self):
         [chart] = tables(tile(self.print_html(), 'auswertung-verlauf'))
@@ -120,12 +120,14 @@ class PrintContentTest(ExportCase):
         self.assertEqual(figures(self.print_html())['Veröffentlicht'], '3')
         items = re.findall(r'<li>(.*?)</li>', massnahmen, re.S)
         # the oldest report first: the first incident (January), the one that swings (February)
-        # and the sixth of the twelve (March)
+        # and the sixth of the twelve (March). The incoming of February is hidden: its case
+        # names the year only, else the list would tell what the cell does not.
         self.assertEqual([words(item) for item in items], [
             'Januar 2026 Titel A (de) Maßnahme A zweite Zeile (de)',
-            'Februar 2026 Titel Eins (de) Maßnahme Eins (de)',
+            '2026 Titel Eins (de) Maßnahme Eins (de)',
             'März 2026 Titel B (de) Maßnahme B (de)'])
         self.assertIn('<time datetime="2026-01">Januar 2026</time>', massnahmen)
+        self.assertIn('<time datetime="2026">2026</time>', massnahmen)
         self.assertIn('Maßnahme A<br>zweite Zeile (de)', massnahmen)
 
     def test_a_list_has_no_number_no_day_and_no_link(self):
@@ -184,7 +186,7 @@ class PrintContentTest(ExportCase):
         # two incoming, one low and one high: the 1 and the 1 would follow from the 2, so the
         # total is withheld, and with it in every place
         self.assertEqual(shown['Eingang'], STAR)
-        self.assertEqual(shown['Noch ohne Bearbeitung'], LESS)
+        self.assertEqual(shown['Noch im Stand „neu“'], LESS)
         self.assertTrue(shown['Abgeschlossen'].startswith('0'))
         for table in tables(tile(html, 'auswertung-verteilungen')):
             for row in table[1:]:
@@ -199,7 +201,7 @@ class PrintDefinitionsTest(ExportCase):
         begriffe = tile(html, 'auswertung-begriffe')
         self.assertEqual([words(term) for term in re.findall(r'<dt>(.*?)</dt>', begriffe, re.S)], [
             'Eingang', 'Abgeschlossen', 'Offen (Stand heute)', 'Veröffentlicht', 'Reaktionszeit',
-            'Bearbeitungsdauer', 'Noch ohne Bearbeitung', 'Vermeidbarkeit', 'Risiko',
+            'Bearbeitungsdauer', 'Noch im Stand „neu“', 'Vermeidbarkeit', 'Risiko',
             'Häufigkeit', 'Gefährdung', 'Keine Angabe'])
         self.assertEqual([words(h) for h in re.findall(r'<h2[^>]*>(.*?)</h2>', html, re.S)], [
             'Kennzahlen', 'Monatsverlauf', 'Verteilungen', 'Maßnahmen', 'Begriffe', 'Hinweise'])
@@ -212,7 +214,7 @@ class PrintDefinitionsTest(ExportCase):
         self.assertIn('Zahlen über 0 und unter 3 stehen als „< 3“', small)
         self.assertIn('Stern', small)
         self.assertIn('weniger als 3 Meldungen', times)
-        self.assertIn('weder der Median noch die Anzahl', times)
+        self.assertIn('der Median nicht angegeben', times)
         # a period of any months, or an area against "All", lets a small number be worked out
         self.assertIn('frei gewählte Zeiträume', comparison)
         self.assertIn('für einen Bereich und für „Alle“', comparison)
@@ -384,7 +386,7 @@ class PrintFrameTest(ExportCase):
         for text in ('Key figures', 'Monthly trend', 'Distributions', 'Measures', 'Definitions', 'Notes',
                      'Evaluation of reports', 'Period: January 2026 to October 2026',
                      'Created on 10/02/2026', 'Print / save as PDF', 'Back to the evaluations',
-                     'Median 2 days, count 12', 'Median 12.5 days, count 8', 'Still without processing'):
+                     'Median 2 days, count 12', 'Median 12.5 days, count 8', 'Still in status “new”'):
             self.assertIn(text, words(html))
         self.assertIn('Fewer than 3 published cases in this period; they are not listed one by one.',
                       words(html))
