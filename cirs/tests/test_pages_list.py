@@ -142,7 +142,7 @@ class PublishedListTest(TestCase):
         html = self.html(q='pump')
         self.assertRegex(html, r'role="status"[^>]*>\s*<span>1 veröffentlichter Fall passt')
         self.assertIn('„pump“', html)
-        self.assertRegex(html, r'<a [^>]*href="%s"[^>]*>Filter aufheben</a>' % re.escape(self.url))
+        self.assertRegex(html, r'<a [^>]*href="%s"[^>]*>Suche zurücksetzen</a>' % re.escape(self.url))
 
     def test_filter_status_counts_several_cases_in_the_plural(self):
         make_case(self.dept, 'Synthetic pump alarm')
@@ -160,7 +160,7 @@ class PublishedListTest(TestCase):
         self.assertIn('ui-state', html)
         self.assertIn('Kein veröffentlichter Fall passt zu Ihrer Suche nach „pump“.', html)
         self.assertIn('Bitte prüfen Sie die Schreibweise oder versuchen Sie einen kürzeren Suchbegriff.', html)
-        self.assertRegex(html, r'<a href="%s">Filter aufheben</a>' % re.escape(self.url))
+        self.assertRegex(html, r'<a href="%s">Suche zurücksetzen</a>' % re.escape(self.url))
         self.assertNotIn('<table', html)
         self.assertEqual(html.count('<h1'), 1)
 
@@ -168,7 +168,7 @@ class PublishedListTest(TestCase):
         html = self.html()
         self.assertIn('ui-state', html)
         self.assertIn('Es gibt noch keine veröffentlichten Fälle.', html)
-        self.assertNotIn('Filter aufheben', html)
+        self.assertNotIn('Suche zurücksetzen', html)
         self.assertNotIn('<table', html)
 
     def test_table_has_caption_and_scope(self):

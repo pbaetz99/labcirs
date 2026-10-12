@@ -31,11 +31,12 @@ from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.forms import (BooleanField, CharField, CheckboxSelectMultiple, DateInput, Form,
                           ModelForm, RadioSelect, Textarea)
+from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy
 from parler.utils import get_language_title
 
-from cirs.forms import UiFormMixin, org_unit_choices
+from cirs.forms import FILL_IN, UiFormMixin, org_unit_choices
 from cirs.models import CriticalIncident, OrgUnit, PublishableIncident
 
 
@@ -101,6 +102,11 @@ class ReviewForm(GroupedFormMixin, ModelForm):
         for name in ('risk', 'frequency', 'hazard'):
             field = self.fields[name]
             field.choices = [('', _('Not specified'))] + [c for c in field.choices if c[0]]
+        # The words of the choices are written in small letters in the model and in capitals in the
+        # filters of the list: the same words look the same in both.
+        for name in ('status', 'risk', 'frequency', 'hazard'):
+            field = self.fields[name]
+            field.choices = [(value, capfirst(str(label))) for value, label in field.choices]
 
     @staticmethod
     def _flat(choices):
@@ -158,6 +164,7 @@ class PublicationForm(GroupedFormMixin, Form):
                     required=False, label='%s (%s)' % (label, language.title),
                     max_length=255 if name == 'incident' else None,
                     widget=None if name == 'incident' else Textarea(attrs={'rows': 4}))
+                self.fields[key].error_messages['required'] = FILL_IN
                 if language.code in stored:
                     self.initial[key] = getattr(stored[language.code], name)
         self.initial['publish'] = bool(self.case and self.case.publish)

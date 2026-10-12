@@ -26,9 +26,10 @@ from django.core import mail
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import UploadedFile
 from django.db.models import Prefetch
-from django.forms import (CharField, ClearableFileInput, DateInput,
-                          EmailField, EmailInput, Form, ModelForm,
-                          RadioSelect, Textarea, TextInput, ValidationError)
+from django.forms import (CharField, CheckboxSelectMultiple, ClearableFileInput,
+                          DateInput, EmailField, EmailInput, Form, ModelForm,
+                          RadioSelect, Select, SelectMultiple, Textarea,
+                          TextInput, ValidationError)
 from django.utils import translation
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
@@ -77,10 +78,17 @@ def org_unit_choices():
     return choices
 
 
+FILL_IN = _('Please fill in this field.')
+CHOOSE = _('Please choose an option.')
+CHOICE_WIDGETS = (Select, SelectMultiple, RadioSelect, CheckboxSelectMultiple)
+
+
 class UiFormMixin:
     """
     Renders a form with the markup of the design system (core.css), see ui_form.html.
     Django sets aria-invalid and aria-describedby (hint and error ids) itself.
+    A missing answer says what to do ("Please fill in this field."), not that the field is
+    "required": the summary of the errors and the message at the field both say it.
     """
     template_name = 'cirs/forms/ui_form.html'
     template_name_label = 'cirs/forms/ui_label.html'
@@ -88,6 +96,10 @@ class UiFormMixin:
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')  # "Datum", not "Datum:"
         super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            if field.required:
+                field.error_messages['required'] = (
+                    CHOOSE if isinstance(field.widget, CHOICE_WIDGETS) else FILL_IN)
 
 
 class IncidentCreateForm(UiFormMixin, ModelForm):

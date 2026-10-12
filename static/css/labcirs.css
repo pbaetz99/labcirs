@@ -61,6 +61,20 @@ html { scroll-padding-top: calc(var(--ui-topbar-h) + var(--ui-s2)); }
    if a deployment shows both. */
 @media (max-width: 80rem) { .ui-topbar { position: static; } }
 
+/* --- Targets of at least 24 px, and a shorter top bar on the phone ---
+   A link in a list of figures, in the head of a table and in the footer was 18 to 21 px high
+   (WCAG 2.5.8 asks for 24). On a phone the links of the bar wrap into four rows, each as high as
+   the bar was on a wide screen, and a stray divider ends a row: the first screen was all bar.
+   Each row needs the height of a control only, and the divider is left out where rows wrap. */
+.ui-kennzahlen dt a, .ui-meldungen thead th a, .ui-fuss a {
+  display: inline-flex; align-items: center; gap: var(--ui-s1); min-height: 1.5rem; min-width: 1.5rem;
+}
+@media (max-width: 48rem) {
+  .ui-nav__link { min-height: var(--ui-control-h); }
+  .ui-nav__sep { display: none; }
+  .ui-seitenweg a { min-height: 2.25rem; }
+}
+
 /* --- A table inside a flush card needs no second frame ---
    The card (ui-card--flush) has the frame and the radius, ui-tablewrap brings its own: a
    double line. core.css does not have this rule. */
@@ -290,7 +304,7 @@ html { scroll-padding-top: calc(var(--ui-topbar-h) + var(--ui-s2)); }
    The summary of the errors gets the focus on load, and the browser scrolls it into view the same way. */
 .ui-seitenweg { display: flex; flex-wrap: wrap; gap: var(--ui-s1) var(--ui-s4); margin: 0; padding: 0; list-style: none; }
 .ui-seitenweg a { display: inline-flex; align-items: center; min-height: var(--ui-control-h); }
-=======
+
 /* --- The evaluations page on paper (cirs/templates/cirs/qm/reports.html) ---
    The page shows every number, small ones too. What is printed from it must not, so on paper the
    results are left out and a short note says where to print instead: the print view, which is

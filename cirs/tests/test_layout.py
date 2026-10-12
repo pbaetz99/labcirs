@@ -36,6 +36,33 @@ class TopBarTest(TestCase):
         # navigation of the QM is about 260 px longer than the one of a visitor.
         self.assertIn('@media (max-width: 80rem) { .ui-topbar { position: static; } }', css_text())
 
+    def test_no_file_of_the_app_has_a_merge_marker_left(self):
+        # A line of equal signs in a stylesheet makes the rule behind it nonsense for the browser:
+        # the note for paper once stayed on the screen because of it.
+        root = Path(settings.BASE_DIR)
+        files = [*root.glob('static/css/*.css'), *root.glob('templates/**/*.html'),
+                 *root.glob('cirs/**/*.html'), *root.glob('cirs/**/*.py'),
+                 *root.glob('labcirs/**/*.py')]
+        self.assertGreater(len(files), 100)
+        for path in files:
+            for number, line in enumerate(path.read_text(encoding='utf-8').splitlines(), 1):
+                self.assertIsNone(re.match(r'^(<<<<<<<|=======|>>>>>>>)( |$)', line),
+                                  '%s:%d' % (path, number))
+
+    def test_the_note_for_paper_is_hidden_on_the_screen(self):
+        self.assertRegex(css_text(), r'\*/\s*\.ui-druckhinweis \{ display: none; \}')
+
+    def test_links_in_lists_tables_and_the_footer_are_targets_of_24_px(self):
+        rule = re.search(r'\.ui-kennzahlen dt a, [^{]*\{([^}]*)\}', css_text()).group(1)
+        self.assertIn('min-height: 1.5rem', rule)
+        self.assertIn('min-width: 1.5rem', rule)
+
+    def test_the_admin_start_page_has_no_text_below_12_px_and_targets_of_24_px(self):
+        css = Path(settings.BASE_DIR, 'static/css/admin-theme.css').read_text(encoding='utf-8')
+        self.assertIn('#user-tools { font-size: 0.8125rem; }', css)
+        self.assertIn('#user-tools a, .module td a, .module th a, .breadcrumbs a { display: inline-block; padding-block: 4px; }', css)
+        self.assertIn('.module.labcirs-system th, .module .mini { font-size: 0.75rem; }', css)
+
     def test_the_text_of_a_chart_does_not_grow_with_the_font_size_of_the_browser(self):
         rule = re.search(r'\.ui-diagramm__beschriftung, [^{]*\{([^}]*)\}', css_text()).group(1)
         self.assertRegex(rule, r'font-size: \d+px')

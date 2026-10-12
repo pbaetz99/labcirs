@@ -92,3 +92,11 @@ body .calendar td a:active, body .timelist a:active { background: #003d6b; } /* 
 .module .labcirs-state--ok { background-image: url(../admin/img/icon-yes.svg); }
 .module .labcirs-state--warning { background-color: var(--message-warning-bg); background-image: url(../admin/img/icon-alert.svg); }
 .module .labcirs-state--notice { background-color: var(--darkened-bg); background-image: url(../admin/img/icon-unknown.svg); }
+
+/* The tools at the top and the links of the start page were set in 11 px and were 16 to 19 px
+   high. Set in 13 px, and as high as a target (WCAG 2.5.8 asks for 24 px). The heads of the
+   status tables and the note under a recent action (10 px) get 12 px. */
+#user-tools { font-size: 0.8125rem; }
+#user-tools a, .module td a, .module th a, .breadcrumbs a { display: inline-block; padding-block: 4px; }
+#user-tools button { font-size: 0.8125rem; padding-block: 4px; }
+.module.labcirs-system th, .module .mini { font-size: 0.75rem; }

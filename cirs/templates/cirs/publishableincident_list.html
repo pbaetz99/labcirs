@@ -46,7 +46,7 @@
       <span>{% blocktranslate count counter=paginator.count with term=q %}{{ counter }} published case matches your search for “{{ term }}”.{% plural %}{{ counter }} published cases match your search for “{{ term }}”.{% endblocktranslate %}</span>
     </p>
     <p class="ui-filterstand__hinweis">{% translate "The search looks at the text only. Month, year and photos are not searched." %}</p>
-    <a class="ui-btn ui-btn--quiet" href="{{ request.path }}">{% translate "Clear filter" %}</a>
+    <a class="ui-btn ui-btn--quiet" href="{{ request.path }}">{% translate "Clear search" %}</a>
   </div>
   {% endif %}
 
@@ -103,7 +103,7 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
     <p class="ui-state__title">{% blocktranslate with term=q %}No published case matches your search for “{{ term }}”.{% endblocktranslate %}</p>
     <p class="ui-muted">{% translate "Please check the spelling or try a shorter search term." %}</p>
-    <p class="ui-muted"><a href="{{ request.path }}">{% translate "Clear filter" %}</a></p>
+    <p class="ui-muted"><a href="{{ request.path }}">{% translate "Clear search" %}</a></p>
   </div>
 {% else %}
   <div class="ui-card ui-state">

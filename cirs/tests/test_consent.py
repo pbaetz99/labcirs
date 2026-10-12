@@ -60,7 +60,7 @@ class ConsentFormTest(TestCase):
         self.assertContains(self.client.get(self.url), 'name="public"')
         response = self.client.post(self.url, WITHOUT_PUBLIC, HTTP_ACCEPT_LANGUAGE='en')
         self.assertEqual(response.status_code, 200)
-        self.assertFormError(response.context['form'], 'public', 'This field is required.')
+        self.assertFormError(response.context['form'], 'public', 'Please choose an option.')
         self.assertEqual(CriticalIncident.objects.count(), 0)
 
     def test_declined_consent_is_stored(self):

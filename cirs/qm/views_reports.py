@@ -134,7 +134,7 @@ def _error_items(form):
     items = []
     for name in form.fields:
         field = form[name]
-        label = f'{LEGENDS[name]}: {field.label}' if name in LEGENDS else str(field.label)
+        label = f'{LEGENDS[name]} ({field.label})' if name in LEGENDS else str(field.label)
         items += [{'target': field.id_for_label, 'label': label, 'message': message}
                   for message in field.errors]
     return items

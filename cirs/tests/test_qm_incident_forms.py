@@ -354,7 +354,7 @@ class PublicationFormTest(FormCase):
         form = self.form({'en-incident': '', 'en-description': 'Only a text'})
         self.assertFalse(form.is_valid())
         self.assertEqual(list(form.errors), ['en-incident'])
-        self.assertEqual(form.errors['en-incident'], ['This field is required.'])
+        self.assertEqual(form.errors['en-incident'], ['Please fill in this field.'])
 
     def test_a_language_that_has_a_translation_keeps_a_title(self):
         make_case(self.incident, {'en': ('Title', 'D', 'M')})

@@ -1,6 +1,22 @@
 LabCIRS changelog
 =================
 
+8.1.0a5 (2026-10-12)
+--------------------
+
+All pages were gone through with the UI/UX guidelines (targets, contrast, text size, phone width, wording). One visible fault, and a round of smaller fixes.
+
+Fixes
+
+* The note "This page shows every number, also small ones, and is not printed" showed on the screen of the evaluations page. It is meant for paper only: a stray merge marker in the stylesheet had made the rule that hides it on the screen invalid. A test now looks for such markers in stylesheets, templates and code.
+
+Interface
+
+* On a phone the top bar needs less room: its rows are as high as a control and no divider stands at the end of a row, so that the content starts higher.
+* Links in the lists of figures, in the head of the table of the work list, in the footer and on the admin start page are targets of at least 24 px (WCAG 2.5.8). The tools at the top of the admin and the heads of its status tables were set in 11 px and now have 12 to 13 px.
+* A missing answer says what to do: "Please fill in this field." or "Please choose an option." instead of "This field is required."
+* The review form writes status, risk, frequency and hazard with a capital letter like the filters of the work list. The summary of the errors of the evaluations reads "From (Month)" instead of "From: Month". The public list says "Clear search" where it said "Clear filter".
+
 8.1.0a4 (2026-10-07)
 --------------------
 

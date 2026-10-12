@@ -766,3 +766,12 @@ class NotificationsEndHintTest(PageCase):
     def test_an_open_report_says_that_the_reply_goes_by_e_mail(self):
         text = words(section(self.get().content.decode(), 'rueckmeldungen-titel'))
         self.assertIn('Your reply is also sent by e-mail', text)
+
+
+class ChoiceWordsTest(PageCase):
+
+    def test_the_words_of_the_choices_start_with_a_capital_like_in_the_filters_of_the_list(self):
+        text = words(section(self.get().content.decode(), 'bewertung-titel'))
+        for word in ('New', 'In process', 'High', 'Low', 'Not specified'):
+            self.assertIn(word, text)
+        self.assertNotIn(' in process ', text)
