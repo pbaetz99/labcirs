@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LabCIRS\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 08:22+0000\n"
+"POT-Creation-Date: 2026-10-12 09:02+0000\n"
 "PO-Revision-Date: 2019-05-22 14:53+0200\n"
 "Last-Translator: Sebastian Major <sebastian.major@charite.de>\n"
 "Language-Team: \n"
@@ -575,17 +575,17 @@ msgstr "Übersetzungsinformation"
 msgid "Incident"
 msgstr "Ereignis"
 
-#: cirs/models.py:375 cirs/qm/forms.py:126
+#: cirs/models.py:375 cirs/qm/forms.py:132
 #: cirs/templates/cirs/publishableincident_list.html:62
 msgid "Description"
 msgstr "Beschreibung"
 
-#: cirs/models.py:376 cirs/qm/forms.py:127
+#: cirs/models.py:376 cirs/qm/forms.py:133
 #: cirs/templates/cirs/publishableincident_list.html:63
 msgid "Measures and consequences"
 msgstr "Maßnahmen und Konsequenzen"
 
-#: cirs/models.py:378 cirs/qm/forms.py:140
+#: cirs/models.py:378 cirs/qm/forms.py:146
 msgid "Publish"
 msgstr "Veröffentlichen"
 
@@ -780,30 +780,30 @@ msgid "Completed"
 msgstr "Abgeschlossen"
 
 #
-#: cirs/qm/forms.py:67
+#: cirs/qm/forms.py:68
 msgid "Classification"
 msgstr "Einordnung"
 
 #
-#: cirs/qm/forms.py:69
+#: cirs/qm/forms.py:70
 msgid "Measure"
 msgstr "Maßnahme"
 
-#: cirs/qm/forms.py:76 cirs/templates/cirs/qm/incident/_history.html:15
+#: cirs/qm/forms.py:77 cirs/templates/cirs/qm/incident/_history.html:15
 #: cirs/templates/cirs/qm/worklist.html:21
 #: cirs/templates/cirs/qm/worklist.html:117
 msgctxt "incident list"
 msgid "Status"
 msgstr "Stand"
 
-#: cirs/qm/forms.py:76 cirs/qm/views_overview.py:126
+#: cirs/qm/forms.py:77 cirs/qm/views_overview.py:126
 #: cirs/templates/cirs/qm/_incident_rows.html:17
 #: cirs/templates/cirs/qm/worklist.html:29
 #: cirs/templates/cirs/qm/worklist.html:119
 msgid "Where"
 msgstr "Wo"
 
-#: cirs/qm/forms.py:77 cirs/qm/report.py:52
+#: cirs/qm/forms.py:78 cirs/qm/report.py:52
 #: cirs/templates/cirs/qm/_definitions.html:26
 #: cirs/templates/cirs/qm/worklist.html:46
 #: cirs/templates/cirs/qm/worklist.html:121
@@ -812,7 +812,7 @@ msgstr "Risiko"
 
 #
 #
-#: cirs/qm/forms.py:84
+#: cirs/qm/forms.py:85
 msgid ""
 "A new status goes by e-mail to the reporting person if they have set up "
 "notifications. The e-mail names the status and nothing else. With "
@@ -824,15 +824,15 @@ msgstr ""
 "„erledigt“ enden die Benachrichtigungen: Spätere Antworten und neue Stände "
 "gehen nicht mehr per E-Mail hinaus, senden Sie daher zuerst eine Antwort."
 
-#: cirs/qm/forms.py:88
+#: cirs/qm/forms.py:89
 msgid "You may choose several."
 msgstr "Sie können mehrere wählen."
 
-#: cirs/qm/forms.py:89
+#: cirs/qm/forms.py:90
 msgid "The day on which the measure is to be checked."
 msgstr "Der Tag, an dem die Maßnahme überprüft werden soll."
 
-#: cirs/qm/forms.py:103 cirs/qm/metrics.py:68
+#: cirs/qm/forms.py:104 cirs/qm/metrics.py:68
 #: cirs/templates/cirs/qm/_definitions.html:32
 #: cirs/templates/cirs/qm/_incident_rows.html:26
 #: cirs/templates/cirs/qm/worklist.html:33
@@ -842,11 +842,11 @@ msgstr "Der Tag, an dem die Maßnahme überprüft werden soll."
 msgid "Not specified"
 msgstr "Keine Angabe"
 
-#: cirs/qm/forms.py:126
+#: cirs/qm/forms.py:132
 msgid "Title"
 msgstr "Titel"
 
-#: cirs/qm/forms.py:141
+#: cirs/qm/forms.py:147
 msgid ""
 "Published cases are visible to every visitor of the site, also without "
 "logging in. Make sure that the texts hold no names and no patient data."
@@ -855,17 +855,17 @@ msgstr ""
 "Anmeldung. Achten Sie darauf, dass die Texte keine Namen und keine "
 "Patientendaten enthalten."
 
-#: cirs/qm/forms.py:171
+#: cirs/qm/forms.py:178
 #, python-format
 msgid "%(language)s (mandatory language)"
 msgstr "%(language)s (Pflichtsprache)"
 
-#: cirs/qm/forms.py:172
+#: cirs/qm/forms.py:179
 #, python-format
 msgid "%(language)s (optional language)"
 msgstr "%(language)s (freiwillig)"
 
-#: cirs/qm/forms.py:215
+#: cirs/qm/forms.py:222
 msgid "Please fill in the texts of at least one language."
 msgstr "Bitte füllen Sie die Texte von mindestens einer Sprache aus."
 
@@ -1428,12 +1428,12 @@ msgstr ""
 "Patientendaten."
 
 #: cirs/templates/cirs/criticalincident_detail.html:104
-#: cirs/templates/cirs/qm/incident/_dialogue.html:37
+#: cirs/templates/cirs/qm/incident/_dialogue.html:38
 msgid "Sending …"
 msgstr "Wird gesendet …"
 
 #: cirs/templates/cirs/criticalincident_detail.html:105
-#: cirs/templates/cirs/qm/incident/_dialogue.html:38
+#: cirs/templates/cirs/qm/incident/_dialogue.html:39
 msgid "Send reply"
 msgstr "Antwort senden"
 
@@ -1534,6 +1534,7 @@ msgstr "Meldungen sind freiwillig und sanktionsfrei."
 
 #: cirs/templates/cirs/criticalincident_form.html:26
 #: cirs/templates/cirs/incident_search_form.html:15
+#: cirs/templates/cirs/qm/incident/_dialogue.html:33
 msgid "Fields marked with <span class=\"ui-required\">*</span> are required."
 msgstr "Felder mit <span class=\"ui-required\">*</span> sind Pflichtangaben."
 
@@ -1690,9 +1691,9 @@ msgstr ""
 "Die Suche berücksichtigt nur den Text. Monat, Jahr und Fotos werden nicht "
 "durchsucht."
 
+#
 #: cirs/templates/cirs/publishableincident_list.html:49
 #: cirs/templates/cirs/publishableincident_list.html:106
-#
 msgid "Clear search"
 msgstr "Suche zurücksetzen"
 
@@ -1934,6 +1935,12 @@ msgstr "Hier gibt es noch nichts anzuzeigen."
 msgid "Report %(number)s"
 msgstr "Meldung %(number)s"
 
+#: cirs/templates/cirs/qm/incident.html:19
+msgid ""
+"Each form saves only itself: text that you typed into another form and did "
+"not send is lost."
+msgstr "Jedes Formular speichert nur sich selbst: Ein Text, den Sie in einem anderen Formular getippt und nicht gesendet haben, geht verloren."
+
 #
 #: cirs/templates/cirs/qm/incident/_dialogue.html:9
 #: cirs/templates/cirs/qm/incident/_head.html:21
@@ -1950,7 +1957,7 @@ msgstr ""
 "Namen oder Patientendaten."
 
 #
-#: cirs/templates/cirs/qm/incident/_dialogue.html:41
+#: cirs/templates/cirs/qm/incident/_dialogue.html:42
 msgid "Your account is not allowed to reply."
 msgstr "Ihr Konto darf nicht antworten."
 

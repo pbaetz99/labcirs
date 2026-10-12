@@ -14,7 +14,7 @@
 {% if group.columns %}<div class="ui-grid ui-grid--2">{% endif %}
 {% for field in group.fields %}
 {% if field.use_fieldset %}
-<fieldset class="ui-fieldset" id="{{ field.auto_id }}"{% if field.aria_describedby %} aria-describedby="{{ field.aria_describedby }}"{% endif %}>
+<fieldset class="ui-fieldset" id="{{ field.auto_id }}" tabindex="-1"{% if field.aria_describedby %} aria-describedby="{{ field.aria_describedby }}"{% endif %}>
   <legend>{{ field.label }}</legend>
   {% for choice in field %}
   <label class="ui-check" for="{{ choice.id_for_label }}">{{ choice.tag }} <span>{{ choice.choice_label }}</span></label>

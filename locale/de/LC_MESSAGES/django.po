@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LabCIRS\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-06 13:01+0000\n"
+"POT-Creation-Date: 2026-10-12 09:02+0000\n"
 "PO-Revision-Date: 2019-05-22 15:00+0200\n"
 "Last-Translator: Sebastian Major <sebastian.major@charite.de>\n"
 "Language-Team: \n"
@@ -67,6 +67,10 @@ msgstr ""
 msgid "To the QM area"
 msgstr "Zum QM-Bereich"
 
+#: templates/admin/index.html:17
+msgid "Data and accounts"
+msgstr "Daten und Konten"
+
 #: templates/admin/system_status.html:13
 msgid "System status"
 msgstr "Systemzustand"
@@ -88,7 +92,10 @@ msgstr "Nicht eingerichtet."
 msgid ""
 "The backup status appears as soon as the setting LABCIRS_BACKUP_STATUS_DIR "
 "names a folder with the status file of the backup script."
-msgstr "Der Sicherungsstatus erscheint, sobald die Einstellung LABCIRS_BACKUP_STATUS_DIR einen Ordner mit der Statusdatei des Sicherungsskripts nennt."
+msgstr ""
+"Der Sicherungsstatus erscheint, sobald die Einstellung "
+"LABCIRS_BACKUP_STATUS_DIR einen Ordner mit der Statusdatei des "
+"Sicherungsskripts nennt."
 
 #: templates/admin/system_status.html:22 templates/admin/system_status.html:24
 #: templates/admin/system_status.html:26 templates/admin/system_status.html:31
@@ -122,7 +129,9 @@ msgstr "Die letzte Sicherung ist älter als %(hours)s Stunden."
 msgid ""
 "The time of the last backup lies in the future. Please check the clock of "
 "the server."
-msgstr "Der Zeitpunkt der letzten Sicherung liegt in der Zukunft. Bitte prüfen Sie die Uhr des Servers."
+msgstr ""
+"Der Zeitpunkt der letzten Sicherung liegt in der Zukunft. Bitte prüfen Sie "
+"die Uhr des Servers."
 
 #: templates/admin/system_status.html:33
 #, python-format
@@ -150,7 +159,8 @@ msgstr "Abteilungen ohne QM"
 
 #: templates/admin/system_status.html:47
 msgid "These departments have no QM. Nobody can handle their reports."
-msgstr "Diese Abteilungen haben kein QM. Niemand kann ihre Meldungen bearbeiten."
+msgstr ""
+"Diese Abteilungen haben kein QM. Niemand kann ihre Meldungen bearbeiten."
 
 #: templates/admin/system_status.html:50
 msgid "(inactive)"
@@ -185,7 +195,10 @@ msgid ""
 "It needs a mail server other than localhost and a sender address "
 "(LABCIRS_EMAIL_HOST and LABCIRS_DEFAULT_FROM_EMAIL). Until then nobody is "
 "notified by mail."
-msgstr "Dafür braucht es einen Mailserver außer localhost und eine Absenderadresse (LABCIRS_EMAIL_HOST und LABCIRS_DEFAULT_FROM_EMAIL). Bis dahin wird niemand per Mail benachrichtigt."
+msgstr ""
+"Dafür braucht es einen Mailserver außer localhost und eine Absenderadresse "
+"(LABCIRS_EMAIL_HOST und LABCIRS_DEFAULT_FROM_EMAIL). Bis dahin wird niemand "
+"per Mail benachrichtigt."
 
 #: templates/admin/system_status.html:67
 msgid "Notification of the QM by department"
@@ -231,7 +244,9 @@ msgstr "Davon inaktiv"
 msgid ""
 "Reporter accounts are the technical accounts of the departments. They never "
 "log in."
-msgstr "Reporter-Konten sind die technischen Konten der Abteilungen. Sie melden sich nie an."
+msgstr ""
+"Reporter-Konten sind die technischen Konten der Abteilungen. Sie melden sich "
+"nie an."
 
 #: templates/admin/system_status.html:107
 #: templates/admin/system_status.html:111

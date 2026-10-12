@@ -419,7 +419,7 @@ class ReviewActionTest(PageCase):
         self.assertRedirects(response, self.url)
         self.assertContains(response, 'The assessment has been saved.')
         self.assertRegex(response.content.decode(),
-                         r'<div class="ui-alert ui-alert--success" role="status">')
+                         r'<div class="ui-alert ui-alert--success" role="status" tabindex="-1" autofocus>')
         saved = self.stored()
         self.assertEqual((saved.status, saved.risk, saved.action, saved.category),
                          ('in process', 'high', 'Synthetic measure', ['other']))
@@ -775,3 +775,22 @@ class ChoiceWordsTest(PageCase):
         for word in ('New', 'In process', 'High', 'Low', 'Not specified'):
             self.assertIn(word, text)
         self.assertNotIn(' in process ', text)
+
+
+class ReadingAidsTest(PageCase):
+    """What a screen reader and a keyboard need on the page."""
+
+    def test_a_text_field_of_a_language_names_its_language(self):
+        html = self.html()
+        self.assertRegex(html, r'<input[^>]* lang="de"')
+        self.assertRegex(html, r'<textarea[^>]* lang="en"')
+
+    def test_the_groups_of_choices_can_take_the_focus_that_the_error_summary_gives(self):
+        html = self.html()
+        self.assertRegex(html, r'<fieldset class="ui-fieldset" id="id_status" tabindex="-1"')
+
+    def test_the_page_says_that_every_form_saves_only_itself(self):
+        self.assertIn('Each form saves only itself', self.html())
+
+    def test_the_reply_form_explains_the_star(self):
+        self.assertIn('are required', words(section(self.html(), 'rueckmeldungen-titel')))

@@ -46,6 +46,7 @@
       var knopf = formular.querySelector('button[type="submit"], button:not([type])');
       if (!knopf || knopf.dataset.laeuft === "1") return;
       knopf.dataset.laeuft = "1";
+      knopf.dataset.original = knopf.innerHTML;
 
       var text = knopf.getAttribute("data-busy-text");
       if (text) {
@@ -60,6 +61,18 @@
       knopf.addEventListener("click", function (ereignis) {
         if (knopf.dataset.laeuft === "1") ereignis.preventDefault();
       });
+    });
+  });
+
+  /* Zurueck aus dem Seitencache des Browsers: die Seite steht so da, wie sie verlassen wurde,
+     mit totem Knopf. Er wird wieder bedienbar. */
+  window.addEventListener("pageshow", function (ereignis) {
+    if (!ereignis.persisted) return;
+    document.querySelectorAll('form[data-einmal-absenden] button[data-laeuft="1"]').forEach(function (knopf) {
+      knopf.dataset.laeuft = "0";
+      knopf.removeAttribute("aria-disabled");
+      knopf.removeAttribute("aria-busy");
+      if (knopf.dataset.original) knopf.innerHTML = knopf.dataset.original;
     });
   });
 

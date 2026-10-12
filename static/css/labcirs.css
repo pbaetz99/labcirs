@@ -49,17 +49,12 @@
    without id ended up under the bar on keyboard focus. */
 html { scroll-padding-top: calc(var(--ui-topbar-h) + var(--ui-s2)); }
 
-/* --- Narrow screens: the top bar wraps and stops sticking ---
-   Wrapped, the bar is two or more rows high; sticky it would cover focused elements
-   (WCAG 2.4.11, scroll-padding covers one row) and much of a landscape phone.
-   One row needs (measured in German, anonymous, list page): word mark "LabCIRS" with both
-   language buttons 811 px; a 270 x 32 px logo with "Example-CIRS" and German only 948 px.
-   The QM area adds overview, reports, evaluations, administration, the account and log out,
-   about 260 px more, so one row needs about 1210 px there. 80rem (1280 px) leaves room for
-   other font metrics; below it the bar scrolls away with the page. At 320 px the bar has four
-   rows. Known limit: a logo together with the language buttons needs more -- raise the limit
-   if a deployment shows both. */
-@media (max-width: 80rem) { .ui-topbar { position: static; } }
+/* --- The top bar scrolls away with the page ---
+   Sticky, a bar of two or more rows would cover the element that has the focus (WCAG 2.4.11).
+   Whether one row suffices depends on the logo, the language buttons and the navigation of the
+   QM (a logo of 270 px, both language buttons and the QM navigation need about 1400 px), so it is
+   not left to a guess about the width: the bar does not stick. */
+.ui-topbar { position: static; }
 
 /* --- Targets of at least 24 px, and a shorter top bar on the phone ---
    A link in a list of figures, in the head of a table and in the footer was 18 to 21 px high
@@ -346,6 +341,7 @@ html { scroll-padding-top: calc(var(--ui-topbar-h) + var(--ui-s2)); }
   /* the chart stays whole, its table may go on the next page: both together need more than the rest of a page */
   .ui-druck .ui-diagramm { break-inside: auto; }
   .ui-druck .ui-diagramm__bild { break-inside: avoid; }
+  .ui-druck details:not([open]) { display: none; }
   .ui-druck .ui-table thead { display: table-header-group; }
   .ui-druck .ui-table tr { break-inside: avoid; }
   .ui-druck .ui-table th { position: static; }

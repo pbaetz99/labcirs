@@ -1,6 +1,22 @@
 LabCIRS changelog
 =================
 
+8.1.0a6 (2026-10-12)
+--------------------
+
+A review of the new QM pages for accessibility (WCAG 2.2 AA) found nothing that blocks and a few things to improve.
+
+Accessibility
+
+* The top bar no longer sticks to the top of the window. With the logo, both language buttons and the QM navigation it needs about 1400 px for one row; in two rows it covered the element that had the focus.
+* After saving, the message ("The assessment has been saved.") gets the focus, so that a screen reader reads it.
+* The link of an error summary to a group of choices (the status, the categories) lands on the group.
+* The text fields of a language in the publication form carry that language (``lang``), so that a screen reader speaks them correctly.
+* The reply form says what the star means, and the page of a report says that each form saves only itself.
+* A button that was locked while sending works again when the browser shows the page from its cache (the back button).
+* Admin start page: the list of models has a heading (hidden), and only the column heads of the status tables are set in 12 px.
+* The print view leaves out the closed tables of the numbers on paper.
+
 8.1.0a5 (2026-10-12)
 --------------------
 

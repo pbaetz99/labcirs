@@ -30,7 +30,7 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.forms import (BooleanField, CharField, CheckboxSelectMultiple, DateInput, Form,
-                          ModelForm, RadioSelect, Textarea)
+                          ModelForm, RadioSelect, Textarea, TextInput)
 from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy
@@ -163,7 +163,8 @@ class PublicationForm(GroupedFormMixin, Form):
                 self.fields[key] = CharField(
                     required=False, label='%s (%s)' % (label, language.title),
                     max_length=255 if name == 'incident' else None,
-                    widget=None if name == 'incident' else Textarea(attrs={'rows': 4}))
+                    widget=(TextInput(attrs={'lang': language.code}) if name == 'incident'
+                            else Textarea(attrs={'rows': 4, 'lang': language.code})))
                 self.fields[key].error_messages['required'] = FILL_IN
                 if language.code in stored:
                     self.initial[key] = getattr(stored[language.code], name)

@@ -99,4 +99,4 @@ body .calendar td a:active, body .timelist a:active { background: #003d6b; } /* 
 #user-tools { font-size: 0.8125rem; }
 #user-tools a, .module td a, .module th a, .breadcrumbs a { display: inline-block; padding-block: 4px; }
 #user-tools button { font-size: 0.8125rem; padding-block: 4px; }
-.module.labcirs-system th, .module .mini { font-size: 0.75rem; }
+.module.labcirs-system thead th, .module .mini { font-size: 0.75rem; }

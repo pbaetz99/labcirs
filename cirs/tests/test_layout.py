@@ -31,10 +31,11 @@ from .test_pages_report import css_text
 
 class TopBarTest(TestCase):
 
-    def test_the_bar_sticks_only_where_one_row_fits_the_navigation_of_the_qm(self):
-        # Wrapped to two rows a sticky bar would cover the element that has the focus. The
-        # navigation of the QM is about 260 px longer than the one of a visitor.
-        self.assertIn('@media (max-width: 80rem) { .ui-topbar { position: static; } }', css_text())
+    def test_the_top_bar_does_not_stick(self):
+        # Wrapped to two rows a sticky bar would cover the element that has the focus, and the
+        # width at which one row suffices depends on the logo, the languages and the navigation.
+        self.assertIn('.ui-topbar { position: static; }', css_text())
+        self.assertNotIn('.ui-topbar { position: static; } }', css_text())
 
     def test_no_file_of_the_app_has_a_merge_marker_left(self):
         # A line of equal signs in a stylesheet makes the rule behind it nonsense for the browser:
@@ -61,7 +62,7 @@ class TopBarTest(TestCase):
         css = Path(settings.BASE_DIR, 'static/css/admin-theme.css').read_text(encoding='utf-8')
         self.assertIn('#user-tools { font-size: 0.8125rem; }', css)
         self.assertIn('#user-tools a, .module td a, .module th a, .breadcrumbs a { display: inline-block; padding-block: 4px; }', css)
-        self.assertIn('.module.labcirs-system th, .module .mini { font-size: 0.75rem; }', css)
+        self.assertIn('.module.labcirs-system thead th, .module .mini { font-size: 0.75rem; }', css)
 
     def test_the_text_of_a_chart_does_not_grow_with_the_font_size_of_the_browser(self):
         rule = re.search(r'\.ui-diagramm__beschriftung, [^{]*\{([^}]*)\}', css_text()).group(1)
@@ -268,3 +269,11 @@ class AdminIncidentPageTest(TestCase):
         html = self.incident_page('en')
         self.assertEqual(html.count('<label>Photo:</label>'), 1)
         self.assertIn('labcirs-thumb', html)
+
+
+class ScriptTest(TestCase):
+
+    def test_a_button_that_was_locked_comes_back_when_the_page_is_shown_from_the_cache(self):
+        script = Path(settings.BASE_DIR, 'static/js/formular.js').read_text(encoding='utf-8')
+        self.assertIn('pageshow', script)
+        self.assertIn('ereignis.persisted', script)

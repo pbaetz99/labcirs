@@ -14,6 +14,7 @@
     <p><a class="button" href="{% url 'qm_overview' %}">{% translate "To the QM area" %}</a></p>
   {% endif %}
   {% if system_status %}{% include "admin/system_status.html" %}{% endif %}
+  {% if system_status %}<h2 class="visually-hidden">{% translate "Data and accounts" %}</h2>{% endif %}
   {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
 </div>
 {% endblock %}

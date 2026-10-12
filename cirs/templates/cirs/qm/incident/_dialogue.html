@@ -30,6 +30,7 @@
     {% else %}
     <p class="ui-secondary">{% translate "Your reply is also sent by e-mail to the reporter if they have set up notifications. Do not write names or patient data." %}</p>
     {% endif %}
+    <p class="ui-secondary">{% blocktranslate trimmed %}Fields marked with <span class="ui-required">*</span> are required.{% endblocktranslate %}</p>
     <form method="post" data-einmal-absenden>
       {% csrf_token %}
       <input type="hidden" name="aktion" value="antwort">

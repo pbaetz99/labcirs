@@ -393,7 +393,7 @@ class SuccessPageTest(PageBase):
         page = Html(self.report())
         self.assertEqual(page.source.count('role="status"'), 1)
         self.assertRegex(page.source,
-                         r'<div class="ui-alert ui-alert--success[^"]*" role="status">')
+                         r'<div class="ui-alert ui-alert--success[^"]*" role="status"[^>]*>')
 
     def test_success_links(self):
         response = self.report()
@@ -522,7 +522,7 @@ class DetailPageTest(PageBase):
         response = self.client.post(self.ci.get_absolute_url(), {'text': 'Synthetic reply'},
                                     follow=True, **DE)
         page = Html(response)
-        self.assertRegex(page.source, r'<div class="ui-alert ui-alert--success" role="status">')
+        self.assertRegex(page.source, r'<div class="ui-alert ui-alert--success" role="status"[^>]*>')
         self.assertIn('Ihre Antwort wurde gespeichert. Sie steht jetzt unter „Rückmeldungen“.',
                       page.text)
         self.assertIn('Synthetic reply', page.section('rueckmeldungen-titel'))

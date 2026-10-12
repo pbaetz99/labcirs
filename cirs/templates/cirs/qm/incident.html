@@ -16,6 +16,7 @@
 
 {% block qm_content %}
 {% include "cirs/qm/incident/_head.html" %}
+<p class="ui-secondary ui-mt-3">{% translate "Each form saves only itself: text that you typed into another form and did not send is lost." %}</p>
 <div class="ui-stack-lg ui-mt-4">
   {% include "cirs/qm/incident/_report.html" %}
   {% include "cirs/qm/incident/_review.html" %}
